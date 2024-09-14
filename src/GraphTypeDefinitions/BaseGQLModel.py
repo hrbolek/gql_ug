@@ -2,11 +2,12 @@ import strawberry
 import uuid
 import datetime
 import typing
+import asyncio
 
 # IDType = strawberry.ID
 IDType = uuid.UUID
 
-class BaseGQLModel:
+class BaseGQLModel(strawberry.relay.Node):
     @classmethod
     def getLoader(cls, info):
         pass
@@ -22,3 +23,25 @@ class BaseGQLModel:
             return result
         return None
 
+    @classmethod
+    async def resolve_nodes(
+        cls,
+        *,
+        info: strawberry.Info,
+        node_ids: typing.Iterable[str],
+        required: bool = False,
+    ):
+        awaitables = [cls.resolve_reference(info=info, id=node_id) for node_id in node_ids]
+        results = await asyncio.gather(*awaitables, return_exceptions=False)
+        return results
+        
+    @classmethod
+    async def resolve_node(
+        cls,
+        node_id: str,
+        *,
+        info: strawberry.Info,
+        required: bool,
+    ):
+        result = await cls.resolve_reference(info=info, id=node_id)
+        return result
