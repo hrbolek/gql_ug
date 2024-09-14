@@ -6,10 +6,12 @@ class Query:
     from .userGQLModel import (
         user_by_id, 
         user_page,
+        users,
         me)
     user_by_id = user_by_id
     user_page = user_page
     me = me
+    users = users
 
     from .groupGQLModel import group_by_id
     group_by_id = group_by_id

@@ -349,3 +349,23 @@ async def user_insert(self, info: strawberry.types.Info, user: UserInsertGQLMode
 async def user_delete(self, info: strawberry.types.Info, id: IDType) -> UserResultGQLModel:
     return await encapsulateDelete(info, UserGQLModel.getLoader(info), id, UserResultGQLModel(msg="ok", id=None))
 
+#
+# Relay
+#
+
+# @strawberry.relay.connection(strawberry.relay.ListConnection[UserGQLModel])
+from .BaseGQLModel import Connection
+
+# @strawberry.type(description="")
+class UserConnection(Connection[UserGQLModel]):
+    pass
+
+# @strawberry.field()
+# async def users(self, after: Optional[int]=0, first: Optional[int]=10, order: Optional[str] = "id", where: Optional[UserInputWhereFilter] = None) -> Connection[UserGQLModel]:
+#     return Connection[UserGQLModel](skip=after, limit=first, where=where, order=order)    
+
+@strawberry.field()
+async def users(self, after: Optional[str]=0, first: Optional[int]=10, orderby: Optional[str] = "id", where: Optional[UserInputWhereFilter] = None) -> Connection[UserGQLModel]:
+    return UserConnection(skip=after, limit=first, where=where, orderby=orderby)    
+
+
