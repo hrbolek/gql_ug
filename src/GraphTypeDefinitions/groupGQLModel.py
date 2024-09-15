@@ -2,8 +2,10 @@ import datetime
 import strawberry
 import uuid
 import logging
-from typing import List, Optional, Union, Annotated
-from .BaseGQLModel import BaseGQLModel, IDType
+import asyncio
+
+from typing import List, Optional, Union, Annotated, Type
+from .BaseGQLModel import BaseGQLModel, IDType, Connection
 from uoishelpers.resolvers import createInputs
 
 from ._GraphPermissions import (
@@ -15,19 +17,22 @@ from ._GraphPermissions import (
     # AlwaysFailPermission
     )
 from ._GraphResolvers import (
-    resolve_id,
-    resolve_name,
-    resolve_name_en,
-    resolve_changedby,
-    resolve_created,
-    resolve_lastchange,
-    resolve_createdby,
+
+    resolve_field,
+    default_resolver,
+    default_vector_resolver,
+    default_scalar_resolver,
+    default_page_resolver,
+    default_by_id_resolver,
 
     # asPage,
 
     encapsulateInsert,
     encapsulateUpdate,
-    encapsulateDelete
+    encapsulateDelete,
+
+    remove_constructor
+
 )
 
 from src.Dataloaders import (
@@ -68,51 +73,95 @@ Mastergroup can be only one.
 Groups are organized in tree structures.
 There also can be defined roles on the group.
 """
+
+@remove_constructor
 @strawberry.federation.type(keys=["id"], description="""Entity representing a group""")
 class GroupGQLModel(BaseGQLModel):
     @classmethod
     def getLoader(cls, info):
         return getLoader(info).GroupModel
 
-    id = resolve_id
-    name = resolve_name
-    name_en = resolve_name_en
-    changedby = resolve_changedby
-    created = resolve_created
-    lastchange = resolve_lastchange
-    createdby = resolve_createdby
+    # id = resolve_id
+    from ._GraphResolvers import (
+        resolve_name as name,
+        resolve_name_en as name_en
+    )
+    # name = resolve_name
+    # name_en = resolve_name_en
+    # changedby = resolve_changedby
+    # created = resolve_created
+    # lastchange = resolve_lastchange
+    # createdby = resolve_createdby
 
-    @strawberry.field(
-        description="""Group's email""",
-        permission_classes=[OnlyForAuthentized])
-    def email(self) -> Optional[str]:
-        result = None if not self.email else self.email
-        return result
+    # @strawberry.field(
+    #     description="""Group's email""",
+    #     permission_classes=[OnlyForAuthentized])
+    # def email(self) -> Optional[str]:
+    #     result = None if not self.email else self.email
+    #     return result 
     
-    @strawberry.field(
+    email = strawberry.field(
+        description="""Group's email""",
+        permission_classes=[OnlyForAuthentized],
+        resolver=default_resolver
+        )
+    
+    # @strawberry.field(
+    #     description="""Group's name abbreviation""",
+    #     permission_classes=[OnlyForAuthentized])
+    # def abbreviation(self) -> Optional[str]:
+    #     result = self.abbreviation
+    #     return result
+
+    abbreviation = strawberry.field(
         description="""Group's name abbreviation""",
-        permission_classes=[OnlyForAuthentized])
-    def abbreviation(self) -> Optional[str]:
-        result = self.abbreviation
-        return result
+        permission_classes=[OnlyForAuthentized],
+        resolver=default_resolver
+        )
 
-
-
-    @strawberry.field(
+    # @strawberry.field(
+    #     description="""Group's validity (still exists?)""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ])
+    # def valid(self) -> Optional[bool]:
+    #     result = False if not self.valid else self.valid 
+    #     return result
+    
+    valid = strawberry.field(
         description="""Group's validity (still exists?)""",
         permission_classes=[
             OnlyForAuthentized
-        ])
-    def valid(self) -> Optional[bool]:
-        result = False if not self.valid else self.valid 
-        return result
+        ],
+        resolver=default_resolver
+        )
 
     grouptype = strawberry.field(
         description="""Group's type (like Department)""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+        graphql_type=GroupTypeGQLModel,
+        # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+        resolver=default_scalar_resolver(fkey_field_name="type_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+    )
+
+    type = strawberry.field(
+        description="""Group's type (like Department)""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=GroupTypeGQLModel,
+        # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+        resolver=default_scalar_resolver(fkey_field_name="type_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+    )
+
+    type_id = strawberry.field(
+        description="""Group's type id""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        resolver=default_resolver
     )
 
     @strawberry.field(
@@ -130,17 +179,45 @@ class GroupGQLModel(BaseGQLModel):
         loader = GroupGQLModel.getLoader(info)
         return await loader.page(skip=skip, limit=limit, orderby="name", where=wheredict, extendedfilter=extendedfilter)
 
+
     @strawberry.field(
-        description="""Commanding group""",
+        description="""Directly commanded groups""",
         permission_classes=[
             OnlyForAuthentized
         ])
-    async def mastergroup(
-        self, info: strawberry.types.Info
-    ) -> Optional["GroupGQLModel"]:
-        result = await GroupGQLModel.resolve_reference(info, id=self.mastergroup_id)
-        return result
+    async def subgroups2(
+        self, info: strawberry.types.Info,
+        where: Optional["GroupInputWhereFilter"] = None, 
+        after: Optional[str] = 0, 
+        first: Optional[int] = 100,
+        orderby: Optional[str] = "id"
+    ) -> Connection["GroupGQLModel"]:
+        extendedfilter = {"mastergroup_id": self.id()}
+        print(f"extendedfilter {extendedfilter}")
+        items = GroupConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)
+        # results = [GroupGQLModel(item) for item in items]
+        return items
 
+    # @strawberry.field(
+    #     description="""Commanding group""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ])
+    # async def mastergroup(
+    #     self, info: strawberry.types.Info
+    # ) -> Optional["GroupGQLModel"]:
+    #     result = await GroupGQLModel.resolve_reference(info, id=self.mastergroup_id)
+    #     return result
+
+    mastergroup = strawberry.field(
+        description="""Commanding group""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=Optional["GroupGQLModel"],
+        # resolver=default_scalar_resolver(fkey_field_name="mastergroup_id", gql_type=Type["GroupGQLModel"])
+        resolver=default_scalar_resolver(fkey_field_name="mastergroup_id")
+    )
     # @strawberry.field(
     #     description="""List of users who are member of the group""",
     #     permission_classes=[
@@ -166,9 +243,24 @@ class GroupGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.GroupModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        graphql_type=List[MembershipGQLModel],
+        # resolver=DBResolvers.GroupModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        resolver=default_vector_resolver(fkey_field_name="group_id", whereType=MembershipInputWhereFilter)
     )
-
+    
+    @strawberry.field(description="Relay definition of memberships")
+    async def _memberships(
+            self, 
+            # after: Optional[str]=0, 
+            after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
+            first: Optional[int]=10, 
+            orderby: Optional[str] = "id", 
+            where: Optional[GroupInputWhereFilter] = None
+        ) -> Connection[MembershipGQLModel]:
+        from .membershipGQLModel import MembershipConnection
+        group_id = self.id if self._data is None else self._data.id
+        extendedfilter = {"group_id": group_id}
+        return MembershipConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)    
     # @strawberry.field(
     #     description="""List of roles in the group""",
     #     permission_classes=[
@@ -190,7 +282,9 @@ class GroupGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.GroupModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
+        graphql_type=List[RoleGQLModel],
+        # resolver=DBResolvers.GroupModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
+        resolver=default_vector_resolver(fkey_field_name="group_id", whereType=RoleInputWhereFilter)
     )
 
     RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
@@ -201,7 +295,8 @@ class GroupGQLModel(BaseGQLModel):
         ])
     async def rbacobject(self, info: strawberry.types.Info) -> Optional[RBACObjectGQLModel]:
         from .RBACObjectGQLModel import RBACObjectGQLModel
-        result = await RBACObjectGQLModel.resolve_reference(info, self.id)
+        id = resolve_field(self=self, field_name="id")
+        result = await RBACObjectGQLModel.resolve_reference(info, id)
         return result    
 
 #####################################################################
@@ -240,8 +335,27 @@ group_page = strawberry.field(
     permission_classes=[
         OnlyForAuthentized
     ],
-    resolver=DBResolvers.GroupModel.resolve_page(GroupGQLModel, WhereFilterModel=GroupInputWhereFilter)
+    graphql_type=List[GroupGQLModel],
+    resolver=default_page_resolver(whereType=GroupInputWhereFilter)
+    # resolver=DBResolvers.GroupModel.resolve_page(GroupGQLModel, WhereFilterModel=GroupInputWhereFilter)
 )
+
+# @strawberry.field(description="")
+# async def group_page(self, info: strawberry.types.Info,
+#     skip: Optional[int] = 0, limit: Optional[int] = 10,
+#     where: Optional[GroupInputWhereFilter] = None,
+#     orderby: Optional[str] = None,
+#     desc: Optional[bool] = None
+# ) -> List[GroupGQLModel]:
+#     wheredict = None if where is None else strawberry.asdict(where)
+#     loader = GroupGQLModel.getLoader(info)
+#     items = await loader.page(where=wheredict, skip=skip, limit=limit, orderby=orderby, desc=desc)
+#     results = [GroupGQLModel(item) for item in items]
+#     return results
+    # ids = (item.id for item in items)
+    # awaitables = (GroupGQLModel.resolve_reference(info=info, id=id) for id in ids)
+    # return await asyncio.gather(*awaitables)
+    # return items
 
 # @strawberry.field(
 #     description="""Finds a group by its id""",
@@ -260,7 +374,9 @@ group_by_id = strawberry.field(
     permission_classes=[
         OnlyForAuthentized
     ],
-    resolver=DBResolvers.GroupModel.resolve_by_id(GroupGQLModel)
+    graphql_type=Optional[GroupGQLModel],
+    resolver=default_by_id_resolver()
+    # resolver=DBResolvers.GroupModel.resolve_by_id(GroupGQLModel)
 )
 
 # @strawberry.field(
@@ -452,3 +568,24 @@ async def group_delete(self, info: strawberry.types.Info, id: IDType) -> GroupRe
 #         result.msg = "fail"
     
 #     return result
+
+
+
+class GroupConnection(Connection[GroupGQLModel]):
+    pass
+
+@strawberry.field(
+        description="Relay definition of groups",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+    )
+async def groups(
+        self, 
+        # after: Optional[str]=0, 
+        after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
+        first: Optional[int]=10, 
+        orderby: Optional[str] = "id", 
+        where: Optional[GroupInputWhereFilter] = None
+    ) -> Connection[GroupGQLModel]:
+    return GroupConnection(skip=after, limit=first, where=where, orderby=orderby)    

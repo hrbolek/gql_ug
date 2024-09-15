@@ -1,5 +1,5 @@
-query statetranstitionPage($skip: Int, $limit: Int, $where: StateTransitionWhereFilter) {
-  result: statetranstitionPage(skip: $skip, limit: $limit, where: $where) {
+query statetransitionPage($skip: Int, $limit: Int, $where: StateTransitionWhereFilter) {
+  result: statetransitionPage(skip: $skip, limit: $limit, where: $where) {
     ...StateTransitionModel
   }
 }

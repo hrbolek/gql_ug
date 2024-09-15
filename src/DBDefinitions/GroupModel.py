@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
 )
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from .Base import BaseModel
 
@@ -29,6 +30,11 @@ class GroupModel(BaseModel):
     valid = Column(Boolean, default=True, comment="if the group still exists")
 
     grouptype_id = Column(ForeignKey("grouptypes.id"), index=True, comment="link to the group type (aka faculty)")
+
+    @hybrid_property
+    def type_id(self):
+        return self.grouptype_id
+    
     grouptype = relationship("GroupTypeModel", viewonly=True)
 
     mastergroup_id = Column(ForeignKey("groups.id"), index=True, comment="link to the commanding group")

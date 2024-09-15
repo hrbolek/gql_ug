@@ -63,6 +63,7 @@ class RBACObjectGQLModel:
         
         result = RBACObjectGQLModel(asGroup=asGroup, asUser=asUser)
         result.id = id
+        result._data = None
         return result
 
     @strawberry.field(
@@ -73,12 +74,13 @@ class RBACObjectGQLModel:
         info: strawberry.types.Info,
         user_id: Annotated[Optional[IDType], strawberry.argument(description="if defined, only roles with this user will be returned")] = None
         ) -> List["RoleGQLModel"]:
-        from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group
+        from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group, RoleGQLModel
         result = []
         if self.asUser:
             result = await resolve_roles_on_user(self, info, user_id=self.id, filter_user_id=user_id)
         if self.asGroup:
             result = await resolve_roles_on_group(self, info, group_id=self.id, filter_user_id=user_id)
+        result = (RoleGQLModel(r) for r in result)
         return result
     
 

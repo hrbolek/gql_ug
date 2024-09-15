@@ -25,6 +25,15 @@ from ._GraphResolvers import (
     # createRootResolver_by_id,
     # createRootResolver_by_page
 
+    resolve_field,
+    default_resolver,
+    default_vector_resolver,
+    default_scalar_resolver,
+    default_page_resolver,
+    default_by_id_resolver,
+
+    remove_constructor,
+
     encapsulateInsert,
     encapsulateUpdate,
     encapsulateDelete
@@ -34,6 +43,42 @@ from src.DBResolvers import DBResolvers
 
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
 
+
+from dataclasses import dataclass
+from uoishelpers.resolvers import createInputs
+
+@createInputs
+@dataclass
+class StateMachineWhereFilter:
+    name: str
+    name_en: str
+    id: uuid.UUID
+    created: datetime.datetime
+    type_id: uuid.UUID
+
+@createInputs
+@dataclass
+class StateWhereFilter:
+    name: str
+    name_en: str
+    id: uuid.UUID
+    created: datetime.datetime
+    statemachine_id: uuid.UUID
+
+@createInputs
+@dataclass
+class StateTransitionWhereFilter:
+    name: str
+    name_en: str
+    id: uuid.UUID
+    created: datetime.datetime
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    statemachine_id: uuid.UUID
+
+
+
+@remove_constructor
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a state machine"""
 )
@@ -43,31 +88,45 @@ class StateMachineGQLModel(BaseGQLModel):
     @classmethod
     def getLoader(cls, info):
         return getLoadersFromInfo(info).StateMachineModel
-    
-    id = resolve_id
-    name = resolve_name
-    changedby = resolve_changedby
-    lastchange = resolve_lastchange
-    created = resolve_created
-    createdby = resolve_createdby
-    name_en = resolve_name_en
-    rbacobject = resolve_rbacobject
 
-    @strawberry.field(
+    from ._GraphResolvers import (
+        resolve_name as name,
+        resolve_name_en as name_en,
+        resolve_rbacobject as rbacobject
+    )    
+    
+
+    # @strawberry.field(
+    #     description="""All states associated with this state machine""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def states(self, info: strawberry.types.Info) -> typing.List["StateGQLModel"]:
+    #     loader = StateGQLModel.getLoader(info)
+    #     results = await loader.filter_by(statemachine_id=self.id)
+    #     return results
+    
+    states = strawberry.field(
         description="""All states associated with this state machine""",
-        permission_classes=[OnlyForAuthentized])
-    async def states(self, info: strawberry.types.Info) -> typing.List["StateGQLModel"]:
-        loader = StateGQLModel.getLoader(info)
-        results = await loader.filter_by(statemachine_id=self.id)
-        return results
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=typing.List["StateGQLModel"],
+        resolver=default_vector_resolver(fkey_field_name="statemachine_id", whereType=StateWhereFilter)
+    )
            
-    @strawberry.field(
+    # @strawberry.field(
+    #     description="""All states associated with this state machine""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def transitions(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
+    #     loader = StateTransitionGQLModel.getLoader(info)
+    #     results = await loader.filter_by(statemachine_id=self.id)
+    #     return results
+    
+    transitions = strawberry.field(
         description="""All states associated with this state machine""",
-        permission_classes=[OnlyForAuthentized])
-    async def transitions(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
-        loader = StateTransitionGQLModel.getLoader(info)
-        results = await loader.filter_by(statemachine_id=self.id)
-        return results
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List["StateTransitionGQLModel"],
+        resolver=default_vector_resolver(fkey_field_name="statemachine_id", whereType=StateTransitionWhereFilter)
+    )
     
 
 @strawberry.enum(description="")
@@ -75,6 +134,7 @@ class StateDataAccessType(Enum):
     READ = "read"
     WRITE = "write"
 
+@remove_constructor
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a state of state machine"""
 )
@@ -85,44 +145,63 @@ class StateGQLModel(BaseGQLModel):
     def getLoader(cls, info):
         return getLoadersFromInfo(info).StateModel
     
-    id = resolve_id
-    name = resolve_name
-    changedby = resolve_changedby
-    lastchange = resolve_lastchange
-    created = resolve_created
-    createdby = resolve_createdby
-    name_en = resolve_name_en
-    rbacobject = resolve_rbacobject
+    from ._GraphResolvers import (
+        resolve_name as name,
+        resolve_name_en as name_en,
+        resolve_rbacobject as rbacobject
+    )    
 
     @strawberry.field(
         description="""Owing state machine""",
         permission_classes=[OnlyForAuthentized])
     async def statemachine(self, info: strawberry.types.Info) -> typing.Optional["StateMachineGQLModel"]:
-        result = await StateMachineGQLModel.resolve_reference(info, id=self.statemachine_id)
+        statemachine_id = resolve_field(self=self, field_name="statemachine_id")
+        result = await StateMachineGQLModel.resolve_reference(info, id=statemachine_id)
         return result
 
-    @strawberry.field(
-        description="""position in list of states""",
-        permission_classes=[OnlyForAuthentized])
-    async def order(self, info: strawberry.types.Info) -> typing.Optional[int]:
-        result = self.order 
-        return result
-
-    @strawberry.field(
-        description="""Transitions linked into thist state""",
-        permission_classes=[OnlyForAuthentized])
-    async def sources(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
-        loader = StateTransitionGQLModel.getLoader(info)
-        results = await loader.filter_by(target_id=self.id)
-        return results
+    # @strawberry.field(
+    #     description="""position in list of states""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def order(self, info: strawberry.types.Info) -> typing.Optional[int]:
+    #     result = self.order 
+    #     return result
     
-    @strawberry.field(
+    order = strawberry.field(
+        description="""position in list of states""",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.Optional[int],
+        resolver=default_resolver
+    )
+
+    # @strawberry.field(
+    #     description="""Transitions linked into thist state""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def sources(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
+    #     loader = StateTransitionGQLModel.getLoader(info)
+    #     results = await loader.filter_by(target_id=self.id)
+    #     return results
+    
+    sources = strawberry.field(
+        description="""Transitions linked into thist state""",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List["StateTransitionGQLModel"],
+        resolver=default_vector_resolver(fkey_field_name="target_id", whereType=StateTransitionWhereFilter)
+    )
+    
+    # @strawberry.field(
+    #     description="""Transitions going out of this state""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def targets(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
+    #     loader = StateTransitionGQLModel.getLoader(info)
+    #     results = await loader.filter_by(source_id=self.id)
+    #     return results
+
+    targets = strawberry.field(
         description="""Transitions going out of this state""",
-        permission_classes=[OnlyForAuthentized])
-    async def targets(self, info: strawberry.types.Info) -> typing.List["StateTransitionGQLModel"]:
-        loader = StateTransitionGQLModel.getLoader(info)
-        results = await loader.filter_by(source_id=self.id)
-        return results
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List["StateTransitionGQLModel"],
+        resolver=default_vector_resolver(fkey_field_name="source_id", whereType=StateTransitionWhereFilter)
+    )
 
     # @strawberry.field(
     #     description="""All roletypes associated with this state, all roles will be enabled for read""",
@@ -175,7 +254,7 @@ class StateGQLModel(BaseGQLModel):
         #     results = await loader.filter_by(list_id=self.writerslist_id)
         # awaitables = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
         # return await asyncio.gather(*awaitables)
-        results = await StateGQLModel.resolve_roletypes(state=self, info=info, access=access)
+        results = await StateGQLModel.resolve_roletypes(state=self._data, info=info, access=access)
         awaitables = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
         return await asyncio.gather(*awaitables)
 
@@ -198,7 +277,7 @@ class StateGQLModel(BaseGQLModel):
         print(f"intersection {intersection}", flush=True)
         return len(intersection) > 0
         
-
+@remove_constructor
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing an entity type"""
 )
@@ -209,34 +288,34 @@ class StateTransitionGQLModel(BaseGQLModel):
     def getLoader(cls, info):
         return getLoadersFromInfo(info).StateTransitionModel
     
-    id = resolve_id
-    name = resolve_name
-    changedby = resolve_changedby
-    lastchange = resolve_lastchange
-    created = resolve_created
-    createdby = resolve_createdby
-    name_en = resolve_name_en
-    rbacobject = resolve_rbacobject
+    from ._GraphResolvers import (
+        resolve_name as name,
+        resolve_name_en as name_en,
+        resolve_rbacobject as rbacobject
+    )    
 
     @strawberry.field(
         description="""Going from state""",
         permission_classes=[OnlyForAuthentized])
     async def source(self, info: strawberry.types.Info) -> typing.Optional["StateGQLModel"]:
-        result = await StateGQLModel.resolve_reference(info, self.source_id)
+        source_id = resolve_field(self=self, field_name="source_id")
+        result = await StateGQLModel.resolve_reference(info, source_id)
         return result
     
     @strawberry.field(
         description="""Going to state""",
         permission_classes=[OnlyForAuthentized])
     async def target(self, info: strawberry.types.Info) -> typing.Optional["StateGQLModel"]:
-        result = await StateGQLModel.resolve_reference(info, self.target_id)
+        target_id = resolve_field(self=self, field_name="target_id")
+        result = await StateGQLModel.resolve_reference(info, target_id)
         return result
     
     @strawberry.field(
         description="""Owing state machine""",
         permission_classes=[OnlyForAuthentized])
     async def statemachine(self, info: strawberry.types.Info) -> typing.Optional["StateMachineGQLModel"]:
-        result = await StateMachineGQLModel.resolve_reference(info, self.statemachine_id)
+        statemachine_id = resolve_field(self=self, field_name="statemachine_id")
+        result = await StateMachineGQLModel.resolve_reference(info, statemachine_id)
         return result    
     
 #############################################################
@@ -245,37 +324,7 @@ class StateTransitionGQLModel(BaseGQLModel):
 #
 #############################################################
 
-from dataclasses import dataclass
-from uoishelpers.resolvers import createInputs
 
-@createInputs
-@dataclass
-class StateMachineWhereFilter:
-    name: str
-    name_en: str
-    id: uuid.UUID
-    created: datetime.datetime
-    type_id: uuid.UUID
-
-@createInputs
-@dataclass
-class StateWhereFilter:
-    name: str
-    name_en: str
-    id: uuid.UUID
-    created: datetime.datetime
-    statemachine_id: uuid.UUID
-
-@createInputs
-@dataclass
-class StateTransitionWhereFilter:
-    name: str
-    name_en: str
-    id: uuid.UUID
-    created: datetime.datetime
-    source_id: uuid.UUID
-    target_id: uuid.UUID
-    statemachine_id: uuid.UUID
 
 from src.DBResolvers import (
     StateResolvers,
@@ -287,32 +336,50 @@ from src.DBResolvers import (
 state_page = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateResolvers.Page(GQLModel=StateGQLModel, WhereFilterModel=StateWhereFilter))
+    graphql_type=typing.List[StateGQLModel],
+    # resolver=StateResolvers.Page(GQLModel=StateGQLModel, WhereFilterModel=StateWhereFilter)
+    resolver=default_page_resolver(whereType=StateWhereFilter)
+)
 
 state_by_id = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateResolvers.ById(GQLModel=StateGQLModel))
+    graphql_type=typing.Optional[StateGQLModel],
+    # resolver=StateResolvers.ById(GQLModel=StateGQLModel)
+    resolver=default_by_id_resolver()
+)
 
 statemachine_page = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateMachineResolvers.Page(GQLModel=StateMachineGQLModel, WhereFilterModel=StateMachineWhereFilter))
+    graphql_type=typing.List[StateMachineGQLModel],
+    # resolver=StateMachineResolvers.Page(GQLModel=StateMachineGQLModel, WhereFilterModel=StateMachineWhereFilter)
+    resolver=default_page_resolver(whereType=StateMachineWhereFilter)
+)
 
 statemachine_by_id = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateMachineResolvers.ById(GQLModel=StateMachineGQLModel))
+    graphql_type=typing.Optional[StateMachineGQLModel],
+    # resolver=StateMachineResolvers.ById(GQLModel=StateMachineGQLModel)
+    resolver=default_by_id_resolver()
+)
 
 statetransition_page = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateTransitionResolvers.Page(GQLModel=StateTransitionGQLModel, WhereFilterModel=StateTransitionWhereFilter))
+    graphql_type=typing.List[StateTransitionGQLModel],
+    # resolver=StateTransitionResolvers.Page(GQLModel=StateTransitionGQLModel, WhereFilterModel=StateTransitionWhereFilter)
+    resolver=default_page_resolver(whereType=StateTransitionWhereFilter)
+)
 
 statetransition_by_id = strawberry.field(
     description="",
     permission_classes=[OnlyForAuthentized],
-    resolver=StateTransitionResolvers.ById(GQLModel=StateTransitionGQLModel))
+    graphql_type=typing.Optional[StateTransitionGQLModel],
+    # resolver=StateTransitionResolvers.ById(GQLModel=StateTransitionGQLModel)
+    resolver=default_by_id_resolver()
+)
 
 #############################################################
 #
@@ -596,3 +663,13 @@ async def statetransition_delete(self, info: strawberry.types.Info, id: uuid.UUI
 #             result=StateResultGQLModel(msg="ok", id=staterole.state_id)
 #         )
 #     return StateResultGQLModel(msg="fail", id=staterole.state_id)
+
+from .BaseGQLModel import Connection
+class StateMachineConnection(Connection[StateMachineGQLModel]):
+    pass
+
+class StateConnection(Connection[StateGQLModel]):
+    pass
+
+class StateTransitionConnection(Connection[StateTransitionGQLModel]):
+    pass

@@ -265,8 +265,8 @@ test_statemachine_delete = createTest2(
     }
 )
 
-test_statetransition_by_id = createByIdTest2(tableName="statetransitions")
 test_statetransition_page = createTest2(tableName="statetransitions", queryName="readp")
+test_statetransition_by_id = createByIdTest2(tableName="statetransitions")
 test_statetransition_create = createTest2(
     tableName="statetransitions", 
     queryName="create",

@@ -129,7 +129,7 @@ def createByIdTest2(tableName, variables=None, expectedJson=None):
             queryReadPage = getQuery(tableName=tableName, queryName="readp")
             pageJson = await SchemaExecutorDemo(query=queryReadPage, variable_values={})
             pageData = pageJson.get("data", None)
-            assert pageData is not None, f"during query {tableName}_by_id got page result with no data {pageJson}"
+            assert pageData is not None, f"during query {tableName}_by_id '{queryReadPage}' with '{{}}' got page result with no data {pageJson}"
             [firstKey, *_] = pageData.keys()
             # firstKey = next(pageData.keys(), None)
             assert firstKey is not None, f"during query {tableName}_by_id got empty data {pageJson}"

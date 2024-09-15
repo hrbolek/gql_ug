@@ -47,3 +47,4 @@ from .RBACObjectGQLModel import RBACObjectGQLModel
 from .BaseGQLModel import IDType
 
 schema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType), mutation=Mutation)
+# schema = strawberry.federation.Schema(query=Query)

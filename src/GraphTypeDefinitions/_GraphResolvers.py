@@ -2,6 +2,8 @@ import strawberry
 import uuid
 import datetime
 import typing
+
+import strawberry.types
 from .BaseGQLModel import IDType
 
 UserGQLModel = typing.Annotated["UserGQLModel", strawberry.lazy(".userGQLModel")]
@@ -10,34 +12,137 @@ RBACObjectGQLModel = typing.Annotated["RBACObjectGQLModel", strawberry.lazy(".RB
 from ._GraphPermissions import RoleBasedPermission, OnlyForAuthentized
 from ..Dataloaders import getUserFromInfo
 
+def remove_constructor(cls):
+    delattr(cls, "__init__")
+    return cls
+
+def resolve_field(*, self, field_name):
+    data = getattr(self, "_data", None)
+    if data is None:
+        data = self
+        value = getattr(self, field_name, None)
+    else:
+        value = getattr(data, field_name, None)
+    print(f"query for {field_name}@{data}={value}")
+    return value
+
 @strawberry.field(description="""Entity primary key""")
 def resolve_id(self) -> IDType:
-    return self.id
+    return resolve_field(self=self, field_name="id")
 
+def default_resolver(self, info: strawberry.types.Info) -> str:
+    # print("default_resolver")
+    return resolve_field(self=self, field_name=info.field_name)
+
+def resolveResultType(info: strawberry.types.Info):
+    return_type = info.return_type
+    if (return_type.__class__.__name__ == "StrawberryOptional"):
+        return_type = return_type.of_type
+
+    if (return_type.__class__.__name__ == "StrawberryList"):
+        return_type = return_type.of_type
+
+    if (isinstance(return_type, strawberry.LazyType)):
+        return_type = return_type.resolve_type()
+    return return_type
+
+
+def default_scalar_resolver(*, fkey_field_name):
+    cache = {"executor": None}
+    def getexecutor(info: strawberry.Info, cache=cache):
+        executor = cache["executor"]
+        if executor is None:
+            return_type = resolveResultType(info)
+            executor = return_type.resolve_reference
+            cache["executor"] = executor
+        return executor
+    async def result(self, info: strawberry.types.Info):
+        value = resolve_field(self=self, field_name=fkey_field_name)
+        executor = getexecutor(info=info)
+        gql_value = await executor(info=info, id=value)
+        return gql_value
+    return result
+
+def default_vector_resolver(*, fkey_field_name, whereType):
+    cache = {"executor": None}
+    def getexecutor(info: strawberry.Info, cache=cache):
+        executor = cache["executor"]
+        if executor is None:
+            return_type = resolveResultType(info)
+            # print(f"for type {return_type}")
+            from .BaseGQLModel import List as BaseList
+            class ExecClass(BaseList[return_type]):
+                pass
+            executor = ExecClass()
+            cache["executor"] = executor
+        return executor
+    async def result(self, info: strawberry.Info, skip: typing.Optional[int]=0, limit: typing.Optional[int]=10, orderby: typing.Optional[str]=None, where: typing.Optional[whereType]=None):
+        value = resolve_field(self=self, field_name="id")
+        extendedfilter = {fkey_field_name: value}
+        executor = getexecutor(info=info)
+        # gql_value = await gql_type.resolve_reference(info=info, id=value)
+        result = await executor(info=info, skip=skip, limit=limit, orderby=orderby, where=where, extendedfilter=extendedfilter)
+        # result = [r for r in result]
+        # print(f"default_vector_resolver created {result} extendedfilter={extendedfilter}, self={self._data}")
+        return result
+    return result
+
+def default_page_resolver(*, whereType):
+    cache = {"executor": None}
+    def getexecutor(info: strawberry.Info, cache=cache):
+        executor = cache["executor"]
+        if executor is None:
+            return_type = resolveResultType(info)
+            from .BaseGQLModel import List as BaseList
+            class ExecClass(BaseList[return_type]):
+                pass
+            executor = ExecClass()
+            cache["executor"] = executor
+        return executor
+
+    async def result(self, info: strawberry.Info, skip: typing.Optional[int]=0, limit: typing.Optional[int]=10, orderby: typing.Optional[str]=None, where: typing.Optional[whereType]=None):
+        executor = getexecutor(info=info)
+        return await executor(info=info, skip=skip, limit=limit, orderby=orderby, where=where)
+    return result
+    
+def default_by_id_resolver():
+    cache = {"executor": None}
+    def getexecutor(info: strawberry.Info, cache=cache):
+        executor = cache["executor"]
+        if executor is None:
+            return_type = resolveResultType(info)
+            executor = return_type.resolve_reference
+            cache["executor"] = executor
+        return executor
+
+    async def result(self, info: strawberry.Info, id: IDType):
+        executor = getexecutor(info=info)
+        return await executor(info=info, id=id)
+    return result
+    
 @strawberry.field(
     description="""Name """,
     permission_classes=[OnlyForAuthentized])
 def resolve_name(self) -> str:
-    return self.name
+    return resolve_field(self=self, field_name="name")
 
 @strawberry.field(
     description="""English name""",
     permission_classes=[OnlyForAuthentized])
-def resolve_name_en(self) -> str:
-    result = self.name_en if self.name_en else ""
-    return result
+def resolve_name_en(self) -> typing.Optional[str]:
+    return resolve_field(self=self, field_name="name_en")
 
 @strawberry.field(
     description="""Time of last update""",
     permission_classes=[OnlyForAuthentized])
 def resolve_lastchange(self) -> datetime.datetime:
-    return self.lastchange
+    return resolve_field(self=self, field_name="lastchange")
 
 @strawberry.field(
     description="""Time of entity introduction""",
     permission_classes=[OnlyForAuthentized])
 def resolve_created(self) -> typing.Optional[datetime.datetime]:
-    return self.created
+    return resolve_field(self=self, field_name="created")
 
 async def resolve_user(info, user_id):
     from .userGQLModel import UserGQLModel
@@ -48,22 +153,25 @@ async def resolve_user(info, user_id):
     description="""Who created entity""",
     permission_classes=[OnlyForAuthentized])
 async def resolve_createdby(self, info: strawberry.types.Info) -> typing.Optional["UserGQLModel"]:
-    return await resolve_user(info, self.createdby)
+    createdby = resolve_field(self=self, field_name="createdby")
+    return await resolve_user(info, createdby)
 
 @strawberry.field(
     description="""Who made last change""",
     permission_classes=[OnlyForAuthentized])
 async def resolve_changedby(self, info: strawberry.types.Info) -> typing.Optional["UserGQLModel"]:
-    return await resolve_user(info, self.changedby)
+    changedby = resolve_field(self=self, field_name="changedby")
+    return await resolve_user(info, changedby)
 
 @strawberry.field(description="""Role based access control object""")
 async def resolve_rbacobject(self) -> typing.Optional[RBACObjectGQLModel]:
     from .RBACObjectGQLModel import RBACObjectGQLModel
-    result = None if self.rbacobject is None else await RBACObjectGQLModel.resolve_reference(self.rbacobject_id)
+    rbacobject = resolve_field(self=self, field_name="rbacobject")
+    result = None if rbacobject is None else await RBACObjectGQLModel.resolve_reference(rbacobject)
     return result
 
 
-async def encapsulateUpdate(info, loader, entity, result):
+async def encapsulateUpdate(info: strawberry.types.Info, loader, entity, result):
     user = getUserFromInfo(info)
     entity.changedby = user["id"]
 
@@ -71,7 +179,7 @@ async def encapsulateUpdate(info, loader, entity, result):
     result.msg = "fail" if row is None else "ok"
     return result
 
-async def encapsulateInsert(info, loader, entity, result):
+async def encapsulateInsert(info: strawberry.types.Info, loader, entity, result):
     user = getUserFromInfo(info)
     entity.createdby = user["id"]
     
@@ -82,7 +190,7 @@ async def encapsulateInsert(info, loader, entity, result):
 
 import sqlalchemy.exc
 
-async def encapsulateDelete(info, loader, id, result):
+async def encapsulateDelete(info: strawberry.types.Info, loader, id, result):
     # try:
     #     await loader.delete(id)
     # except sqlalchemy.exc.IntegrityError as e:

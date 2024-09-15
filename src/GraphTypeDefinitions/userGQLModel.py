@@ -3,7 +3,12 @@ import strawberry
 import asyncio
 import uuid
 import typing
+import dataclasses
+
 from typing import List, Optional, Union, Annotated
+import typing
+
+import strawberry.types
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
@@ -14,17 +19,17 @@ from ._GraphPermissions import (
     RBACPermission
 )
 from ._GraphResolvers import (
-    resolve_id,
-    resolve_name,
-    resolve_name_en,
-    resolve_changedby,
-    resolve_created,
-    resolve_lastchange,
-    resolve_createdby,
+    default_resolver,
+    default_vector_resolver,
+    default_by_id_resolver,
+    default_page_resolver,
 
     encapsulateInsert,
     encapsulateUpdate,
-    encapsulateDelete
+    encapsulateDelete,
+
+    remove_constructor
+
 )
 
 from src.Dataloaders import (
@@ -40,25 +45,66 @@ GroupGQLModel = Annotated["GroupGQLModel", strawberry.lazy(".groupGQLModel")]
 RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleGQLModel")]
 MembershipInputWhereFilter = Annotated["MembershipInputWhereFilter", strawberry.lazy(".membershipGQLModel")]
 
+
+
+@remove_constructor
 @strawberry.federation.type(keys=["id"], description="""Entity representing a user""")
 class UserGQLModel(BaseGQLModel):
     @classmethod
     def getLoader(cls, info):
         return getLoader(info).UserModel
-
-    id = resolve_id
-    name = resolve_name
-    changedby = resolve_changedby
-    created = resolve_created
-    lastchange = resolve_lastchange
-    createdby = resolve_createdby
     
+    # id = strawberry.field(
+    #     description="""Unique identifier""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     graphql_type=IDType,
+    #     resolver=default_resolver
+    # )  
+
+    # lastchange = strawberry.field(
+    #     description="""Timestamp""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     graphql_type=datetime.datetime,
+    #     resolver=default_resolver
+    # )  
+
+    # created = strawberry.field(
+    #     description="""Timestamp""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     graphql_type=datetime.datetime,
+    #     resolver=default_resolver
+    # )  
+
+    # changedby = resolve_changedby
+    # created = resolve_created
+    # lastchange = resolve_lastchange
+    # createdby = resolve_createdby
+    
+    from ._GraphResolvers import (
+        resolve_name as name
+    )
+    # name = strawberry.field(
+    #     description="""User's name (like John)""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     graphql_type=str,
+    #     resolver=default_resolver
+    # )  
+
     firstname = strawberry.field(
         description="""User's name (like John)""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.UserModel.name
+        graphql_type=str,
+        resolver=default_resolver
     )  
 
     surname = strawberry.field(
@@ -66,8 +112,35 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.UserModel.surname
+        graphql_type=str,
+        resolver=default_resolver
     )  
+
+    fullname = strawberry.field(
+        description="""User's full name""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=str,
+        resolver=default_resolver
+    )  
+
+    email = strawberry.field(
+        description="""User's email""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        resolver=default_resolver
+    )
+
+    valid = strawberry.field(
+        description="""If the user is still valid""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        resolver=default_resolver
+    )
+
 
     @strawberry.field(
         description="""if this record is related to logged user""",
@@ -76,13 +149,14 @@ class UserGQLModel(BaseGQLModel):
         ])
     async def is_this_me(self, info: strawberry.types.Info) -> bool:
         user = getUserFromInfo(info)
+        selfid = self.id if self._data is None else self._data.id
         # print(f"me: {user}")
         if user is None: return None
         user_id = user.get("id", None)
-        print(f"is_this_me {type(user_id)}, {type(self.id)}", flush=True)
-        print(f"is_this_me {user_id==self.id}", flush=True)
+        # print(f"is_this_me {type(user_id)}, {type(self.id)}", flush=True)
+        # print(f"is_this_me {user_id==self.id}", flush=True)
         # return f"{self.id}" == f"{user_id}"
-        return user_id==self.id
+        return user_id==selfid
         
 
     @strawberry.field(
@@ -90,7 +164,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ])
-    async def roles_on(self, info: strawberry.types.Info) -> List["RoleGQLModel"]:
+    async def roles_on(self, info: strawberry.types.Info) -> typing.List["RoleGQLModel"]:
         from .roleGQLModel import resolve_roles_on_user
         user = getUserFromInfo(info)
         user_id = user.get("id", None)
@@ -116,35 +190,21 @@ class UserGQLModel(BaseGQLModel):
     #     resolver=DBResolvers.UserModel.fullname
     # )  
 
-    @strawberry.field(
-        description="""User's family name (like Obama)""",
-        permission_classes=[OnlyForAuthentized])
-    def fullname(self) -> Optional[str]:
-        return self.fullname
-
-    email = strawberry.field(
-        description="""User's email""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        resolver=DBResolvers.UserModel.email
-    )
-
-    valid = strawberry.field(
-        description="""If the user is still valid""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        resolver=DBResolvers.UserModel.valid
-    )
+    
 
     memberships = strawberry.field(
         description="""List of mmeberships associated with the user""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.UserModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        graphql_type=typing.List[MembershipGQLModel],
+        # resolver=DBResolvers.UserModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        resolver=default_vector_resolver(fkey_field_name="user_id", whereType=MembershipInputWhereFilter)
     )
+
+    # @strawberry.field(description="")
+    # async def _memberships(self, ins) -> MembershipConnection:
+    #     pass
 
     membership = strawberry.field(
         description="""List of mmeberships associated with the user""",
@@ -152,7 +212,10 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.UserModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        graphql_type=typing.List[MembershipGQLModel],
+        # resolver=DBResolvers.UserModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+        resolver=default_vector_resolver(fkey_field_name="user_id", whereType=MembershipInputWhereFilter)
+
     )
 
     roles = strawberry.field(
@@ -179,7 +242,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[OnlyForAuthentized])
     async def member_of(
         self, info: strawberry.types.Info, grouptype_id: Optional[IDType] = None, 
-    ) -> List["GroupGQLModel"]:
+    ) -> typing.List["GroupGQLModel"]:
         from .groupGQLModel import GroupGQLModel
         from .membershipGQLModel import MembershipGQLModel
         loader = MembershipGQLModel.getLoader(info)
@@ -213,8 +276,10 @@ user_by_id = strawberry.field(
     description="",
     permission_classes=[
         OnlyForAuthentized
-        ],
-    resolver=DBResolvers.UserModel.resolve_by_id(UserGQLModel)
+    ],
+    graphql_type=Optional[UserGQLModel],
+    # resolver=DBResolvers.UserModel.resolve_by_id(UserGQLModel)
+    resolver=default_by_id_resolver()
 )
 
 @createInputs
@@ -238,7 +303,9 @@ user_page = strawberry.field(
     permission_classes=[
         OnlyForAuthentized
     ],
-    resolver=DBResolvers.UserModel.resolve_page(UserGQLModel, WhereFilterModel=UserInputWhereFilter)
+    graphql_type=List[UserGQLModel],
+    # resolver=DBResolvers.UserModel.resolve_page(UserGQLModel, WhereFilterModel=UserInputWhereFilter)
+    resolver=default_page_resolver(whereType=UserInputWhereFilter)
     )
 
 
@@ -353,19 +420,43 @@ async def user_delete(self, info: strawberry.types.Info, id: IDType) -> UserResu
 # Relay
 #
 
-# @strawberry.relay.connection(strawberry.relay.ListConnection[UserGQLModel])
-from .BaseGQLModel import Connection
-
-# @strawberry.type(description="")
+from .BaseGQLModel import Connection, List as BaseList
 class UserConnection(Connection[UserGQLModel]):
     pass
 
-# @strawberry.field()
-# async def users(self, after: Optional[int]=0, first: Optional[int]=10, order: Optional[str] = "id", where: Optional[UserInputWhereFilter] = None) -> Connection[UserGQLModel]:
-#     return Connection[UserGQLModel](skip=after, limit=first, where=where, order=order)    
+class UserList(BaseList[UserGQLModel]):
+    pass
 
-@strawberry.field()
-async def users(self, after: Optional[str]=0, first: Optional[int]=10, orderby: Optional[str] = "id", where: Optional[UserInputWhereFilter] = None) -> Connection[UserGQLModel]:
+@strawberry.field(
+        description="Relay definition of users",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+    )
+async def users(
+        self, 
+        # after: Optional[str]=0, 
+        after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
+        first: Optional[int]=10, 
+        orderby: Optional[str] = "id", 
+        where: Optional[UserInputWhereFilter] = None
+    ) -> Connection[UserGQLModel]:
     return UserConnection(skip=after, limit=first, where=where, orderby=orderby)    
 
-
+@strawberry.field(
+        description="users in page",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+    )
+async def user_page2(
+        self, 
+        info: strawberry.Info,
+        # after: Optional[str]=0, 
+        skip: Annotated[Optional[str], strawberry.argument(description="")]=0, 
+        limit: Optional[int]=10, 
+        orderby: Optional[str] = "id", 
+        where: Optional[UserInputWhereFilter] = None
+    ) -> typing.List[UserGQLModel]:
+    executor = UserList()
+    return await executor(info=info, skip=skip, limit=limit, orderby=orderby, where=where)

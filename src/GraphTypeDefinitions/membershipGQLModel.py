@@ -1,7 +1,7 @@
 import datetime
 import strawberry
 import uuid
-from typing import List, Optional, Union, Annotated
+from typing import List, Optional, Union, Annotated, Type
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
@@ -11,17 +11,19 @@ from ._GraphPermissions import (
     RBACPermission
 )
 from ._GraphResolvers import (
-    resolve_id,
-    resolve_name,
-    resolve_name_en,
-    resolve_changedby,
-    resolve_created,
-    resolve_lastchange,
-    resolve_createdby,
+    resolve_field,
+    default_resolver,
+    default_vector_resolver,
+    default_scalar_resolver,
+    default_page_resolver,
+    default_by_id_resolver,
     
     encapsulateInsert,
     encapsulateUpdate,
-    encapsulateDelete
+    encapsulateDelete,
+
+    remove_constructor
+
 )
 
 from src.Dataloaders import (
@@ -32,6 +34,7 @@ from src.DBResolvers import DBResolvers
 GroupGQLModel = Annotated["GroupGQLModel", strawberry.lazy(".groupGQLModel")]
 UserGQLModel = Annotated["UserGQLModel", strawberry.lazy(".userGQLModel")]
 
+@remove_constructor
 @strawberry.federation.type(
     keys=["id"],
     description="""Entity representing a relation between an user and a group""",
@@ -41,26 +44,40 @@ class MembershipGQLModel(BaseGQLModel):
     def getLoader(cls, info):
         return getLoader(info).MembershipModel
 
-    id = resolve_id
-    changedby = resolve_changedby
-    created = resolve_created
-    lastchange = resolve_lastchange
-    createdby = resolve_createdby
+    # id = resolve_id
+    # changedby = resolve_changedby
+    # created = resolve_created
+    # lastchange = resolve_lastchange
+    # createdby = resolve_createdby
    
+    # async def resolve_user(self, info: strawberry.Info):
+    #     from .userGQLModel import UserGQLModel
+    #     user_id = self.user_id if self._data is None else self._data.user_id
+    #     return await UserGQLModel.resolve_reference(info=info, id=user_id)
+
     user = strawberry.field(
         description="""user""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.MembershipModel.user(UserGQLModel)
+        graphql_type=Optional[UserGQLModel],
+        # resolver=default_scalar_resolver(fkey_field_name="user_id", gql_type=Type[UserGQLModel]) # DBResolvers.MembershipModel.user(UserGQLModel)
+        resolver=default_scalar_resolver(fkey_field_name="user_id")
     )
 
+    # async def resolve_group(self, info: strawberry.Info):
+    #     from .groupGQLModel import GroupGQLModel
+    #     group_id = self.group_id if self._data is None else self._data.group_id
+    #     return await GroupGQLModel.resolve_reference(info=info, id=group_id)
+    
     group = strawberry.field(
         description="""group""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.MembershipModel.group(GroupGQLModel)
+        graphql_type=Optional[GroupGQLModel],
+        # resolver=default_scalar_resolver(fkey_field_name="group_id", gql_type=Type[GroupGQLModel])#DBResolvers.MembershipModel.group(GroupGQLModel)
+        resolver=default_scalar_resolver(fkey_field_name="group_id")#DBResolvers.MembershipModel.group(GroupGQLModel)
     )
 
     valid = strawberry.field(
@@ -68,7 +85,8 @@ class MembershipGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.MembershipModel.valid
+        graphql_type=bool,
+        resolver=default_resolver
     )
     
     startdate = strawberry.field(
@@ -76,7 +94,8 @@ class MembershipGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.MembershipModel.startdate
+        graphql_type=datetime.datetime,
+        resolver=default_resolver
     )
     
     enddate = strawberry.field(
@@ -84,7 +103,8 @@ class MembershipGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.MembershipModel.enddate
+        graphql_type=datetime.datetime,
+        resolver=default_resolver
     )
 
     RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
@@ -93,7 +113,8 @@ class MembershipGQLModel(BaseGQLModel):
         permission_classes=[OnlyForAuthentized])
     async def rbacobject(self, info: strawberry.types.Info) -> Optional[RBACObjectGQLModel]:
         from .RBACObjectGQLModel import RBACObjectGQLModel
-        result = None if self.rbacobject is None else await RBACObjectGQLModel.resolve_reference(info, self.group_id)
+        group_id = resolve_field(self=self, field_name="group_id")
+        result = await RBACObjectGQLModel.resolve_reference(info=info, id=group_id)
         return result    
 
 #####################################################################
@@ -121,7 +142,9 @@ membership_page = strawberry.field(
     permission_classes=[
         OnlyForAuthentized
     ],
-    resolver=DBResolvers.MembershipModel.resolve_page(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+    graphql_type=List[MembershipGQLModel],
+    # resolver=DBResolvers.MembershipModel.resolve_page(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
+    resolver=default_page_resolver(whereType=MembershipInputWhereFilter)
 )
 
 membership_by_id = strawberry.field(
@@ -129,7 +152,9 @@ membership_by_id = strawberry.field(
     permission_classes=[
         OnlyForAuthentized
     ],
-    resolver=DBResolvers.MembershipModel.resolve_by_id(MembershipGQLModel)
+    graphql_type=Optional[MembershipGQLModel],
+    # resolver=DBResolvers.MembershipModel.resolve_by_id(MembershipGQLModel)
+    resolver=default_by_id_resolver()
 )
 #####################################################################
 #
@@ -238,3 +263,7 @@ async def membership_insert(self,
     ])
 async def membership_delete(self, info: strawberry.types.Info, id: IDType) -> MembershipResultGQLModel:
     return await encapsulateDelete(info, MembershipGQLModel.getLoader(info), id, MembershipResultGQLModel(msg="ok", id=None))
+
+from .BaseGQLModel import Connection
+class MembershipConnection(Connection[MembershipGQLModel]):
+    pass

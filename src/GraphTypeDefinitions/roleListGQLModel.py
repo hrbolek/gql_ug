@@ -5,13 +5,7 @@ from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
 from ._GraphResolvers import (
-    resolve_id,
-    resolve_changedby,
-    resolve_lastchange,
-    resolve_created,
-    resolve_createdby,
-    resolve_rbacobject,
-
+    remove_constructor
     )
 
 from ._GraphPermissions import (
@@ -176,3 +170,6 @@ async def role_type_list_remove(
     #     await loader.delete(isIn.id)
     return result
     
+from .BaseGQLModel import Connection
+class RoleTypeListConnection(Connection[RoleTypeListGQLModel]):
+    pass

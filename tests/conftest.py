@@ -428,6 +428,7 @@ def runUserInfo(port, user):
     _api_process.start()
     print(f"UserInfoServer started at {port}")
     logging.info(f"UserInfoServer started at {port}")
+    sleep(2)
     yield _api_process
     _api_process.terminate()
     _api_process.join()
