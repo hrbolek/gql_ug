@@ -225,7 +225,9 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        resolver=DBResolvers.UserModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
+        graphql_type=List[RoleGQLModel],
+        # resolver=DBResolvers.UserModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
+        resolver=default_page_resolver(whereType=RoleInputWhereFilter)
     )
 
 

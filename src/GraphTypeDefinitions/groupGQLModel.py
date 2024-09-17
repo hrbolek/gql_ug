@@ -103,6 +103,7 @@ class GroupGQLModel(BaseGQLModel):
     email = strawberry.field(
         description="""Group's email""",
         permission_classes=[OnlyForAuthentized],
+        graphql_type=Optional[str],
         resolver=default_resolver
         )
     
@@ -116,6 +117,7 @@ class GroupGQLModel(BaseGQLModel):
     abbreviation = strawberry.field(
         description="""Group's name abbreviation""",
         permission_classes=[OnlyForAuthentized],
+        graphql_type=Optional[str],
         resolver=default_resolver
         )
 
