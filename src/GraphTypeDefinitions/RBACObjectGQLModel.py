@@ -90,7 +90,7 @@ class RBACObjectGQLModel:
     async def user_can_with_state(self, 
             info: strawberry.types.Info, 
             access: StateDataAccessType, 
-            state_id: Optional[uuid.UUID] = None, 
+            state_id: uuid.UUID, 
             user_id: Optional[uuid.UUID] = None) -> Optional[bool]:
         # user = getUserFromInfo(info=info)
         _user_id = getUserFromInfo(info=info)["id"] if user_id is None else user_id
