@@ -1,6 +1,7 @@
 query ($id: UUID!) {
   result: groupById(id: $id) {
     ...GroupModel
+    ...Coverage
   }
 }
 
@@ -12,5 +13,34 @@ fragment GroupModel on GroupGQLModel {
   nameEn
   rbacobject {
     id
+  }
+  subgroups {
+    id
+    name
+  }
+
+}
+
+fragment Coverage on GroupGQLModel {
+  Subgroups {
+    pageInfo {
+        after
+        before
+        first
+        last
+        hasNextPage
+    }    
+    edges {
+        cursor
+        node {
+            id
+            name
+        }
+    }
+  }
+  Memberships {
+    edges {
+        cursor
+    }
   }
 }

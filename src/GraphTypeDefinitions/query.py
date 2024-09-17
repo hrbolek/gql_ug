@@ -7,7 +7,7 @@ class Query:
         user_by_id, 
         user_page,
         users,
-        user_page2,
+        # user_page2,
         me)
     # user_by_id = user_by_id
     # user_page = user_page

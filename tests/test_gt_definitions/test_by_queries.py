@@ -7,6 +7,7 @@ from .gt_utils import (
 test_user_by_id = createByIdTest2(tableName="users")
 # test_event_by_id = createByIdTest2(tableName="events")
 test_user_page = createTest2(tableName="users", queryName="readp")
+test_user_me = createTest2(tableName="users", queryName="me")
 test_user_insert = createTest2(
     tableName="users", 
     queryName="create", 

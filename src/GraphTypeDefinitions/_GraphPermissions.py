@@ -539,10 +539,20 @@ def RoleBasedPermission(roles: str = ""):
             # self, source, **kwargs
         ) -> bool:
             roleIdsNeeded = await updateRoleIdsNeeded(info=info)
-            rbacobject = getattr(source, "id", None)
+            
+            from ._GraphResolvers import resolve_field
+            # rbacobject = getattr(source, "id", None)
+            rbacobject = resolve_field(self=source, field_name="rbacobject")
+            if rbacobject is None:
+                print(f"WARNING, check code RoleBasedPermission and also data {source} + {source._data}")
+                rbacobject = resolve_field(self=source, field_name="id")
+
             assert rbacobject is not None, f"source rbacobject returned None {source}"
+
+            # set the result if Permission check fail
             self.defaultResult = [] if info._field.type.__class__ == StrawberryList else None
-            # return False
+
+            
             logging.info(f"has_permission {kwargs}")
             # assert False
             activeRoles = await self.getActiveRoles(rbacobject=rbacobject, info=info)

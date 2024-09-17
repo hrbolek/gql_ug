@@ -164,28 +164,36 @@ class GroupGQLModel(BaseGQLModel):
         resolver=default_resolver
     )
 
+    # @strawberry.field(
+    #     description="""Directly commanded groups""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ])
+    # async def subgroups(
+    #     self, info: strawberry.types.Info,
+    #     where: Optional["GroupInputWhereFilter"] = None, 
+    #     skip: Optional[int] = 0, limit: Optional[int] = 100
+    # ) -> List["GroupGQLModel"]:
+    #     wheredict = None if where is None else strawberry.asdict(where)
+    #     extendedfilter = {"mastergroup_id": self.id}
+    #     loader = GroupGQLModel.getLoader(info)
+    #     return await loader.page(skip=skip, limit=limit, orderby="name", where=wheredict, extendedfilter=extendedfilter)
+
+    subgroups = strawberry.field(
+        description="""Directly commanded groups""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=List["GroupGQLModel"],
+        resolver=default_vector_resolver(fkey_field_name="mastergroup_id", whereType=GroupInputWhereFilter)
+    )
+    
     @strawberry.field(
         description="""Directly commanded groups""",
         permission_classes=[
             OnlyForAuthentized
         ])
-    async def subgroups(
-        self, info: strawberry.types.Info,
-        where: Optional["GroupInputWhereFilter"] = None, 
-        skip: Optional[int] = 0, limit: Optional[int] = 100
-    ) -> List["GroupGQLModel"]:
-        wheredict = None if where is None else strawberry.asdict(where)
-        extendedfilter = {"mastergroup_id": self.id}
-        loader = GroupGQLModel.getLoader(info)
-        return await loader.page(skip=skip, limit=limit, orderby="name", where=wheredict, extendedfilter=extendedfilter)
-
-
-    @strawberry.field(
-        description="""Directly commanded groups""",
-        permission_classes=[
-            OnlyForAuthentized
-        ])
-    async def subgroups2(
+    async def _subgroups(
         self, info: strawberry.types.Info,
         where: Optional["GroupInputWhereFilter"] = None, 
         after: Optional[str] = 0, 

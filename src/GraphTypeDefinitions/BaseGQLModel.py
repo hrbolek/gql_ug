@@ -4,6 +4,7 @@ import datetime
 import typing
 import asyncio
 
+from abc import abstractmethod
 import strawberry.types
 
 # IDType = strawberry.ID
@@ -17,7 +18,8 @@ class Node:
 
 @strawberry.type(description="")
 class BaseGQLModel(Node):
-    @classmethod
+    @abstractmethod
+    # @classmethod
     def getLoader(cls, info):
         pass
 
@@ -214,20 +216,20 @@ class List(typing.Generic[ListType]):
         return (listType(result) for result in results)
         
 
-class Page(typing.Generic[ListType]):
-    @cached_property
-    def _ListType(self):
-        cls = type(self)
-        ob0 = cls.__orig_bases__[0]
-        bt = ob0.__args__[0]
-        # print(f"_ConnectionType {cls}, {ob0}, {bt}")
-        return bt
+# class Page(typing.Generic[ListType]):
+#     @cached_property
+#     def _ListType(self):
+#         cls = type(self)
+#         ob0 = cls.__orig_bases__[0]
+#         bt = ob0.__args__[0]
+#         # print(f"_ConnectionType {cls}, {ob0}, {bt}")
+#         return bt
     
-    async def __call__(self, info: strawberry.Info, skip: int=0, limit: int=10, orderby=None, where: dict=None) -> typing.List[ListType]:
-        listType = self._ListType
-        loader = listType.getLoader(info=info)
-        where = None if where is None else strawberry.asdict(where)
-        results = await loader.page(skip=skip, limit=limit, orderby=orderby, where=where)
-        # awaitables = (connectionType.resolve_reference(info=info, id=result.id) for result in results)
-        # awaited = await asyncio.gather(*awaitables)
-        return (listType(result) for result in results)    
+#     async def __call__(self, info: strawberry.Info, skip: int=0, limit: int=10, orderby=None, where: dict=None) -> typing.List[ListType]:
+#         listType = self._ListType
+#         loader = listType.getLoader(info=info)
+#         where = None if where is None else strawberry.asdict(where)
+#         results = await loader.page(skip=skip, limit=limit, orderby=orderby, where=where)
+#         # awaitables = (connectionType.resolve_reference(info=info, id=result.id) for result in results)
+#         # awaited = await asyncio.gather(*awaitables)
+#         return (listType(result) for result in results)    
