@@ -123,7 +123,7 @@ def default_by_id_resolver():
 @strawberry.field(
     description="""Name """,
     permission_classes=[OnlyForAuthentized])
-def resolve_name(self) -> str:
+def resolve_name(self) -> typing.Optional[str]:
     return resolve_field(self=self, field_name="name")
 
 @strawberry.field(

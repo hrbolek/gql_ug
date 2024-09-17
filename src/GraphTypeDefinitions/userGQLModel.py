@@ -106,7 +106,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=str,
+        graphql_type=Optional[str],
         resolver=default_resolver
     )  
 
@@ -115,7 +115,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=str,
+        graphql_type=Optional[str],
         resolver=default_resolver
     )  
 
@@ -124,7 +124,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=str,
+        graphql_type=Optional[str],
         resolver=default_resolver
     )  
 
@@ -133,6 +133,7 @@ class UserGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
+        graphql_type=Optional[str],
         resolver=default_resolver
     )
 
