@@ -153,7 +153,7 @@ class GroupGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=GroupTypeGQLModel,
+        graphql_type=Optional[GroupTypeGQLModel],
         # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
         resolver=default_scalar_resolver(fkey_field_name="type_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
     )
@@ -163,6 +163,7 @@ class GroupGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
+        graphql_type=Optional[IDType],
         resolver=default_resolver
     )
 
@@ -190,23 +191,23 @@ class GroupGQLModel(BaseGQLModel):
         resolver=default_vector_resolver(fkey_field_name="mastergroup_id", whereType=GroupInputWhereFilter)
     )
     
-    @strawberry.field(
-        description="""Directly commanded groups""",
-        permission_classes=[
-            OnlyForAuthentized
-        ])
-    async def _subgroups(
-        self, info: strawberry.types.Info,
-        where: Optional["GroupInputWhereFilter"] = None, 
-        after: Optional[str] = 0, 
-        first: Optional[int] = 100,
-        orderby: Optional[str] = "id"
-    ) -> Connection["GroupGQLModel"]:
-        extendedfilter = {"mastergroup_id": self.id()}
-        print(f"extendedfilter {extendedfilter}")
-        items = GroupConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)
-        # results = [GroupGQLModel(item) for item in items]
-        return items
+    # @strawberry.field(
+    #     description="""Directly commanded groups""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ])
+    # async def _subgroups(
+    #     self, info: strawberry.types.Info,
+    #     where: Optional["GroupInputWhereFilter"] = None, 
+    #     after: Optional[str] = 0, 
+    #     first: Optional[int] = 100,
+    #     orderby: Optional[str] = "id"
+    # ) -> Connection["GroupGQLModel"]:
+    #     extendedfilter = {"mastergroup_id": self.id()}
+    #     print(f"extendedfilter {extendedfilter}")
+    #     items = GroupConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)
+    #     # results = [GroupGQLModel(item) for item in items]
+    #     return items
 
     # @strawberry.field(
     #     description="""Commanding group""",
@@ -258,35 +259,20 @@ class GroupGQLModel(BaseGQLModel):
         resolver=default_vector_resolver(fkey_field_name="group_id", whereType=MembershipInputWhereFilter)
     )
     
-    @strawberry.field(description="Relay definition of memberships")
-    async def _memberships(
-            self, 
-            # after: Optional[str]=0, 
-            after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
-            first: Optional[int]=10, 
-            orderby: Optional[str] = "id", 
-            where: Optional[GroupInputWhereFilter] = None
-        ) -> Connection[MembershipGQLModel]:
-        from .membershipGQLModel import MembershipConnection
-        group_id = self.id if self._data is None else self._data.id
-        extendedfilter = {"group_id": group_id}
-        return MembershipConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)    
-    # @strawberry.field(
-    #     description="""List of roles in the group""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ])
-    # async def roles(
-    #     self, info: strawberry.types.Info, where: Optional[RoleInputWhereFilter] = None, skip: Optional[int] = 0, limit: Optional[int] = 1000
-    # ) -> List["RoleGQLModel"]:
-    #     # result = await resolveRolesForGroup(session,  self.id)
-    #     from .roleGQLModel import RoleGQLModel
-    #     wheredict = None if where is None else strawberry.asdict(where)
-    #     extendedfilter = {"group_id": self.id}
-    #     loader = RoleGQLModel.getLoader(info)
-    #     result = await loader.page(skip=skip, limit=limit, where=wheredict, extendedfilter=extendedfilter)
-    #     return result
-
+    # @strawberry.field(description="Relay definition of memberships")
+    # async def _memberships(
+    #         self, 
+    #         # after: Optional[str]=0, 
+    #         after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
+    #         first: Optional[int]=10, 
+    #         orderby: Optional[str] = "id", 
+    #         where: Optional[GroupInputWhereFilter] = None
+    #     ) -> Connection[MembershipGQLModel]:
+    #     from .membershipGQLModel import MembershipConnection
+    #     group_id = self.id if self._data is None else self._data.id
+    #     extendedfilter = {"group_id": group_id}
+    #     return MembershipConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)   
+     
     roles = strawberry.field(
         description="""List of roles in the group""",
         permission_classes=[
