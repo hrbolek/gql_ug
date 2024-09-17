@@ -61,7 +61,7 @@ class RoleGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=datetime.datetime,
+        graphql_type=Optional[datetime.datetime],
         resolver=default_resolver
     )
     
@@ -70,7 +70,7 @@ class RoleGQLModel(BaseGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=datetime.datetime,
+        graphql_type=Optional[datetime.datetime],
         resolver=default_resolver
     )
    
