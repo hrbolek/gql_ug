@@ -29,7 +29,7 @@ class BaseGQLModel(Node):
             
             loader = cls.getLoader(info)
             if isinstance(id, str): id = uuid.UUID(id)
-            print(f"loading {cls}(id={id})")
+            # print(f"loading {cls}(id={id})")
             result = await loader.load(id)
             return None if result is None else cls(result)
             # if result is not None:

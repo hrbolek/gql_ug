@@ -8,7 +8,8 @@ from .MembershipModel import MembershipModel
 from .GroupModel import (
     GroupModel,
     GroupTypeModel,
-    GroupCategoryModel
+    GroupCategoryModel,
+    createGroupPaths
     )
 from .RoleModel import (
     RoleModel,

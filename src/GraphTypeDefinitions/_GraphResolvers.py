@@ -17,13 +17,9 @@ def remove_constructor(cls):
     return cls
 
 def resolve_field(*, self, field_name):
-    data = getattr(self, "_data", None)
-    if data is None:
-        data = self
-        value = getattr(self, field_name, None)
-    else:
-        value = getattr(data, field_name, None)
-    print(f"query for {field_name}@{data}={value}")
+    _data = getattr(self, "_data", self)
+    value = getattr(_data, field_name, None)
+    # print(f"query for {field_name}@{_data}={value}")
     return value
 
 @strawberry.field(description="""Entity primary key""")
@@ -34,6 +30,7 @@ def default_resolver(self, info: strawberry.types.Info) -> str:
     # print("default_resolver")
     return resolve_field(self=self, field_name=info.field_name)
 
+from strawberry.types.base import StrawberryList, StrawberryOptional
 def resolveResultType(info: strawberry.types.Info):
     return_type = info.return_type
     if (return_type.__class__.__name__ == "StrawberryOptional"):

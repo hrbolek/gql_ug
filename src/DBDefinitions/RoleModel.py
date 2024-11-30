@@ -30,4 +30,5 @@ class RoleModel(BaseModel):
     roletype = relationship("RoleTypeModel", viewonly=True)
     user = relationship("UserModel", foreign_keys=[user_id], viewonly=True)
     group = relationship("GroupModel", viewonly=True)
+    memberships = relationship("MembershipModel", viewonly=True, uselist=True, primaryjoin="foreign(MembershipModel.group_id)==(RoleModel.group_id)")
 

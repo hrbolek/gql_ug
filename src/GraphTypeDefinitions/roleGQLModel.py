@@ -1,6 +1,7 @@
 import datetime
 import strawberry
 import uuid
+import asyncio
 from typing import List, Optional, Union, Annotated
 from uoishelpers.resolvers import createInputs
 
@@ -170,6 +171,9 @@ from sqlalchemy import select
 
 async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: Optional[IDType] = None) -> List["RoleGQLModel"]:
     # ve vsech skupinach, kde je user clenem najdi vsechny role a ty vrat
+    if filter_user_id is not None:
+        return await resolve_roles_on_user_with_user(self, info=info, user_id=user_id,filter_user_id=filter_user_id)
+    
     from .membershipGQLModel import MembershipGQLModel
     loaderm = MembershipGQLModel.getLoader(info)
     rows = await loaderm.filter_by(user_id = user_id)
@@ -179,17 +183,48 @@ async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDTy
         select(RoleModel).
         where(RoleModel.group_id.in_(groupids))
     )
-    if filter_user_id is not None:
-        stmt = stmt.filter(RoleModel.user_id == filter_user_id)
+    # if filter_user_id is not None:
+    #     stmt = stmt.filter(RoleModel.user_id == filter_user_id)
         # print("filtered to", filter_user_id, flush=True)
     loader = RoleGQLModel.getLoader(info)
     rows = await loader.execute_select(stmt)
     return rows
 
+async def resolve_roles_on_user_with_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
+    loaderr = RoleGQLModel.getLoader(info=info)
+    stmtr = loaderr.getSelectStatement()
+    modelr = loaderr.getModel()
+    stmtr = stmtr.filter_by(user_id=filter_user_id).join(modelr.memberships).where(modelr.user_id==user_id)
+    rows = await loaderr.execute_select(stmtr)
+    return rows
+
+async def resolve_roles_on_group_with_user(self, info: strawberry.types.Info, group_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
+    from .groupGQLModel import GroupGQLModel
+    loaderg = GroupGQLModel.getLoader(info=info)
+    # modelg = loaderg.getModel()
+    # print(f"loading group {group_id}")
+    group = await loaderg.load(group_id)
+    # print(f"got group {group}")
+    if group is None:
+        return []
+    path = group.path
+    ids = path.split("/")
+    ids = [IDType(id) for id in ids]
+    loaderr = RoleGQLModel.getLoader(info=info)
+    stmtr = loaderr.getSelectStatement()
+    modelr = loaderr.getModel()
+    stmtr = stmtr.filter_by(user_id=filter_user_id).where(modelr.group_id.in_(ids))
+    rows = await loaderr.execute_select(stmtr)
+    return rows
+
 async def resolve_roles_on_group(self, info: strawberry.types.Info, group_id: IDType, filter_user_id: Optional[IDType] = None) -> List["RoleGQLModel"]:
     # najdi vsechny role pro skupinu a nadrizene skupiny
+    if filter_user_id is not None:
+        return await resolve_roles_on_group_with_user(self, info=info, group_id=group_id, filter_user_id=filter_user_id)
+    
     from .groupGQLModel import GroupGQLModel
     grouploader = GroupGQLModel.getLoader(info)
+    # TODO refactor with the help of materialized path
     groupids = []
     cid = group_id
     while cid is not None:
@@ -334,6 +369,36 @@ async def role_insert(self,
     ])
 async def role_delete(self, info: strawberry.types.Info, id: IDType) -> RoleResultGQLModel:
     return await encapsulateDelete(info, RoleGQLModel.getLoader(info), id, RoleResultGQLModel(msg="ok", id=None))
+
+@strawberry.type(description="")
+class RBACItem:
+    rbac_id: IDType
+    roles: List[RoleGQLModel]
+
+async def resolve_rbac_with_user(self, info: strawberry.types.Info, rbac_id: IDType, user_id: IDType):
+    from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group
+    awaitableresult0 = resolve_roles_on_user(None, info, user_id=rbac_id, filter_user_id=user_id)
+    awaitableresult1 = resolve_roles_on_group(None, info, group_id=rbac_id, filter_user_id=user_id)
+    result0, result1 = await asyncio.gather(awaitableresult0, awaitableresult1)
+    roles = [*result0, *result1]
+    return roles
+
+@strawberry.field(description="")
+async def resolveRBACs(self, info: strawberry.types.Info, rbac_ids: List[IDType], user_id: IDType) -> List[RBACItem]:
+    from .roleGQLModel import RoleGQLModel
+    # resolvedroles = await asyncio.gather(RBACObjectGQLModel.resolve_reference(info=info, id=id) for id in rbac_ids)
+    print("resolveRBACs", [type(id) for id in rbac_ids], flush=True)
+    _rbac_ids = [rbac_id if isinstance(rbac_id, IDType) else IDType(rbac_id) for rbac_id in rbac_ids]
+    # print("resolveRBACs", [type(id) for id in _rbac_ids])
+    futures = (resolve_rbac_with_user(self, info=info, rbac_id=rbac_id, user_id=user_id) for rbac_id in _rbac_ids)
+    resolvedroles = await asyncio.gather(*futures)
+    print("resolveRBACs", resolvedroles, flush=True)
+    result = [
+        RBACItem(rbac_id=rbac_id, roles=[RoleGQLModel(role) for role in roles]) 
+        for rbac_id, roles in zip(rbac_ids, resolvedroles)]
+
+    return result
+
 
 from .BaseGQLModel import Connection
 class RoleConnection(Connection[RoleGQLModel]):

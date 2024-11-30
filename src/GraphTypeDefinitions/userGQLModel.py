@@ -228,7 +228,7 @@ class UserGQLModel(BaseGQLModel):
         ],
         graphql_type=List[RoleGQLModel],
         # resolver=DBResolvers.UserModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
-        resolver=default_page_resolver(whereType=RoleInputWhereFilter)
+        resolver=default_vector_resolver(fkey_field_name="user_id", whereType=RoleInputWhereFilter)
     )
 
 

@@ -16,7 +16,7 @@ import logging.handlers
 
 from src.GraphTypeDefinitions import schema
 from src.DBDefinitions import startEngine, ComposeConnectionString
-from src.DBFeeder import initDB
+from src.DBFeeder import initDB, createGroupPaths
 from uoishelpers.authenticationMiddleware import createAuthentizationSentinel
 
 # region logging setup
@@ -86,7 +86,12 @@ async def RunOnceAndReturnSessionMaker():
     # zde definujte do funkce asyncio.gather
     # vlozte asynchronni funkce, ktere maji data uvest do prvotniho konzistentniho stavu
     # await initDB(result)
-    coroutine = initDB(result)
+    async def initAnd_(SessionMaker):
+        await initDB(SessionMaker)
+        await createGroupPaths(SessionMaker)
+        print(f"data ready, paths created", flush=True)
+
+    coroutine = initAnd_(result)
     asyncio.create_task(coroutine)
     
     #

@@ -5,6 +5,8 @@ import logging
 import asyncio
 
 from typing import List, Optional, Union, Annotated, Type
+
+import strawberry.types
 from .BaseGQLModel import BaseGQLModel, IDType, Connection
 from uoishelpers.resolvers import createInputs
 
@@ -191,6 +193,7 @@ class GroupGQLModel(BaseGQLModel):
         resolver=default_vector_resolver(fkey_field_name="mastergroup_id", whereType=GroupInputWhereFilter)
     )
     
+
     # @strawberry.field(
     #     description="""Directly commanded groups""",
     #     permission_classes=[
@@ -229,6 +232,34 @@ class GroupGQLModel(BaseGQLModel):
         # resolver=default_scalar_resolver(fkey_field_name="mastergroup_id", gql_type=Type["GroupGQLModel"])
         resolver=default_scalar_resolver(fkey_field_name="mastergroup_id")
     )
+
+    @strawberry.field(
+        description="""Commanding groups ordered from highest to lowest""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=List["GroupGQLModel"])
+    async def mastergroups(self, info: strawberry.types.Info):
+        path = self._data.path 
+        ids = [] if path is None else path.split('/')[:-1]
+        print(f"path {path}", flush=True)
+        print(f"ids {ids}", flush=True)
+        futures = [GroupGQLModel.resolve_reference(info=info, id=id) for id in ids]
+        result = await asyncio.gather(*futures)
+        return result
+
+
+    @strawberry.field(
+        description="""""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=Optional[str])
+    async def path(self, info: strawberry.types.Info):
+        path = self._data.path 
+        return path
+
+
     # @strawberry.field(
     #     description="""List of users who are member of the group""",
     #     permission_classes=[
@@ -440,12 +471,13 @@ class GroupUpdateGQLModel:
 class GroupInsertGQLModel:
     name: str
     grouptype_id: IDType
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
+    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid4)
     name_en: Optional[str] = None
     mastergroup_id: Optional[IDType] = None
     valid: Optional[bool] = None
     abbreviation: Optional[str] = None
     email: Optional[str] = None
+    path: strawberry.Private[str] = None
     createdby: strawberry.Private[IDType] = None
     rbacobject: strawberry.Private[IDType] = None
 
@@ -517,6 +549,10 @@ class InsertGroupPermission(RBACPermission):
     ])
 async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLModel) -> Optional[GroupResultGQLModel]:
     group.rbacobject = group.id
+    if group.mastergroup_id is not None:
+        loader = GroupGQLModel.getLoader(info=info)
+        master = await loader.load(group.mastergroup_id)
+    group.path = f"{group.id}" if group.mastergroup_id is None else f"{master.path}/{group.id}"
     return await encapsulateInsert(info, GroupGQLModel.getLoader(info), group, GroupResultGQLModel(id=group.id, msg="ok"))
 
 

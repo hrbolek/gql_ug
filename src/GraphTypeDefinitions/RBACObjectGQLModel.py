@@ -115,7 +115,8 @@ class RBACObjectGQLModel:
         permission_classes=[OnlyForAuthentized])
     async def user_can_without_state(self, 
             info: strawberry.types.Info, 
-            roles_needed: List[str] = strawberry.argument(description="role type names needed to have access"),
+            roles_needed: List[str], # = strawberry.argument(description="role type names needed to have access"),
+            # setthistottrue: bool,
             # strawberry.types.StrawberryArgument(description="roles needed to have access", ),           
             user_id: Optional[uuid.UUID] = None) -> Optional[bool]:
         
@@ -168,3 +169,5 @@ async def rbac_by_id(
 ) -> Optional["RBACObjectGQLModel"]:
     result = await RBACObjectGQLModel.resolve_reference(info=info, id=id)
     return result
+
+
