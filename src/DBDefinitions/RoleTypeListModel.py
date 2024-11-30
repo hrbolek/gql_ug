@@ -1,3 +1,4 @@
+import uuid
 import sqlalchemy
 from sqlalchemy import (
     Column,
@@ -6,10 +7,9 @@ from sqlalchemy import (
     DateTime,
     Boolean,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
-from .UUID import UUIDColumn, UUIDFKey
-from .Base import BaseModel
+from .BaseModel import BaseModel, UUIDFKey
 
 
 class RoleTypeListModel(BaseModel):
@@ -17,7 +17,6 @@ class RoleTypeListModel(BaseModel):
 
     __tablename__ = "roletypelists"
 
-    id = UUIDColumn()
-    type_id = Column(ForeignKey("roletypes.id"), index=True, nullable=True)
-    list_id = UUIDFKey(comment="list which item belongs to")#Column(ForeignKey("users.id"), index=True, nullable=True)
+    type_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("roletypes.id"), index=True, nullable=True, default=None)
+    list_id: Mapped[uuid.UUID] = UUIDFKey(comment="list which item belongs to")#Column(ForeignKey("users.id"), index=True, nullable=True)
 

@@ -1,18 +1,18 @@
 import sqlalchemy
 from sqlalchemy.schema import Column
 from sqlalchemy import Uuid, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .UUID import uuid, UUIDFKey, UUIDColumn
-from .Base import BaseModel
+from .BaseModel import BaseModel
 
 class StateTransitionModel(BaseModel):
+    """Represents transitions between states in a state machine."""
+
     __tablename__ = "statetransitions"
 
-    id = UUIDColumn()
-    name = Column(String, comment="name of state transition")
-    name_en = Column(String, comment="english name of state transition")
+    name: Mapped[str] = mapped_column(String, comment="Name of state transition", nullable=True, default=None)
+    name_en: Mapped[str] = mapped_column(String, comment="English name of state transition", nullable=True, default=None)
 
-    source_id = Column(ForeignKey("states.id"), index=True, nullable=False)
-    target_id = Column(ForeignKey("states.id"), index=True, nullable=False)
-    statemachine_id = Column(ForeignKey("statemachines.id"), index=True, nullable=False)
+    source_id: Mapped[int] = mapped_column(ForeignKey("states.id"), index=True, nullable=True, default=None)
+    target_id: Mapped[int] = mapped_column(ForeignKey("states.id"), index=True, nullable=True, default=None)
+    statemachine_id: Mapped[int] = mapped_column(ForeignKey("statemachines.id"), index=True, nullable=True, default=None)

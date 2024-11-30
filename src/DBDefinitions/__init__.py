@@ -1,60 +1,34 @@
 import sqlalchemy
 
-        
-from .Base import BaseModel
-from .UUID import UUIDColumn
+import logging
+# Set up logging to see the queries
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+
+
+from .BaseModel import BaseModel
+
 from .UserModel import UserModel
+from .UserTypeModel import UserTypeModel
 from .MembershipModel import MembershipModel
 from .GroupModel import (
     GroupModel,
-    GroupTypeModel,
-    GroupCategoryModel,
+    # GroupTypeModel,
+    # GroupCategoryModel,
     createGroupPaths
     )
-from .RoleModel import (
-    RoleModel,
-    RoleTypeModel,
-    RoleCategoryModel
-)
+from .GroupTypeModel import GroupTypeModel
+from .GroupCategoryModel import GroupCategoryModel
+from .RoleModel import RoleModel
+from .RoleTypeModel import RoleTypeModel
+from .RoleCategoryModel import RoleCategoryModel
 from .RoleTypeListModel import RoleTypeListModel
 
 from .StateTransitionModel import StateTransitionModel
-from .StateMachineModel import (
-    StateMachineModel,
-    StatemachineTypeModel,
-    StatemachineCategoryModel
-)
+from .StateMachineModel import StateMachineModel
+from .StateMachineTypeModel import StateMachineTypeModel
+from .StateMachineCategoryModel import StateMachineCategoryModel
 from .StateModel import StateModel
-
-systemModels = [
-    RoleCategoryModel,
-    RoleTypeModel,
-    GroupCategoryModel,
-    GroupTypeModel,
-    StatemachineCategoryModel,
-    StatemachineTypeModel
-]
-
-allModels = [
-    RoleCategoryModel,
-    RoleTypeModel,
-    GroupCategoryModel,
-    GroupTypeModel,
-
-    UserModel,
-    GroupModel,
-    RoleModel,
-
-    MembershipModel,
-
-    RoleTypeListModel,
-
-    StatemachineCategoryModel,
-    StatemachineTypeModel,
-    StateMachineModel,
-    StateModel,
-    StateTransitionModel
-]
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session

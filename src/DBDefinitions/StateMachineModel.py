@@ -1,20 +1,21 @@
+import uuid
 import sqlalchemy
-from sqlalchemy.schema import Column
-from sqlalchemy import Uuid, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .UUID import uuid, UUIDFKey, UUIDColumn
-from .Base import BaseModel
-
-from .utils import createTypeAndCategory
-StatemachineTypeModel, StatemachineCategoryModel = createTypeAndCategory(tableNamePrefix="statemachine")
+from .BaseModel import BaseModel
 
 class StateMachineModel(BaseModel):
     __tablename__ = "statemachines"
 
-    id = UUIDColumn()
-    name = Column(String, comment="name of type")
-    name_en = Column(String, comment="english name of type")
+    name: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="Name of the state"
+    )
+    name_en: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="English name of the state"
+    )
 
-    type_id = Column(ForeignKey("statemachinetypes.id"), index=True, nullable=True)
+    type_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("statemachinetypes.id"), index=True, nullable=True, default=None)
     states = relationship("StateModel", uselist=True, viewonly=True)

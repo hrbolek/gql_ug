@@ -1,4 +1,6 @@
 import sqlalchemy
+import typing
+import uuid
 from sqlalchemy import (
     Uuid,
     Column,
@@ -10,42 +12,79 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from .Base import (BaseModel, uuid4)
+from .BaseModel import BaseModel
 
 
-from .utils import createTypeAndCategory
-GroupTypeModel, GroupCategoryModel = createTypeAndCategory(tableNamePrefix="group")
-print("GroupTypeModel", GroupTypeModel.__name__)
+# from .utils import createTypeAndCategory
+# GroupTypeModel, GroupCategoryModel = createTypeAndCategory(tableNamePrefix="group")
+# print("GroupTypeModel", GroupTypeModel.__name__)
+
+import datetime
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+
 class GroupModel(BaseModel):
-    """Spravuje data spojena se skupinou"""
+    """Manages data associated with a group."""
 
     __tablename__ = "groups"
-    id = Column(Uuid, primary_key=True, index=True, comment="primary key", default=uuid4)
-    
-    # https://stackoverflow.com/questions/59132388/postgres-materialized-path-what-are-the-benefits-of-using-ltree
-    # IDA/IDB/SELF
-    path = Column(String, index=True, comment="materialized path technique, not implemented") 
 
-    name = Column(String, comment="name of the group")
-    name_en = Column(String, comment="english name of the group")
-    abbreviation = Column(String, comment="name abbreviation of the group")
-    email = Column(String, comment="can be an email for whole group")
+    # Materialized path technique
+    path: Mapped[str] = mapped_column(
+        index=True,
+        nullable=True,
+        default=None,
+        comment="Materialized path technique, not implemented"
+    )
 
-    startdate = Column(DateTime, comment="born date of the group")
-    enddate = Column(DateTime, comment="date when group `died`")
-    valid = Column(Boolean, default=True, comment="if the group still exists")
+    name: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="Name of the group"
+    )
+    name_en: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="English name of the group"
+    )
+    abbreviation: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="Name abbreviation of the group"
+    )
+    email: Mapped[str] = mapped_column(
+        nullable=True, default=None,
+        comment="Email for the entire group"
+    )
 
-    grouptype_id = Column(ForeignKey("grouptypes.id"), index=True, comment="link to the group type (aka faculty)")
+    startdate: Mapped[datetime.datetime] = mapped_column(
+        nullable=True, default=None,
+        comment="Born date of the group"
+    )
+    enddate: Mapped[datetime.datetime] = mapped_column(
+        nullable=True, default=None,
+        comment="Date when the group 'died'"
+    )
+    valid: Mapped[bool] = mapped_column(
+        nullable=True, 
+        default=True, 
+        comment="If the group still exists"
+    )
+
+    grouptype_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("grouptypes.id"),
+        index=True, nullable=True, default=None,
+        comment="Link to the group type (aka faculty)"
+    )
+
+    mastergroup_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("groups.id"),
+        index=True,
+        nullable=True, default=None,
+        comment="Link to the commanding group"
+    )
 
     @hybrid_property
-    def type_id(self):
+    def type_id(self) -> typing.Optional[uuid.UUID]:
         return self.grouptype_id
-    
-
-    mastergroup_id = Column(ForeignKey("groups.id"), index=True, comment="link to the commanding group")
 
     mastergroup = relationship("GroupModel", viewonly=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
-    subgroups = relationship ("GroupModel", remote_side=[id], viewonly=True, uselist=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
+    subgroups = relationship ("GroupModel", remote_side="GroupModel.id", viewonly=True, uselist=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
     # https://docs.sqlalchemy.org/en/20/_modules/examples/materialized_paths/materialized_paths.html
 
 
@@ -69,7 +108,7 @@ async def createGroupPaths(asyncsessionmaker):
             group.path = f"{group.id}"
         await session.commit()
         groupinfos = {group.id: {"id": group.id, "path": f"{group.path}"} for group in groupstoupdate}
-        print(f"groupinfos: {groupinfos}", flush=True)
+        # print(f"groupinfos: {groupinfos}", flush=True)
     
     while len(groupinfos) > 0:
         idsToQuery = [group["id"] for group in groupinfos.values()]
@@ -85,6 +124,6 @@ async def createGroupPaths(asyncsessionmaker):
                 group.path = f"{masterpath}/{group.id}"
             await session.commit()
             groupinfos = {group.id: {"id": group.id, "path": f"{group.path}"} for group in groupstoupdate}
-        print(f"groupinfos: {groupinfos}", flush=True)
+        # print(f"groupinfos: {groupinfos}", flush=True)
 
     pass

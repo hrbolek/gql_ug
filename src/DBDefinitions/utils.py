@@ -3,8 +3,7 @@ from sqlalchemy.schema import Column
 from sqlalchemy import Uuid, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .UUID import UUIDFKey, UUIDColumn
-from .Base import BaseModel
+from .BaseModel import BaseModel, UUIDFKey, UUIDColumn
 
 def createTypeAndCategory(tableNamePrefix: str):
     "returns SQLModels named {tableNamePrefix}TypeModel, {tableNamePrefix}Category, describing tables {tableNamePrefix}types, {tableNamePrefix}categories "

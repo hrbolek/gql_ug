@@ -11,12 +11,12 @@ from src.DBDefinitions import (
     StateModel,
     StateMachineModel,
     StateTransitionModel,
-    StatemachineTypeModel,
-    StatemachineCategoryModel
+    StateMachineTypeModel,
+    StateMachineCategoryModel
     )
 
 StateResolvers = DBResolver(StateModel)
 StateMachineResolvers = DBResolver(StateMachineModel)
 StateTransitionResolvers = DBResolver(StateTransitionModel)
-StatemachineTypeResolvers = DBResolver(StatemachineTypeModel)
-StatemachineCategoryResolvers = DBResolver(StatemachineCategoryModel)
+StatemachineTypeResolvers = DBResolver(StateMachineTypeModel)
+StatemachineCategoryResolvers = DBResolver(StateMachineCategoryModel)

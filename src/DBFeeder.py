@@ -1,16 +1,29 @@
 from functools import cache
 from src.DBDefinitions import (
     BaseModel,
-    systemModels,
-    allModels,
-    createGroupPaths
-    # GroupTypeModel, 
-    # RoleTypeModel,
-    # RoleCategoryModel,
-    # UserModel,
-    # GroupModel,
-    # MembershipModel,
-    # RoleModel,
+    createGroupPaths,
+
+    UserModel,
+    UserTypeModel,
+    
+    GroupModel,
+    GroupTypeModel,
+    GroupCategoryModel,
+
+    MembershipModel,
+
+    RoleModel,
+    RoleTypeModel,
+    RoleCategoryModel,
+
+    RoleTypeListModel,
+
+    StateModel,
+    StateTransitionModel,
+    StateMachineModel,
+    StateMachineTypeModel,
+    StateMachineCategoryModel,
+
 )
 
 
@@ -937,10 +950,30 @@ def get_demodata():
 async def initDB(asyncSessionMaker):
 
     DEMODATA = os.environ.get("DEMODATA", None) in ["True", "true"]        
+    dbModels = [
+        GroupCategoryModel,
+        GroupTypeModel,
+
+        RoleCategoryModel,
+        RoleTypeModel,
+
+        UserTypeModel,
+        
+        StateMachineCategoryModel,
+        StateMachineTypeModel
+    ]
     if DEMODATA:
-        dbModels = allModels
-    else:
-        dbModels = systemModels
+        dbModels.extend(
+            [
+                StateMachineModel,
+                UserModel,
+                GroupModel,
+                RoleModel,
+                StateModel,
+                StateTransitionModel,
+                MembershipModel
+            ]
+        )
        
     jsonData = get_demodata()
     await ImportModels(asyncSessionMaker, dbModels, jsonData)
