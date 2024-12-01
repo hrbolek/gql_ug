@@ -1,41 +1,43 @@
 import datetime
 import strawberry
-import uuid
+from dataclasses import dataclass
+
 from typing import List, Optional, Union, Annotated
 import typing
 import strawberry.types
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
+from .NamedGQLModel import NamedGQLModel
 from ._GraphPermissions import (
     RoleBasedPermission, 
     OnlyForAuthentized,
     RBACPermission,
     OnlyForAdmins
 )
-from ._GraphResolvers import (
-    encapsulateInsert,
-    encapsulateUpdate,
-    encapsulateDelete,
+from uoishelpers.resolvers import (
+    getLoadersFromInfo,
 
-    remove_constructor,
+    ScalarResolver,
+    VectorResolver,
+    PageResolver,
 
-    default_scalar_resolver,
-    default_vector_resolver,
-    default_page_resolver
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
 )
-
-from src.Dataloaders import (
-    getLoadersFromInfo as getLoader,
-    getUserFromInfo)
-from src.DBResolvers import DBResolvers
+from uoishelpers.gqlpermissions import (
+    SimpleDeletePermission,
+    SimpleInsertPermission,
+    SimpleUpdatePermission
+)
 
 GroupTypeGQLModel = Annotated["GroupTypeGQLModel", strawberry.lazy(".groupTypeGQLModel")]
 GroupTypeInputWhereFilter = Annotated["GroupTypeInputWhereFilter", strawberry.lazy(".groupTypeGQLModel")]
-RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
 
-from .utils import createInputs
-from dataclasses import dataclass
 
 @createInputs
 @dataclass
@@ -43,28 +45,21 @@ class GroupCategoryInputWhereFilter:
     id: IDType
     name: str
 
-@remove_constructor
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a group category (like Academic structures)"""
 )
-class GroupCategoryGQLModel(BaseGQLModel):
+class GroupCategoryGQLModel(NamedGQLModel):
     @classmethod
     def getLoader(cls, info):
-        return getLoader(info).GroupCategoryModel
+        return getLoadersFromInfo(info).GroupCategoryModel
 
-    from ._GraphResolvers import (
-        resolve_name as name,
-        resolve_name_en as name_en,
-        resolve_rbacobject as rbacobject
-    )
-
-    types = strawberry.field(
+    types: typing.List[GroupTypeGQLModel] = strawberry.field(
         description="",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=typing.List[GroupTypeGQLModel],
-        resolver=default_vector_resolver(fkey_field_name="category_id", whereType=GroupTypeInputWhereFilter)
+        # graphql_type=typing.List[GroupTypeGQLModel],
+        resolver=VectorResolver[GroupTypeGQLModel](fkey_field_name="category_id", whereType=GroupTypeInputWhereFilter)
     )
 
 #####################################################################
@@ -132,16 +127,17 @@ group_category_page = strawberry.field(
         OnlyForAuthentized
     ],
     graphql_type=typing.List[GroupCategoryGQLModel],
-    resolver=default_page_resolver(whereType=GroupCategoryInputWhereFilter)
+    resolver=PageResolver[GroupCategoryGQLModel](whereType=GroupCategoryInputWhereFilter)
 )
 
-@strawberry.field(
+group_category_by_id = strawberry.field(
     description="""Finds a group category by its id""",
     permission_classes=[
         OnlyForAuthentized
-    ])
-async def group_category_by_id(self, info: strawberry.types.Info, id: IDType) -> typing.Optional[GroupCategoryGQLModel]:
-    return await GroupCategoryGQLModel.resolve_reference(info=info, id=id)
+    ],
+    graphql_type=typing.Optional[GroupCategoryGQLModel],
+    resolver=GroupCategoryGQLModel.load_with_loader
+    )
 
 #####################################################################
 #
@@ -156,54 +152,43 @@ class GroupCategoryUpdateGQLModel:
     lastchange: datetime.datetime
     name: Optional[str] = None
     name_en: Optional[str] = None
-    changedby: strawberry.Private[IDType] = None
+    changedby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="")
 class GroupCategoryInsertGQLModel:
     id: Optional[IDType] = None
     name: Optional[str] = None
     name_en: Optional[str] = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
 
-@strawberry.type(description="")
-class GroupCategoryResultGQLModel:
-    id: IDType = None
-    msg: str = None
-
-    @strawberry.field(description="""Result of groupcategory operation""")
-    async def category(self, info: strawberry.types.Info) -> Union[GroupCategoryGQLModel, None]:
-        result = await GroupCategoryGQLModel.resolve_reference(info, self.id)
-        return result
-    
+@strawberry.input(description="")
+class GroupCategoryDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
+   
 @strawberry.mutation(
     description="""Allows an update of group category""",
     permission_classes=[
         OnlyForAuthentized,
-        OnlyForAdmins
+        SimpleUpdatePermission[GroupCategoryGQLModel](roles=["administrátor"])
     ])
-async def group_category_update(self, info: strawberry.types.Info, group_category: GroupCategoryUpdateGQLModel) -> GroupCategoryResultGQLModel:
-    return await encapsulateUpdate(info, GroupCategoryGQLModel.getLoader(info), group_category, GroupCategoryResultGQLModel(id=group_category.id, msg="ok"))
+async def group_category_update(self, info: strawberry.types.Info, group_category: GroupCategoryUpdateGQLModel) -> typing.Union[GroupCategoryGQLModel, UpdateError[GroupCategoryGQLModel]]:
+    return await Update[GroupCategoryGQLModel].DoItSafeWay(info=info, entity=group_category)
 
 @strawberry.mutation(
     description="""Inserts a group category""",
     permission_classes=[
         OnlyForAuthentized,
-        OnlyForAdmins
+        SimpleInsertPermission[GroupCategoryGQLModel](roles=["administrátor"])
     ])
-async def group_category_insert(self, info: strawberry.types.Info, group_category: GroupCategoryInsertGQLModel) -> GroupCategoryResultGQLModel:
-    return await encapsulateInsert(info, GroupCategoryGQLModel.getLoader(info), group_category, GroupCategoryResultGQLModel(id=None, msg="ok"))
+async def group_category_insert(self, info: strawberry.types.Info, group_category: GroupCategoryInsertGQLModel) -> typing.Union[GroupCategoryGQLModel, InsertError[GroupCategoryGQLModel]]:
+    return await Insert[GroupCategoryGQLModel].DoItSafeWay(info=info, entity=group_category)
 
 @strawberry.mutation(
     description="Deletes the group category",
     permission_classes=[
         OnlyForAuthentized,
-        OnlyForAdmins
+        SimpleDeletePermission[GroupCategoryGQLModel](roles=["administrátor"])
     ])
-async def group_category_delete(self, info: strawberry.types.Info, id: IDType) -> GroupCategoryResultGQLModel:
-    return await encapsulateDelete(info, GroupCategoryGQLModel.getLoader(info), id, GroupCategoryResultGQLModel(msg="ok", id=None))
-
-
-from .BaseGQLModel import Connection, List as BaseList
-class GroupCategoryConnection(Connection[GroupCategoryGQLModel]):
-    pass
-
+async def group_category_delete(self, info: strawberry.types.Info, group_category: GroupCategoryDeleteGQLModel) -> typing.Optional[DeleteError[GroupCategoryGQLModel]]:
+    return await Delete[GroupCategoryGQLModel].DoItSafeWay(info=info, entity=group_category)

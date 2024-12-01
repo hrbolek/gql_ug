@@ -6,6 +6,8 @@ import typing
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
+from .NamedGQLModel import NamedGQLModel
+
 from ._GraphPermissions import (
     RoleBasedPermission, 
     OnlyForAuthentized,
@@ -27,40 +29,23 @@ from ._GraphResolvers import (
     encapsulateDelete
 )
 
-from src.Dataloaders import (
-    getLoadersFromInfo as getLoader,
-    getUserFromInfo)
+from src.Dataloaders import getLoadersFromInfo
 from src.DBResolvers import DBResolvers
 
-GroupGQLModel = Annotated["GroupGQLModel", strawberry.lazy(".groupGQLModel")]
 GroupCategoryGQLModel = Annotated["GroupCategoryGQLModel", strawberry.lazy(".groupCategoryGQLModel")]
-RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
 
 # GroupTypeGQLModelResolvers = DBResolvers.GroupTypeModel(ForwardRef("GroupTypeGQLModel"))
 
-@remove_constructor
+
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a group type (like Faculty)"""
 )
-class GroupTypeGQLModel(BaseGQLModel):
+class GroupTypeGQLModel(NamedGQLModel):
     @classmethod
     def getLoader(cls, info):
         # return getLoader(info).grouptypes
-        return getLoader(info).GroupTypeModel
+        return getLoadersFromInfo(info).GroupTypeModel
         
-    from ._GraphResolvers import (
-        resolve_name as name,
-        resolve_name_en as name_en
-    )
-
-    # groups = strawberry.field(
-    #     description="""Groups which has this type""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ],
-    #     resolver=DBResolvers.GroupTypeModel.groups(GroupGQLModel)
-    # )
-
     category = strawberry.field(
         description="""Group category which this type belongs to""",
         permission_classes=[
@@ -70,23 +55,13 @@ class GroupTypeGQLModel(BaseGQLModel):
         resolver=default_scalar_resolver(fkey_field_name="category_id")
     )
 
-    @strawberry.field(
-        description="""""",
-        permission_classes=[
-            OnlyForAuthentized
-        ])
-    async def rbacobject(self, info: strawberry.types.Info) -> Optional[RBACObjectGQLModel]:
-        from .RBACObjectGQLModel import RBACObjectGQLModel
-        createdby = resolve_field(self=self, field_name="createdby")
-        result = await RBACObjectGQLModel.resolve_reference(info, createdby)
-        return result    
 
 #####################################################################
 #
 # Special fields for query
 #
 #####################################################################
-from .utils import createInputs
+from uoishelpers.resolvers import createInputs
 from dataclasses import dataclass
 # MembershipInputWhereFilter = Annotated["MembershipInputWhereFilter", strawberry.lazy(".membershipGQLModel")]
 @createInputs
@@ -132,14 +107,14 @@ class GroupTypeUpdateGQLModel:
     lastchange: datetime.datetime
     name: Optional[str] = None
     name_en: Optional[str] = None
-    changedby: strawberry.Private[IDType] = None
+    changedby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="")
 class GroupTypeInsertGQLModel:
     id: Optional[IDType] = None
     name: Optional[str] = None
     name_en: Optional[str] = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
 
 @strawberry.type(description="")
 class GroupTypeResultGQLModel:
@@ -178,6 +153,3 @@ async def group_type_insert(self, info: strawberry.types.Info, group_type: Group
 async def group_type_delete(self, info: strawberry.types.Info, id: IDType) -> GroupTypeResultGQLModel:
     return await encapsulateDelete(info, GroupTypeGQLModel.getLoader(info), id, GroupTypeResultGQLModel(msg="ok", id=None))
 
-from .BaseGQLModel import Connection
-class GroupTypeConnection(Connection[GroupTypeGQLModel]):
-    pass

@@ -1,4 +1,5 @@
 import os
+import dataclasses
 import strawberry
 import asyncio
 import socket
@@ -7,7 +8,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from strawberry.fastapi import GraphQLRouter
 from strawberry.asgi import GraphQL
 
@@ -187,20 +188,28 @@ async def apollo_gql(request: Request, item: Item):
         return {"data": None, "errors": [{f"{type(e).__name__}": "{e}"}]}
     
     # logging.info(f"schema execute result \n{schemaresult}")
-    result = {"data": schemaresult.data}
-    if schemaresult.errors:
-        result["errors"] = [
-            {
-                "msg": error.message,
-                "locations": error.locations,
-                "path": error.path,
-                "nodes": error.nodes,
-                "source": error.source,
-                "original_error": { "type": f"{type(error.original_error)}", "msg": f"{error.original_error}" },
-                # "msg_r": f"{error}",
-                "msg_e": f"{error}".split('\n')
-            } for error in schemaresult.errors]
+    # result = {"data": schemaresult.data}
+    # if schemaresult.errors:
+    #     result["errors"] = [
+    #         {
+    #             "msg": error.message,
+    #             "locations": error.locations,
+    #             "path": error.path,
+    #             "nodes": error.nodes,
+    #             "source": error.source,
+    #             "original_error": { "type": f"{type(error.original_error)}", "msg": f"{error.original_error}" },
+    #             # "msg_r": f"{error}",
+    #             "msg_e": f"{error}".split('\n')
+    #         } for error in schemaresult.errors]
+    result = dataclasses.asdict(schemaresult)
+    if result["errors"] is None:
+        del result["errors"]
     return result
+
+@app.get("/voyager", response_class=FileResponse)
+async def graphiql():
+    realpath = os.path.realpath("./voyager.html")
+    return realpath
 
 logging.info("All initialization is done")
 

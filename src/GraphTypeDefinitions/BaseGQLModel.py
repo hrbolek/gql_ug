@@ -1,235 +1,102 @@
-import strawberry
 import uuid
 import datetime
 import typing
-import asyncio
+import strawberry
+import dataclasses
 
-from abc import abstractmethod
 import strawberry.types
+from uoishelpers.gqlpermissions import OnlyForAuthentized
 
-# IDType = strawberry.ID
 IDType = uuid.UUID
+UserGQLModel = typing.Annotated["UserGQLModel", strawberry.lazy(".userGQLModel")]
+RBACObjectGQLModel = typing.Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
 
-@strawberry.interface(description="")
-class Node:
-    @strawberry.field(description="")
-    async def id() -> IDType:
-        return None
+@classmethod
+async def resolve_reference(cls, info: strawberry.types.Info, id: IDType, **otherData):
+    _id = IDType(id) if isinstance(id, str) else id
+    return None if id is None else cls(id=_id, **otherData)
 
-@strawberry.type(description="")
-class BaseGQLModel(Node):
-    @abstractmethod
-    # @classmethod
-    def getLoader(cls, info):
-        pass
+
+@strawberry.federation.interface(
+    keys=["id"], description="""Entity representing an interface"""
+)
+class BaseGQLModel:
+    
+    @classmethod
+    def getLoader(cls, info: strawberry.types.Info):
+        raise NotImplementedError()
+    
+    @classmethod
+    def from_dataclass(cls, db_row):
+        db_row_dict = dataclasses.asdict(db_row)
+        instance = cls(**db_row_dict)
+        return instance
 
     @classmethod
-    async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
-        if id is not None:
-            
-            loader = cls.getLoader(info)
-            if isinstance(id, str): id = uuid.UUID(id)
-            # print(f"loading {cls}(id={id})")
-            result = await loader.load(id)
-            return None if result is None else cls(result)
-            # if result is not None:
-            #     result.__strawberry_definition__ = cls.__strawberry_definition__  # little hack :)
-            # return 
-        return None
+    async def load_with_loader(cls, info: strawberry.types.Info, id: uuid.UUID):
+        if id is None: return None
 
-    def __init__(self, data):
-        # print(f"{type(self).__name__}.__init__({data.id})")
-        self._data = data
-    
-    def __repr__(self):
-        return f"{type(self).__name__}({self._data.id})"
-    
-    from ._GraphResolvers import (
-        resolve_id as id,
-        resolve_createdby as createdby,
-        resolve_created as created,
-        resolve_lastchange as lastchange,
-        resolve_changedby as changedby
-    )
-
-
-    # @classmethod
-    # async def resolve_nodes(
-    #     cls,
-    #     *,
-    #     info: strawberry.Info,
-    #     node_ids: typing.Iterable[str],
-    #     required: bool = False,
-    # ):
-    #     awaitables = [cls.resolve_reference(info=info, id=node_id) for node_id in node_ids]
-    #     results = await asyncio.gather(*awaitables, return_exceptions=False)
-    #     return results
+        _id = IDType(id) if isinstance(id, str) else id
+        loader = cls.getLoader(info=info)
+        db_row = await loader.load(_id)
         
-    # @classmethod
-    # async def resolve_node(
-    #     cls,
-    #     node_id: str,
-    #     *,
-    #     info: strawberry.Info,
-    #     required: bool,
-    # ):
-    #     result = await cls.resolve_reference(info=info, id=node_id)
-    #     return result
-
-#
-# see https://relay.dev/graphql/connections.htm
-#
-@strawberry.type(description="")
-class PageInfo():
-    def __init__(self, after: int=0, first: int=0, orderby: str="id", where: dict=None, extendedfilter: dict=None, gqltype=None, load_data=None):       
-        assert load_data is not None, f"missing load_data"
-        self.after = after
-        self.before = None
-        self.first = first
-        self.last = None
-        self.orderby = orderby
-        self.where = where
-        self.type = gqltype
-        self.extendedfilter = extendedfilter
-        self.load_data = load_data
+        return None if db_row is None else cls.from_dataclass(db_row=db_row)
     
-    @strawberry.field(description="")
-    def after(self) -> typing.Optional[str]:
-        return self.after
-    
-    @strawberry.field(description="")
-    def before(self) -> typing.Optional[str]:
-        return self.before
-    
-    @strawberry.field(description="")
-    def first(self) -> typing.Optional[int]:
-        return self.first
-    
-    @strawberry.field(description="")
-    def last(self) -> typing.Optional[int]:
-        return self.last
-    
-    @strawberry.field(description="")
-    async def has_next_page(self, info: strawberry.types.Info) -> bool:
-        data = await self.load_data(info=info)
-        # print([item.email for item in data], self.first)
-        return len(data) > self.first
-    
-from functools import cached_property, cache
-
-ConnectionType = typing.TypeVar("GQLType", bound="BaseGQLModel")
-
-@strawberry.type(description="")
-class Connection_Edge(typing.Generic[ConnectionType]):
-    def __init__(self, dbrow: ConnectionType):
-        self.data = dbrow
-        pass
-
-    @strawberry.field()
-    async def cursor(self, info: strawberry.Info) -> str:
-        value = self._cursor
-        if callable(value):
-            value = value()
-        return f"{value}"
-
-    @strawberry.field()
-    async def node(self, info: strawberry.Info) -> ConnectionType:
-        return self
-
-def addcursor(index, item):
-    item._cursor = index
-    return item
-
-@strawberry.type(description="")
-class Connection(typing.Generic[ConnectionType]):
-    @cached_property
-    def _ConnectionType(self):
-        cls = type(self)
-        ob0 = cls.__orig_bases__[0]
-        bt = ob0.__args__[0]
-        # print(f"_ConnectionType {cls}, {ob0}, {bt}")
-        return bt
-
-    async def load_data(self, info: strawberry.types.Info):
-        if self.result is None:
-            connectionType = self._ConnectionType
-            loader = connectionType.getLoader(info=info)
-            _page_info = self._page_info
-            skip = _page_info.after
-            limit = _page_info.first
-            where = _page_info.where
-            orderby = _page_info.orderby
-            extendedfilter = _page_info.extendedfilter
-            # print(f"used  {extendedfilter}")       
-            results = await loader.page(skip=skip, limit=limit+1, orderby=orderby, where=where, extendedfilter=extendedfilter)
-            # awaitables = (connectionType.resolve_reference(info=info, id=result.id) for result in results)
-            # awaited = await asyncio.gather(*awaitables)
-            self.result = [addcursor(index+skip+1, connectionType(result)) for index, result in enumerate(results)]
-            # print(f"loaded {self.result}")       
-        return self.result 
-
-    def __init__(self, skip: int=0, limit: int=0, orderby=None, where: dict=None, extendedfilter: dict=None):
-        self.result = None
-        self._page_info = PageInfo(
-            after=(int(skip) if isinstance(skip, str) else skip),
-            first=limit,
-            where=(None if where is None else strawberry.asdict(where)),
-            orderby=orderby,
-            extendedfilter=extendedfilter,
-            gqltype=self._ConnectionType,
-            load_data=self.load_data
+    @classmethod
+    def resolve_reference(cls, info: strawberry.types.Info, id: uuid.UUID, **otherdata):
+        return cls.load_with_loader(info=info, id=id)
+       
+    id: typing.Optional[IDType] = strawberry.field(
+        description="primary key", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
         )
-        pass
+    lastchange: typing.Optional[datetime.date] = strawberry.field(
+        description="timestamp", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
+        )
+    created: typing.Optional[datetime.date] = strawberry.field(
+        description="date & time of unit born", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
+        )
+    createdby_id: typing.Optional[IDType] = strawberry.field(
+        description="who created this entity", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
+        )
+    changedby_id: typing.Optional[IDType] = strawberry.field(
+        description="who changed this entity", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
+        )
+    rbacobject_id: typing.Optional[IDType] = strawberry.field(
+        description="rbac ruling object", 
+        default=None,
+        permission_classes=[OnlyForAuthentized]
+        )
 
-    @strawberry.field(description="")
-    def page_info(self) -> PageInfo:
-        return self._page_info
-    
-    @strawberry.field(description="")
-    async def edges(self, info: strawberry.Info) -> typing.List[Connection_Edge[ConnectionType]]:
-        items = await self.load_data(info=info)
-        # gqltype = self._ConnectionType
-        # results = [gqltype(item) for item in items]
-        if len(items) > self._page_info.first:
-            return items[:-1]
-        else:
-            return items
+    @strawberry.field(
+        description="who created this entity",
+        permission_classes=[OnlyForAuthentized]
+        )
+    async def createdby(self, info: strawberry.types.Info) -> typing.Optional["UserGQLModel"]:
+        from .userGQLModel import UserGQLModel
+        return None if self.changedby_id is None else await UserGQLModel.load_with_loader(info=info, id=self.createdby_id)
 
+    @strawberry.field(
+        description="who changed this entity",
+        permission_classes=[OnlyForAuthentized]
+        )
+    async def changedby(self, info: strawberry.types.Info) -> typing.Optional["UserGQLModel"]:
+        from .userGQLModel import UserGQLModel
+        return None if self.changedby_id is None else await UserGQLModel.load_with_loader(info=info, id=self.changedby_id)
 
-ListType = typing.TypeVar("ListType", bound="BaseGQLModel")
-class List(typing.Generic[ListType]):
-    @cached_property
-    def _ListType(self):
-        cls = type(self)
-        ob0 = cls.__orig_bases__[0]
-        bt = ob0.__args__[0]
-        # print(f"_ConnectionType {cls}, {ob0}, {bt}")
-        return bt
-    
-    async def __call__(self, info: strawberry.Info, skip: int=0, limit: int=10, orderby=None, where: dict=None, extendedfilter: dict=None) -> typing.List[ListType]:
-        listType = self._ListType
-        loader = listType.getLoader(info=info)
-        where = None if where is None else strawberry.asdict(where)
-        results = await loader.page(skip=skip, limit=limit, orderby=orderby, where=where, extendedfilter=extendedfilter)
-        # awaitables = (connectionType.resolve_reference(info=info, id=result.id) for result in results)
-        # awaited = await asyncio.gather(*awaitables)
-        return (listType(result) for result in results)
-        
-
-# class Page(typing.Generic[ListType]):
-#     @cached_property
-#     def _ListType(self):
-#         cls = type(self)
-#         ob0 = cls.__orig_bases__[0]
-#         bt = ob0.__args__[0]
-#         # print(f"_ConnectionType {cls}, {ob0}, {bt}")
-#         return bt
-    
-#     async def __call__(self, info: strawberry.Info, skip: int=0, limit: int=10, orderby=None, where: dict=None) -> typing.List[ListType]:
-#         listType = self._ListType
-#         loader = listType.getLoader(info=info)
-#         where = None if where is None else strawberry.asdict(where)
-#         results = await loader.page(skip=skip, limit=limit, orderby=orderby, where=where)
-#         # awaitables = (connectionType.resolve_reference(info=info, id=result.id) for result in results)
-#         # awaited = await asyncio.gather(*awaitables)
-#         return (listType(result) for result in results)    
+    @strawberry.field(
+        description="rbac holds relations of user",
+        permission_classes=[OnlyForAuthentized]
+        )
+    async def rbacobject(self, info: strawberry.types.Info) -> typing.Optional["RBACObjectGQLModel"]:
+        from .RBACObjectGQLModel import RBACObjectGQLModel
+        return None if self.rbacobject_id is None else await RBACObjectGQLModel.resolve_reference(info=info, id=self.rbacobject_id)

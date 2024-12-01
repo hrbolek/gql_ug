@@ -99,7 +99,7 @@ import dataclasses
 class RoleTypeInsertIntoList:
     type_id: IDType = None
     list_id: IDType = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
 
 # class InsertMembershipPermission(RBACPermission):
 #     message = "User is not allowed create new membership"
@@ -170,6 +170,3 @@ async def role_type_list_remove(
     #     await loader.delete(isIn.id)
     return result
     
-from .BaseGQLModel import Connection
-class RoleTypeListConnection(Connection[RoleTypeListGQLModel]):
-    pass

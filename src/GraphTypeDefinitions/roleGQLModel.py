@@ -1,9 +1,25 @@
 import datetime
+import typing
 import strawberry
 import uuid
 import asyncio
 from typing import List, Optional, Union, Annotated
-from uoishelpers.resolvers import createInputs
+from uoishelpers.resolvers import (
+    createInputs,
+
+    ScalarResolver,
+    VectorResolver,
+    PageResolver,
+
+    # Insert,
+    InsertError,
+    Insert,
+    UpdateError,
+    Update,
+    DeleteError,
+    Delete
+
+)    
 
 from .BaseGQLModel import BaseGQLModel, IDType
 from ._GraphPermissions import (
@@ -38,7 +54,7 @@ GroupGQLModel = Annotated["GroupGQLModel", strawberry.lazy(".groupGQLModel")]
 UserGQLModel = Annotated["UserGQLModel", strawberry.lazy(".userGQLModel")]
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy(".roleTypeGQLModel")]
 
-@remove_constructor
+
 @strawberry.federation.type(
     keys=["id"],
     description="""Entity representing a role of a user in a group (like user A in group B is Dean)""",
@@ -48,76 +64,79 @@ class RoleGQLModel(BaseGQLModel):
     def getLoader(cls, info):
         return getLoader(info).RoleModel
 
-    valid = strawberry.field(
+    valid: typing.Optional[bool] = strawberry.field(
         description="""If an user has still this role""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=bool,
-        resolver=default_resolver
     )
 
-    startdate = strawberry.field(
+    startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""When an user has got this role""",
         permission_classes=[
             OnlyForAuthentized
-        ],
-        graphql_type=Optional[datetime.datetime],
-        resolver=default_resolver
+        ]
     )
     
-    enddate = strawberry.field(
+    enddate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""When an user has been removed from this role""",
         permission_classes=[
             OnlyForAuthentized
-        ],
-        graphql_type=Optional[datetime.datetime],
-        resolver=default_resolver
+        ]
     )
-   
-    roletype = strawberry.field(
+
+    roletype_id: typing.Optional[IDType] = strawberry.field(
+        description="id of role type",
+        permission_classes=[
+            OnlyForAuthentized
+        ]        
+    )
+
+    user_id: typing.Optional[IDType] = strawberry.field(
+        description="id of user who plays this role type",
+        permission_classes=[
+            OnlyForAuthentized
+        ]        
+    )
+
+    group_id: typing.Optional[IDType] = strawberry.field(
+        description="id of group which role type belongs to",
+        permission_classes=[
+            OnlyForAuthentized
+        ]        
+    )   
+
+    roletype: typing.Optional[RoleTypeGQLModel] = strawberry.field(
         description="""Role type (like Dean)""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=Optional[RoleTypeGQLModel],
-        resolver=default_scalar_resolver(fkey_field_name="roletype_id")
+        resolver=ScalarResolver[RoleTypeGQLModel](fkey_field_name="roletype_id")
     )
     
-    user = strawberry.field(
+    user: typing.Optional[UserGQLModel] = strawberry.field(
         description="""User having this role. Must be member of group?""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=Optional[UserGQLModel],
-        resolver=default_scalar_resolver(fkey_field_name="user_id")
+        resolver=ScalarResolver[UserGQLModel](fkey_field_name="user_id")
     )
    
-    group = strawberry.field(
+    group: typing.Optional[GroupGQLModel] = strawberry.field(
         description="""Group where user has a role name""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=Optional[GroupGQLModel],
-        resolver=default_scalar_resolver(fkey_field_name="group_id")
+        resolver=ScalarResolver[GroupGQLModel](fkey_field_name="group_id")
     )
     
-    RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
-    @strawberry.field(
-        description="""""",
-        permission_classes=[OnlyForAuthentized])
-    async def rbacobject(self, info: strawberry.types.Info) -> Optional[RBACObjectGQLModel]:
-        from .RBACObjectGQLModel import RBACObjectGQLModel
-        createdby = resolve_field(self=self, field_name="createdby")
-        result = await RBACObjectGQLModel.resolve_reference(info, createdby)
-        return result    
         
 #####################################################################
 #
 # Special fields for query
 #
 #####################################################################
-from .utils import createInputs
+from uoishelpers.resolvers import createInputs
 from dataclasses import dataclass
 GroupInputWhereFilter = Annotated["GroupInputWhereFilter", strawberry.lazy(".groupGQLModel")]
 UserInputWhereFilter = Annotated["UserInputWhereFilter", strawberry.lazy(".userGQLModel")]
@@ -150,7 +169,7 @@ role_by_id = strawberry.field(
         OnlyForAuthentized
     ],
     graphql_type=Optional[RoleGQLModel],
-    resolver=default_by_id_resolver()
+    resolver=RoleGQLModel.load_with_loader
 )
 
 
@@ -161,7 +180,7 @@ role_page = strawberry.field(
     ],
     graphql_type=List[RoleGQLModel],
     # resolver=DBResolvers.RoleModel.resolve_page(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
-    resolver=default_page_resolver(whereType=RoleInputWhereFilter)
+    resolver=PageResolver[RoleGQLModel](whereType=RoleInputWhereFilter)
 )
 
 from src.DBDefinitions import (
@@ -284,7 +303,7 @@ class RoleUpdateGQLModel:
     valid: Optional[bool] = None
     startdate: Optional[datetime.datetime] = None
     enddate: Optional[datetime.datetime] = None
-    changedby: strawberry.Private[IDType] = None
+    changedby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="")
 class RoleInsertGQLModel:
@@ -295,8 +314,13 @@ class RoleInsertGQLModel:
     valid: Optional[bool] = True
     startdate: Optional[datetime.datetime] = strawberry.field(description="start datetime of role", default_factory=datetime.datetime.now)
     enddate: Optional[datetime.datetime] = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
     rbacobject: strawberry.Private[IDType] = None
+
+@strawberry.input(description="")
+class RoleDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
 
 @strawberry.type(description="")
 class RoleResultGQLModel:
@@ -332,8 +356,9 @@ class UpdateRolePermission(RBACPermission):
 async def role_update(self, 
     info: strawberry.types.Info, 
     role: RoleUpdateGQLModel
-) -> RoleResultGQLModel:
-    return await encapsulateUpdate(info, RoleGQLModel.getLoader(info), role, RoleResultGQLModel(msg="ok", id=role.id))
+) -> typing.Union[RoleGQLModel, UpdateError[RoleGQLModel]]:
+    return await Update[RoleGQLModel].DoItSafeWay(info=info, entity=role)
+    # return await encapsulateUpdate(info, RoleGQLModel.getLoader(info), role, RoleResultGQLModel(msg="ok", id=role.id))
 
 class InsertRolePermission(RBACPermission):
     message = "User is not allowed create new role"
@@ -357,9 +382,9 @@ class InsertRolePermission(RBACPermission):
 async def role_insert(self, 
     info: strawberry.types.Info, 
     role: RoleInsertGQLModel
-) -> RoleResultGQLModel:
+) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
     role.rbacobject = role.group_id
-    return await encapsulateInsert(info, RoleGQLModel.getLoader(info), role, RoleResultGQLModel(msg="ok", id=None))
+    return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
     
 @strawberry.mutation(
     description="Deletes the role",
@@ -367,8 +392,8 @@ async def role_insert(self,
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def role_delete(self, info: strawberry.types.Info, id: IDType) -> RoleResultGQLModel:
-    return await encapsulateDelete(info, RoleGQLModel.getLoader(info), id, RoleResultGQLModel(msg="ok", id=None))
+async def role_delete(self, info: strawberry.types.Info, role: RoleDeleteGQLModel) -> typing.Optional[DeleteError[RoleGQLModel]]:
+    return await Delete[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
 @strawberry.type(description="")
 class RBACItem:
@@ -384,22 +409,28 @@ async def resolve_rbac_with_user(self, info: strawberry.types.Info, rbac_id: IDT
     return roles
 
 @strawberry.field(description="")
-async def resolveRBACs(self, info: strawberry.types.Info, rbac_ids: List[IDType], user_id: IDType) -> List[RBACItem]:
+async def resolveRBACs(self, info: strawberry.types.Info, rbac_ids: List[IDType], user_id: typing.Optional[IDType] = None) -> List[RBACItem]:
     from .roleGQLModel import RoleGQLModel
     # resolvedroles = await asyncio.gather(RBACObjectGQLModel.resolve_reference(info=info, id=id) for id in rbac_ids)
-    print("resolveRBACs", [type(id) for id in rbac_ids], flush=True)
+    if user_id is None:
+        user = getUserFromInfo(info=info)
+        user_id = user["id"]
+        user_id = IDType(user_id) if isinstance(user_id, str) else user_id
+    # print("resolveRBACs", [type(id) for id in rbac_ids], flush=True)
     _rbac_ids = [rbac_id if isinstance(rbac_id, IDType) else IDType(rbac_id) for rbac_id in rbac_ids]
     # print("resolveRBACs", [type(id) for id in _rbac_ids])
     futures = (resolve_rbac_with_user(self, info=info, rbac_id=rbac_id, user_id=user_id) for rbac_id in _rbac_ids)
     resolvedroles = await asyncio.gather(*futures)
-    print("resolveRBACs", resolvedroles, flush=True)
+    index = {
+        role.id: role
+        for rolelist in resolvedroles
+        for role in rolelist
+    }
+    # print("resolveRBACs", resolvedroles, flush=True)
     result = [
-        RBACItem(rbac_id=rbac_id, roles=[RoleGQLModel(role) for role in roles]) 
+        RBACItem(rbac_id=rbac_id, roles=[RoleGQLModel.from_dataclass(role) for role in index.values()]) 
         for rbac_id, roles in zip(rbac_ids, resolvedroles)]
 
     return result
 
 
-from .BaseGQLModel import Connection
-class RoleConnection(Connection[RoleGQLModel]):
-    pass

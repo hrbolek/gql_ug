@@ -29,6 +29,36 @@ query {
 }
 ```
 
+```gql
+{
+  userPage {
+    id
+    email
+    lastchange
+    created
+    createdby {
+      id
+    }
+    name
+    createdbyId
+    firstname
+    fullname
+    givenname
+    isThisMe
+    middlename
+    surname
+    valid
+    changedby {
+      id
+    }
+    rbacobjectId
+    rbacobject {
+      id
+    }
+  }
+}
+```
+
 ## Environment variables
 
 ### DB related variables

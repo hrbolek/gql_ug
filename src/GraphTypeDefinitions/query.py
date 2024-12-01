@@ -6,7 +6,6 @@ class Query:
     from .userGQLModel import (
         user_by_id, 
         user_page,
-        users,
         # user_page2,
         me)
     # user_by_id = user_by_id
@@ -14,7 +13,7 @@ class Query:
     # me = me
     # users = users
 
-    from .groupGQLModel import group_by_id, group_page, groups
+    from .groupGQLModel import group_by_id, group_page
     # group_by_id = group_by_id
 
     # from .groupGQLModel import group_page, groups

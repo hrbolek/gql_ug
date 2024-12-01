@@ -1,3 +1,4 @@
+import typing
 import strawberry
 import uuid
 import asyncio
@@ -18,7 +19,7 @@ RoleGQLModel = Annotated["RoleGQLModel", strawberry.lazy(".roleGQLModel")]
 @strawberry.federation.type(keys=["id"])
 class RBACObjectGQLModel:
 
-    id = resolve_id
+    id: typing.Optional[IDType] = strawberry.field(description="id", default=None) # = resolve_id
     asUser: strawberry.Private[bool] = False
     asGroup: strawberry.Private[bool] = False
     
@@ -80,7 +81,11 @@ class RBACObjectGQLModel:
             result = await resolve_roles_on_user(self, info, user_id=self.id, filter_user_id=user_id)
         if self.asGroup:
             result = await resolve_roles_on_group(self, info, group_id=self.id, filter_user_id=user_id)
-        result = (RoleGQLModel(r) for r in result)
+        result = (
+            RoleGQLModel.from_dataclass(r) 
+            # for result in results
+            for r in result
+            )
         return result
     
 

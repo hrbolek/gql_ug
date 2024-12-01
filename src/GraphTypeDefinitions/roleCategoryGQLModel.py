@@ -5,6 +5,7 @@ from typing import List, Optional, Union, Annotated
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
+from .NamedGQLModel import NamedGQLModel
 
 from ._GraphPermissions import (
     RoleBasedPermission, 
@@ -36,21 +37,15 @@ from src.DBResolvers import DBResolvers
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy(".roleTypeGQLModel")]
 RoleTypeInputWhereFilter = Annotated["RoleTypeInputWhereFilter", strawberry.lazy(".roleTypeGQLModel")]
 
-@remove_constructor
+
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a role type (like Dean)"""
 )
-class RoleCategoryGQLModel(BaseGQLModel):
+class RoleCategoryGQLModel(NamedGQLModel):
     @classmethod
     def getLoader(cls, info):
         return getLoader(info).RoleCategoryModel
-    
-    from ._GraphResolvers import (
-        resolve_name as name,
-        resolve_name_en as name_en
-    )
-   
-   
+      
     role_types = strawberry.field(
         description="""List of roles with this type""",
         permission_classes=[
@@ -60,23 +55,13 @@ class RoleCategoryGQLModel(BaseGQLModel):
         # resolver=DBResolvers.RoleCategoryModel.types(RoleTypeGQLModel, WhereFilterModel=RoleTypeInputWhereFilter)
         resolver=default_vector_resolver(fkey_field_name="category_id", whereType=RoleTypeInputWhereFilter)
     )
-
-    RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]
-    @strawberry.field(
-        description="""""",
-        permission_classes=[OnlyForAuthentized])
-    async def rbacobject(self, info: strawberry.types.Info) -> Optional[RBACObjectGQLModel]:
-        from .RBACObjectGQLModel import RBACObjectGQLModel
-        createdby = resolve_field(self=self, field_name="createdby")
-        result = await RBACObjectGQLModel.resolve_reference(info, createdby)
-        return result        
-    
+   
 #####################################################################
 #
 # Special fields for query
 #
 #####################################################################
-from .utils import createInputs
+from uoishelpers.resolvers import createInputs
 from dataclasses import dataclass
 
 @createInputs
@@ -118,14 +103,14 @@ class RoleCategoryUpdateGQLModel:
     lastchange: datetime.datetime
     name: Optional[str] = None
     name_en: Optional[str] = None
-    changedby: strawberry.Private[IDType] = None
+    changedby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="Initial data structure for C operation")
 class RoleCategoryInsertGQLModel:
     id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
     name: Optional[str] = None
     name_en: Optional[str] = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
 
 @strawberry.type(description="")
 class RoleCategoryResultGQLModel:
@@ -199,6 +184,3 @@ async def role_category_insert(self,
 async def role_category_delete(self, info: strawberry.types.Info, id: IDType) -> RoleCategoryResultGQLModel:
     return await encapsulateDelete(info, RoleCategoryGQLModel.getLoader(info), id, RoleCategoryResultGQLModel(msg="ok", id=None))
 
-from .BaseGQLModel import Connection
-class RoleCategoryConnection(Connection[RoleCategoryGQLModel]):
-    pass

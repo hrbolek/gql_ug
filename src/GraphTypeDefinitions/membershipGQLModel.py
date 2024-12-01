@@ -122,7 +122,7 @@ class MembershipGQLModel(BaseGQLModel):
 # Special fields for query
 #
 #####################################################################
-from .utils import createInputs
+from uoishelpers.resolvers import createInputs
 from dataclasses import dataclass
 GroupInputWhereFilter = Annotated["GroupInputWhereFilter", strawberry.lazy(".groupGQLModel")]
 UserInputWhereFilter = Annotated["UserInputWhereFilter", strawberry.lazy(".userGQLModel")]
@@ -170,7 +170,7 @@ class MembershipUpdateGQLModel:
     valid: Optional[bool] = None
     startdate: Optional[datetime.datetime] = None
     enddate: Optional[datetime.datetime] = None
-    changedby: strawberry.Private[IDType] = None
+    changedby_id: strawberry.Private[IDType] = None
     group_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="")
@@ -181,7 +181,7 @@ class MembershipInsertGQLModel:
     valid: Optional[bool] = True
     startdate: Optional[datetime.datetime] = None
     enddate: Optional[datetime.datetime] = None
-    createdby: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
     
 
 @strawberry.type(description="")
@@ -264,6 +264,3 @@ async def membership_insert(self,
 async def membership_delete(self, info: strawberry.types.Info, id: IDType) -> MembershipResultGQLModel:
     return await encapsulateDelete(info, MembershipGQLModel.getLoader(info), id, MembershipResultGQLModel(msg="ok", id=None))
 
-from .BaseGQLModel import Connection
-class MembershipConnection(Connection[MembershipGQLModel]):
-    pass
