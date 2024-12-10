@@ -123,13 +123,13 @@ class UserGQLModel(BaseGQLModel):
         ]
     )  
 
-    fullname: typing.Optional[str] = strawberry.field(
-        description="""User's full name""",
-        default=None,
-        permission_classes=[
-            OnlyForAuthentized
-        ]
-    )  
+    # fullname: typing.Optional[str] = strawberry.field(
+    #     description="""User's full name""",
+    #     default=None,
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ]
+    # )  
 
     valid: typing.Optional[bool] = strawberry.field(
         description="""If the user is still valid""",
@@ -198,13 +198,14 @@ class UserGQLModel(BaseGQLModel):
     def gdpr(self, info: strawberry.types.Info, force: typing.Optional[bool] = False) -> typing.Optional[str]:
         return "gdpr information" if force else None
 
-    # fullname = strawberry.field(
-    #     description="""User's name (like John Newbie)""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ],
-    #     resolver=DBResolvers.UserModel.fullname
-    # )  
+    @strawberry.field(
+        description="""User's name (like John Newbie)""",
+        permission_classes=[
+            OnlyForAuthentized
+        ]
+    )
+    def fullname(self, info: strawberry.types.Info) -> typing.Optional[str]:
+        return f"{self.name} {self.middlename} {self.surname}" if self.middlename else f"{self.name} {self.surname}" 
     
 
     memberships: typing.List[MembershipGQLModel] = strawberry.field(
@@ -242,6 +243,33 @@ class UserGQLModel(BaseGQLModel):
     #     print(actinguser)
     #     return "GDPRInfo"
 
+    @strawberry.field(
+        description="""List of groups given type, where the user is member""",
+        permission_classes=[
+            OnlyForAuthentized
+        ]
+    )
+    async def groups(
+        self, 
+        info: strawberry.types.Info, 
+        limit: typing.Optional[int] = 10,
+        skip: typing.Optional[int] = 0,
+        order_by: typing.Optional[str] = None,
+        where: typing.Optional[MembershipInputWhereFilter] = None
+        ) -> typing.List["GroupGQLModel"]:
+        from .membershipGQLModel import MembershipGQLModel
+        from .groupGQLModel import GroupGQLModel
+
+        extendedfilter = {"user_id": self.id}
+        membershipLoader = MembershipGQLModel.getLoader(info=info)
+        groupLoader = GroupGQLModel.getLoader(info=info)
+
+        where = None if where is None else strawberry.asdict(where)
+        memberships = await membershipLoader.page(skip=skip, limit=limit, orderby=order_by, where=where, extendedfilter=extendedfilter)
+        future_groups = (groupLoader.load(membership.group_id) for membership in memberships)
+        group_rows = await asyncio.gather(*future_groups)
+        results = (GroupGQLModel.from_dataclass(row) for row in group_rows)        
+        return results
 
     @strawberry.field(
         description="""List of groups given type, where the user is member""",
@@ -312,12 +340,12 @@ async def me(self,
     info: strawberry.types.Info) -> Optional[UserGQLModel]:
     result = None
     user = getUserFromInfo(info)
-    print(f"me: {user}")
+    # print(f"?me>: {user}")
     if user is None: return None
     user_id = user.get("id", None)
     if user_id is None: return None
     # user_id = IDType(user_id)
-    result = await UserGQLModel.resolve_reference(info, user_id)
+    result = await UserGQLModel.resolve_reference(info=info, id=user_id)
     return result
 
 

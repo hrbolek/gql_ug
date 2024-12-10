@@ -1,3 +1,4 @@
+import typing
 import datetime
 import strawberry
 import uuid
@@ -34,7 +35,6 @@ from src.DBResolvers import DBResolvers
 GroupGQLModel = Annotated["GroupGQLModel", strawberry.lazy(".groupGQLModel")]
 UserGQLModel = Annotated["UserGQLModel", strawberry.lazy(".userGQLModel")]
 
-@remove_constructor
 @strawberry.federation.type(
     keys=["id"],
     description="""Entity representing a relation between an user and a group""",
@@ -54,6 +54,19 @@ class MembershipGQLModel(BaseGQLModel):
     #     from .userGQLModel import UserGQLModel
     #     user_id = self.user_id if self._data is None else self._data.user_id
     #     return await UserGQLModel.resolve_reference(info=info, id=user_id)
+    user_id: typing.Optional[IDType] = strawberry.field(
+        description="ID of associated user",
+        permission_classes=[
+            OnlyForAuthentized
+        ]        
+    )
+
+    group_id: typing.Optional[IDType] = strawberry.field(
+        description="ID of associated group",
+        permission_classes=[
+            OnlyForAuthentized
+        ]        
+    )
 
     user = strawberry.field(
         description="""user""",
@@ -89,22 +102,25 @@ class MembershipGQLModel(BaseGQLModel):
         resolver=default_resolver
     )
     
-    startdate = strawberry.field(
+    startdate: Optional[datetime.datetime] = strawberry.field(
         description="""date when the membership begins""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=Optional[datetime.datetime],
-        resolver=default_resolver
     )
     
-    enddate = strawberry.field(
+    enddate: Optional[datetime.datetime] = strawberry.field(
         description="""date when the membership ends""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=Optional[datetime.datetime],
-        resolver=default_resolver
+    )
+
+    valid: Optional[bool] = strawberry.field(
+        description="""if membership is valid""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
     )
 
     RBACObjectGQLModel = Annotated["RBACObjectGQLModel", strawberry.lazy(".RBACObjectGQLModel")]

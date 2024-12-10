@@ -144,6 +144,7 @@ async def get_context(request: Request):
     result["request"] = request
     result["user"] = request.scope.get("user", None)
     logging.info(f"context created {result}")
+    print(f"context created {result}")
     return result
 
 @asynccontextmanager
