@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import typing
 import strawberry
@@ -63,6 +64,13 @@ class RoleGQLModel(BaseGQLModel):
     @classmethod
     def getLoader(cls, info):
         return getLoader(info).RoleModel
+
+    @classmethod
+    def from_dataclass(cls, db_row):
+        db_row_dict = dataclasses.asdict(db_row)
+        db_row_dict["valid"] = db_row.valid
+        instance = cls(**db_row_dict)
+        return instance
 
     valid: typing.Optional[bool] = strawberry.field(
         description="""If an user has still this role""",

@@ -103,12 +103,12 @@ readonlyschema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLM
 class UGWhoAmIExtension(WhoAmIExtension):
     async def ug_query(self, query, variables={}):
         context = self.execution_context.context
-        print(f"ug_query context A = {context}")
+        # print(f"ug_query context A = {context}")
         # result = await self.execution_context.schema.execute(query=query, variable_values=variables, context_value=context)
         result = await readonlyschema.execute(query=query, variable_values=variables, context_value=context)
-        print(f"ug_query context B = {context}")
+        # print(f"ug_query context B = {context}")
         result = strawberry.asdict(result)
-        print(f"result = {result}")
+        # print(f"result = {result}")
         return result
 
     # async def on_execute(self):

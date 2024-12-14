@@ -1,4 +1,5 @@
 import datetime
+import dataclasses
 import strawberry
 import uuid
 import logging
@@ -97,6 +98,13 @@ class GroupGQLModel(NamedGQLModel):
     def getLoader(cls, info):
         return getLoader(info).GroupModel
 
+    @classmethod
+    def from_dataclass(cls, db_row):
+        db_row_dict = dataclasses.asdict(db_row)
+        db_row_dict["valid"] = db_row.valid
+        instance = cls(**db_row_dict)
+        return instance
+
     email: typing.Optional[str] = strawberry.field(
         description="""Group's email""",
         permission_classes=[OnlyForAuthentized]
@@ -113,6 +121,14 @@ class GroupGQLModel(NamedGQLModel):
             OnlyForAuthentized
         ]
         )
+    # @strawberry.field(
+    #     description="""Group's validity (still exists?)""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ]
+    # )
+    # async def valid(self) -> typing.Optional[bool]:
+    #     return self.valid
 
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="",
@@ -152,16 +168,16 @@ class GroupGQLModel(NamedGQLModel):
         ],
         graphql_type=Optional[GroupTypeGQLModel],
         # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
-        resolver=ScalarResolver[GroupTypeGQLModel](fkey_field_name="type_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+        resolver=ScalarResolver[GroupTypeGQLModel](fkey_field_name="grouptype_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
     )
 
-    type_id: typing.Optional[IDType] = strawberry.field(
+    grouptype_id: typing.Optional[IDType] = strawberry.field(
         description="""Group's type id""",
         permission_classes=[
             OnlyForAuthentized
         ],
         graphql_type=Optional[IDType],
-        resolver=default_resolver
+        # resolver=default_resolver
     )
 
     # @strawberry.field(

@@ -260,12 +260,12 @@ class UserGQLModel(BaseGQLModel):
         from .membershipGQLModel import MembershipGQLModel
         from .groupGQLModel import GroupGQLModel
 
-        extendedfilter = {"user_id": self.id}
         membershipLoader = MembershipGQLModel.getLoader(info=info)
-        groupLoader = GroupGQLModel.getLoader(info=info)
-
+        extendedfilter = {"user_id": self.id}
         where = None if where is None else strawberry.asdict(where)
         memberships = await membershipLoader.page(skip=skip, limit=limit, orderby=order_by, where=where, extendedfilter=extendedfilter)
+
+        groupLoader = GroupGQLModel.getLoader(info=info)
         future_groups = (groupLoader.load(membership.group_id) for membership in memberships)
         group_rows = await asyncio.gather(*future_groups)
         results = (GroupGQLModel.from_dataclass(row) for row in group_rows)        
@@ -281,11 +281,14 @@ class UserGQLModel(BaseGQLModel):
         from .membershipGQLModel import MembershipGQLModel
         loader = MembershipGQLModel.getLoader(info)
         rows = await loader.filter_by(user_id=self.id)# , grouptype_id=grouptype_id)
+        # memberships = (MembershipGQLModel.from_dataclass(row) for row in rows)
+        groupLoader = GroupGQLModel.getLoader(info=info)
+        futureresults = (groupLoader.load(row.group_id) for row in rows if row.valid)
+        rows = await asyncio.gather(*futureresults)
+        rows = filter(lambda item: item.grouptype_id == grouptype_id, rows)
         if grouptype_id:
             rows = filter(lambda item: item.grouptype_id == grouptype_id, rows)
-
-        futureresults = (GroupGQLModel.from_dataclass(info, row.group_id) for row in rows)
-        results = await asyncio.gather(*futureresults)
+        results = ()
         return results
     
 #####################################################################

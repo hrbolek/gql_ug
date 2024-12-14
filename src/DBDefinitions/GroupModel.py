@@ -60,11 +60,6 @@ class GroupModel(BaseModel):
         nullable=True, default=None,
         comment="Date when the group 'died'"
     )
-    valid: Mapped[bool] = mapped_column(
-        nullable=True, 
-        default=True, 
-        comment="If the group still exists"
-    )
 
     grouptype_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("grouptypes.id"),
@@ -82,6 +77,27 @@ class GroupModel(BaseModel):
     @hybrid_property
     def type_id(self) -> typing.Optional[uuid.UUID]:
         return self.grouptype_id
+
+    @hybrid_property
+    def valid(self):
+        """Evaluates if the entity is valid based on the current datetime."""
+        now = datetime.datetime.utcnow()
+        if self.startdate and self.enddate:
+            return self.startdate <= now <= self.enddate
+        elif self.startdate:
+            return self.startdate <= now
+        elif self.enddate:
+            return now <= self.enddate
+        return False
+
+    @valid.expression
+    def valid(cls):
+        """Defines the SQL expression for the 'valid' property."""
+        now = datetime.datetime.utcnow()
+        return sqlalchemy.and_(
+            sqlalchemy.or_(cls.startdate <= now, cls.startdate.is_(None)),  # Valid if startdate is in the past or missing
+            sqlalchemy.or_(cls.enddate >= now, cls.enddate.is_(None))       # Valid if enddate is in the future or missing
+        )
 
     mastergroup = relationship("GroupModel", viewonly=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
     subgroups = relationship ("GroupModel", remote_side="GroupModel.id", viewonly=True, uselist=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html

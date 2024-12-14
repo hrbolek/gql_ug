@@ -46,8 +46,15 @@ class GroupTypeGQLModel(NamedGQLModel):
         # return getLoader(info).grouptypes
         return getLoadersFromInfo(info).GroupTypeModel
         
+    category_id: typing.Optional[IDType] = strawberry.field(
+        description="Unique identifier for the category associated with this group type",
+        permission_classes=[
+            OnlyForAuthentized
+        ]
+    )
+
     category = strawberry.field(
-        description="""Group category which this type belongs to""",
+        description="""Detailed information about the category that this group type is associated with""",
         permission_classes=[
             OnlyForAuthentized
         ],

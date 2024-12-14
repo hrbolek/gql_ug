@@ -1,3 +1,4 @@
+import datetime
 import sqlalchemy
 from sqlalchemy import (
     Column,
@@ -7,6 +8,7 @@ from sqlalchemy import (
     Boolean,
 )
 from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from .BaseModel import BaseModel
 
@@ -24,8 +26,28 @@ class RoleModel(BaseModel):
 
     startdate: Mapped = mapped_column(DateTime, comment="When the role begins", nullable=True, default=None)
     enddate: Mapped = mapped_column(DateTime, comment="When the role ends", nullable=True, default=None)
-    valid: Mapped = mapped_column(Boolean, default=True, comment="If the role is still active", nullable=False)
 
+    @hybrid_property
+    def valid(self):
+        """Evaluates if the entity is valid based on the current datetime."""
+        now = datetime.datetime.utcnow()
+        if self.startdate and self.enddate:
+            return self.startdate <= now <= self.enddate
+        elif self.startdate:
+            return self.startdate <= now
+        elif self.enddate:
+            return now <= self.enddate
+        return False
+
+    @valid.expression
+    def valid(cls):
+        """Defines the SQL expression for the 'valid' property."""
+        now = datetime.datetime.utcnow()
+        return sqlalchemy.and_(
+            sqlalchemy.or_(cls.startdate <= now, cls.startdate.is_(None)),  # Valid if startdate is in the past or missing
+            sqlalchemy.or_(cls.enddate >= now, cls.enddate.is_(None))       # Valid if enddate is in the future or missing
+        )
+    
     roletype = relationship("RoleTypeModel", viewonly=True, lazy="joined")
     user = relationship("UserModel", foreign_keys=[user_id], viewonly=True)
     group = relationship("GroupModel", viewonly=True)

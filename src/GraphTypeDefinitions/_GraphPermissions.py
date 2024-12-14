@@ -291,7 +291,7 @@ class OnlyForAuthentized(strawberry.permission.BasePermission):
         self, source, info: strawberry.types.Info, **kwargs
     ) -> bool:
         if self.isDEMO:
-            print("DEMO Enabled, not for production")
+            # print("DEMO Enabled, not for production")
             return True
         
         self.defaultResult = [] if info._field.type.__class__ == StrawberryList else None
