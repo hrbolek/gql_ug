@@ -424,14 +424,14 @@ class RBACPermission(strawberry.permission.BasePermission):
     async def testIsAdmin(self, info: strawberry.types.Info, adminRoleNames=["administrátor"]):
         assert len(adminRoleNames) > 0, "as adminRoleNames is empty, this always fails"
         userRoles = await self.getUserRoles(info)
-        adminRoles = filter(lambda role: role["type"]["name"] in adminRoleNames, userRoles)
+        adminRoles = filter(lambda role: role["roletype"]["name"] in adminRoleNames, userRoles)
         # isAdmin = next(adminRoles, None) is not None
         return next(adminRoles, None)
     
     async def testIsAllowed(self, info: strawberry.types.Info, rbacobject, allowedRolesNames = []):
         assert len(allowedRolesNames) > 0, "as allowedRolesNames is empty, this always fails"
         relatedRoles = await self.getActiveRoles(rbacobject, info)
-        allowedRoles = filter(lambda role: role["type"]["name"] in allowedRolesNames, relatedRoles)
+        allowedRoles = filter(lambda role: role["roletype"]["name"] in allowedRolesNames, relatedRoles)
         return next(allowedRoles, None)
 
     async def resolveUserRole(self, info: strawberry.types.Info, rbacobject, adminRoleNames=["administrátor"], allowedRoleNames = []):

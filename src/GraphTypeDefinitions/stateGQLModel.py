@@ -114,6 +114,21 @@ class StateGQLModel(NamedGQLModel):
     def getLoader(cls, info):
         return getLoadersFromInfo(info).StateModel
     
+    statemachine_id: typing.Optional[IDType] = strawberry.field(
+        description="""Id of state machine""",
+        permission_classes=[OnlyForAuthentized],
+    )
+
+    writerslist_id: typing.Optional[IDType] = strawberry.field(
+        description="""Id of roletype list""",
+        permission_classes=[OnlyForAuthentized],
+    )
+
+    readerslist_id: typing.Optional[IDType] = strawberry.field(
+        description="""Id of roletype list""",
+        permission_classes=[OnlyForAuthentized],
+    )
+
     statemachine: typing.Optional["StateMachineGQLModel"] = strawberry.field(
         description="""Owing state machine""",
         permission_classes=[OnlyForAuthentized],
@@ -171,19 +186,37 @@ class StateGQLModel(NamedGQLModel):
         permission_classes=[OnlyForAuthentized]
     )
 
-    writerslist_id: typing.Optional[IDType] = strawberry.field(
-        description="list of roles which can write at this state",
-        permission_classes=[OnlyForAuthentized]
-    )
+    # @strawberry.field(
+    #     description="""All roletypes associated with this state, all roles will be enabled for update""",
+    #     permission_classes=[OnlyForAuthentized])
+    # async def readers(self, info: strawberry.types.Info) -> typing.List["RoleTypeGQLModel"]:
+    #     from .roleListGQLModel import RoleTypeListGQLModel
+    #     from .roleTypeGQLModel import RoleTypeGQLModel
+
+    #     loader = RoleTypeListGQLModel.getLoader(info)
+    #     results = await loader.filter_by(list_id=self.readerslist_id)
+    #     awaitables = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
+    #     return await asyncio.gather(*awaitables)
+    
+    # writerslist_id: typing.Optional[IDType] = strawberry.field(
+    #     description="list of roles which can write at this state",
+    #     permission_classes=[OnlyForAuthentized]
+    # )
 
     @classmethod
     async def resolve_roletypes(cls, state, info: strawberry.types.Info, access: typing.Optional[StateDataAccessType] = StateDataAccessType.READ) -> typing.List["RoleTypeGQLModel"]:
         from .roleListGQLModel import RoleTypeListGQLModel
         loader = RoleTypeListGQLModel.getLoader(info)
         if access == StateDataAccessType.READ:
-            results = await loader.filter_by(list_id=state.readerslist_id)
+            if state.readerslist_id is None:
+                results = []
+            else:
+                results = await loader.filter_by(list_id=state.readerslist_id)
         else:
-            results = await loader.filter_by(list_id=state.writerslist_id)
+            if state.writerslist_id is None:
+                results = []
+            else:
+                results = await loader.filter_by(list_id=state.writerslist_id)
         return results
 
     @strawberry.field(
@@ -199,6 +232,7 @@ class StateGQLModel(NamedGQLModel):
         #     results = await loader.filter_by(list_id=self.writerslist_id)
         # awaitables = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
         # return await asyncio.gather(*awaitables)
+        
         results = await StateGQLModel.resolve_roletypes(state=self, info=info, access=access)
         awaitables = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
         return await asyncio.gather(*awaitables)

@@ -24,13 +24,14 @@ class RoleModel(BaseModel):
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True, nullable=True, default=None)
     roletype_id: Mapped[int] = mapped_column(ForeignKey("roletypes.id"), index=True, nullable=True, default=None)
 
+    deputy: Mapped[bool] = mapped_column(comment="if this role is deputy role", nullable=True, default=None)
     startdate: Mapped = mapped_column(DateTime, comment="When the role begins", nullable=True, default=None)
     enddate: Mapped = mapped_column(DateTime, comment="When the role ends", nullable=True, default=None)
 
     @hybrid_property
     def valid(self):
         """Evaluates if the entity is valid based on the current datetime."""
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         if self.startdate and self.enddate:
             return self.startdate <= now <= self.enddate
         elif self.startdate:
@@ -42,7 +43,7 @@ class RoleModel(BaseModel):
     @valid.expression
     def valid(cls):
         """Defines the SQL expression for the 'valid' property."""
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         return sqlalchemy.and_(
             sqlalchemy.or_(cls.startdate <= now, cls.startdate.is_(None)),  # Valid if startdate is in the past or missing
             sqlalchemy.or_(cls.enddate >= now, cls.enddate.is_(None))       # Valid if enddate is in the future or missing

@@ -1,3 +1,4 @@
+import dataclasses
 import typing
 import datetime
 import strawberry

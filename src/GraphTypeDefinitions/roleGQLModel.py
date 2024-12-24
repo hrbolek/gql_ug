@@ -79,6 +79,13 @@ class RoleGQLModel(BaseGQLModel):
         ],
     )
 
+    deputy: typing.Optional[bool] = strawberry.field(
+        description="""If this role is deputy""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+    )
+
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""When an user has got this role""",
         permission_classes=[
@@ -319,11 +326,12 @@ class RoleInsertGQLModel:
     group_id: IDType
     roletype_id: IDType
     id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
-    valid: Optional[bool] = True
+    # valid: Optional[bool] = True
+    deputy: Optional[bool] = strawberry.field(description="If the role is deputy role", default=False)
     startdate: Optional[datetime.datetime] = strawberry.field(description="start datetime of role", default_factory=datetime.datetime.now)
     enddate: Optional[datetime.datetime] = None
     createdby_id: strawberry.Private[IDType] = None
-    rbacobject: strawberry.Private[IDType] = None
+    rbacobject_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="")
 class RoleDeleteGQLModel:
@@ -391,7 +399,7 @@ async def role_insert(self,
     info: strawberry.types.Info, 
     role: RoleInsertGQLModel
 ) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
-    role.rbacobject = role.group_id
+    role.rbacobject_id = role.group_id
     return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
     
 @strawberry.mutation(
