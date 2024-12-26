@@ -37,6 +37,7 @@ from ._GraphResolvers import (
 )
 
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
+# StateMachineTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
 
 from dataclasses import dataclass
 from uoishelpers.resolvers import createInputs, ScalarResolver
@@ -96,7 +97,19 @@ class StateMachineGQLModel(NamedGQLModel):
         ],
         resolver=VectorResolver["StateTransitionGQLModel"](fkey_field_name="statemachine_id", whereType=StateTransitionWhereFilter)
     )
-    
+    type_id: typing.Optional[IDType] = strawberry.field(
+        description="""state machine type id""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+    )
+    # type: typing.Optional[IDType] = strawberry.field(
+    #     description="""state machine type""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     resolver=ScalarResolver["StateMachineTypeGQLModel"](fkey_field_name="type_id")
+    # )
 
 @strawberry.enum(description="")
 class StateDataAccessType(Enum):
