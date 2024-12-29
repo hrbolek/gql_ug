@@ -15,7 +15,6 @@ from ._GraphPermissions import (
 from ._GraphResolvers import (
     resolve_field,
     default_resolver,
-    default_vector_resolver,
     default_scalar_resolver,
     default_page_resolver,
     default_by_id_resolver,
@@ -182,8 +181,7 @@ membership_page = strawberry.field(
         OnlyForAuthentized
     ],
     graphql_type=List[MembershipGQLModel],
-    # resolver=DBResolvers.MembershipModel.resolve_page(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
-    resolver=default_page_resolver(whereType=MembershipInputWhereFilter)
+    resolver=PageResolver[MembershipGQLModel](whereType=MembershipInputWhereFilter)
 )
 
 membership_by_id = strawberry.field(

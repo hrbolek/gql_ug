@@ -17,19 +17,7 @@ from ._GraphPermissions import (
     RBACPermission
 )
 from ._GraphResolvers import (
-
-    resolve_field,
-    default_resolver,
-    default_vector_resolver,
-    default_scalar_resolver,
-    default_page_resolver,
     default_by_id_resolver,
-
-    remove_constructor,
-
-    encapsulateInsert,
-    encapsulateUpdate,
-    encapsulateDelete
 )
 from uoishelpers.resolvers import (
     createInputs,
@@ -111,8 +99,7 @@ role_type_page = strawberry.field(
         # OnlyForAuthentized
     ],
     graphql_type=List[RoleTypeGQLModel],
-    # resolver=DBResolvers.RoleTypeModel.resolve_page(RoleTypeGQLModel, WhereFilterModel=RoleTypeInputWhereFilter)
-    resolver=default_page_resolver(whereType=RoleTypeInputWhereFilter)
+    resolver=PageResolver[RoleTypeGQLModel](whereType=RoleTypeInputWhereFilter)
 )
 
 #####################################################################

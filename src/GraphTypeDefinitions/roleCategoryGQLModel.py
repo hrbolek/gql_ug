@@ -14,14 +14,7 @@ from ._GraphPermissions import (
     OnlyForAdmins
 )
 from ._GraphResolvers import (
-
-    resolve_field,
-    default_resolver,
-    default_vector_resolver,
-    default_scalar_resolver,
-    default_page_resolver,
     default_by_id_resolver,
-
 )
 from uoishelpers.resolvers import (
     createInputs,
@@ -61,8 +54,7 @@ class RoleCategoryGQLModel(NamedGQLModel):
             OnlyForAuthentized
         ],
         graphql_type=List[RoleTypeGQLModel],
-        # resolver=DBResolvers.RoleCategoryModel.types(RoleTypeGQLModel, WhereFilterModel=RoleTypeInputWhereFilter)
-        resolver=default_vector_resolver(fkey_field_name="category_id", whereType=RoleTypeInputWhereFilter)
+        resolver=VectorResolver[RoleTypeGQLModel](fkey_field_name="category_id", whereType=RoleTypeInputWhereFilter)
     )
    
 #####################################################################
@@ -96,8 +88,7 @@ role_category_page = strawberry.field(
         OnlyForAuthentized
     ],
     graphql_type=List[RoleCategoryGQLModel],
-    # resolver=DBResolvers.RoleCategoryModel.resolve_page(RoleCategoryGQLModel, WhereFilterModel=RoleCategoryInputWhereFilter)
-    resolver=default_page_resolver(whereType=RoleCategoryInputWhereFilter)
+    resolver=PageResolver[RoleCategoryGQLModel](whereType=RoleCategoryInputWhereFilter)
 )
 #####################################################################
 #

@@ -327,13 +327,6 @@ from src.DBResolvers import (
     StatemachineCategoryResolvers,
     StateTransitionResolvers
 )
-# state_page = strawberry.field(
-#     description="",
-#     permission_classes=[OnlyForAuthentized],
-#     graphql_type=typing.List[StateGQLModel],
-#     # resolver=StateResolvers.Page(GQLModel=StateGQLModel, WhereFilterModel=StateWhereFilter)
-#     resolver=default_page_resolver(whereType=StateWhereFilter)
-# )
 
 state_page: typing.List["StateGQLModel"] = strawberry.field(
     description="all states",
@@ -355,8 +348,6 @@ statemachine_page = strawberry.field(
     description="all state machines",
     permission_classes=[OnlyForAuthentized],
     graphql_type=typing.List[StateMachineGQLModel],
-    # resolver=StateMachineResolvers.Page(GQLModel=StateMachineGQLModel, WhereFilterModel=StateMachineWhereFilter)
-    # resolver=default_page_resolver(whereType=StateMachineWhereFilter)
     resolver=PageResolver[StateMachineGQLModel](whereType=StateMachineWhereFilter)
 )
 
@@ -373,8 +364,6 @@ statetransition_page = strawberry.field(
     description="all state transitions",
     permission_classes=[OnlyForAuthentized],
     graphql_type=typing.List[StateTransitionGQLModel],
-    # resolver=StateTransitionResolvers.Page(GQLModel=StateTransitionGQLModel, WhereFilterModel=StateTransitionWhereFilter)
-    # resolver=default_page_resolver(whereType=StateTransitionWhereFilter)
     resolver=PageResolver[StateTransitionGQLModel](whereType=StateTransitionWhereFilter)
 )
 

@@ -17,9 +17,7 @@ from ._GraphPermissions import (
 from ._GraphResolvers import (
     remove_constructor,
     
-    default_page_resolver,
     default_scalar_resolver,
-    default_vector_resolver,
     default_by_id_resolver,
 
     resolve_field,
@@ -106,7 +104,7 @@ group_type_page = strawberry.field(
         OnlyForAuthentized
     ],
     graphql_type=typing.List[GroupTypeGQLModel],
-    resolver=default_page_resolver(whereType=GroupTypeInputWhereFilter)
+    resolver=PageResolver[GroupTypeGQLModel](whereType=GroupTypeInputWhereFilter)
 )
 
 group_type_by_id = strawberry.field(
