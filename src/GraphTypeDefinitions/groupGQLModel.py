@@ -495,17 +495,22 @@ class GroupInsertGQLModel:
     createdby_id: strawberry.Private[IDType] = None
     rbacobject: strawberry.Private[IDType] = None
 
-@strawberry.type(description="represents the result of CUD op on GroupGQLModel")
-class GroupResultGQLModel:
-    id: IDType = None
-    msg: str = None
+@strawberry.input(description="")
+class GroupDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
 
-    @strawberry.field(description="""Result of group operation""")
-    async def group(self, info: strawberry.types.Info) -> Union[GroupGQLModel, None]:
-        # print("GroupResultGQLModel", "group", self.id, flush=True)
-        result = await GroupGQLModel.resolve_reference(info, self.id)
-        # print("GroupResultGQLModel", result.id, result.name, flush=True)
-        return result
+# @strawberry.type(description="represents the result of CUD op on GroupGQLModel")
+# class GroupResultGQLModel:
+#     id: IDType = None
+#     msg: str = None
+
+#     @strawberry.field(description="""Result of group operation""")
+#     async def group(self, info: strawberry.types.Info) -> Union[GroupGQLModel, None]:
+#         # print("GroupResultGQLModel", "group", self.id, flush=True)
+#         result = await GroupGQLModel.resolve_reference(info, self.id)
+#         # print("GroupResultGQLModel", result.id, result.name, flush=True)
+#         return result
 
 
 class UpdateGroupPermission(RBACPermission):
@@ -533,8 +538,9 @@ class UpdateGroupPermission(RBACPermission):
         OnlyForAuthentized,
         UpdateGroupPermission
     ])
-async def group_update(self, info: strawberry.types.Info, group: GroupUpdateGQLModel) -> GroupResultGQLModel:
-    return await encapsulateUpdate(info, GroupGQLModel.getLoader(info), group, GroupResultGQLModel(id=group.id, msg="ok"))
+async def group_update(self, info: strawberry.types.Info, group: GroupUpdateGQLModel) -> Union[GroupGQLModel, UpdateError[GroupGQLModel]]:
+    result = await Update[GroupGQLModel].DoItSafeWay(info=info, entity=group)
+    return result
 
 class InsertGroupPermission(RBACPermission):
     message = "User is not allowed to create a new group"
@@ -561,13 +567,14 @@ class InsertGroupPermission(RBACPermission):
         OnlyForAuthentized,
         InsertGroupPermission
     ])
-async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLModel) -> Optional[GroupResultGQLModel]:
+async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLModel) -> Union[GroupGQLModel, InsertError[GroupGQLModel]]:
     group.rbacobject = group.id
     if group.mastergroup_id is not None:
         loader = GroupGQLModel.getLoader(info=info)
         master = await loader.load(group.mastergroup_id)
     group.path = f"{group.id}" if group.mastergroup_id is None else f"{master.path}/{group.id}"
-    return await encapsulateInsert(info, GroupGQLModel.getLoader(info), group, GroupResultGQLModel(id=group.id, msg="ok"))
+    result = await Insert[GroupGQLModel].DoItSafeWay(info=info, entity=group)
+    return result
 
 
 @strawberry.mutation(
@@ -576,6 +583,7 @@ async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLM
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def group_delete(self, info: strawberry.types.Info, id: IDType) -> GroupResultGQLModel:
-    return await encapsulateDelete(info, GroupGQLModel.getLoader(info), id, GroupResultGQLModel(msg="ok", id=None))
+async def group_delete(self, info: strawberry.types.Info, group: GroupDeleteGQLModel) -> Optional[DeleteError[GroupGQLModel]]:
+    result = await Delete[GroupGQLModel].DoItSafeWay(info=info, entity=group)
+    return result
 

@@ -28,6 +28,21 @@ from ._GraphResolvers import (
 
 )
 
+from uoishelpers.resolvers import (
+    createInputs,
+
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
+)
+
 from src.Dataloaders import (
     getLoadersFromInfo as getLoader,
     getUserFromInfo)
@@ -251,8 +266,9 @@ class UpdateMembershipPermission(RBACPermission):
 async def membership_update(self, 
     info: strawberry.types.Info, 
     membership: "MembershipUpdateGQLModel"
-) -> "MembershipResultGQLModel":
-    return await encapsulateUpdate(info, MembershipGQLModel.getLoader(info), membership, MembershipResultGQLModel(id=membership.id, msg="ok"))
+) -> Union[MembershipGQLModel, UpdateError[MembershipGQLModel]]:
+    result = await Update[GroupGQLModel].DoItSafeWay(info=info, entity=membership)
+    return result
 
 class InsertMembershipPermission(RBACPermission):
     message = "User is not allowed create new membership"
@@ -276,8 +292,9 @@ class InsertMembershipPermission(RBACPermission):
 async def membership_insert(self, 
     info: strawberry.types.Info, 
     membership: "MembershipInsertGQLModel"
-) -> "MembershipResultGQLModel":
-    return await encapsulateInsert(info, MembershipGQLModel.getLoader(info), membership, MembershipResultGQLModel(id=membership.id, msg="ok"))
+) -> Union[MembershipGQLModel, InsertError[MembershipGQLModel]]:
+    result = await Insert[GroupGQLModel].DoItSafeWay(info=info, entity=membership)
+    return result
 
 @strawberry.mutation(
     description="Deletes the membership",
@@ -285,6 +302,7 @@ async def membership_insert(self,
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def membership_delete(self, info: strawberry.types.Info, id: IDType) -> MembershipResultGQLModel:
-    return await encapsulateDelete(info, MembershipGQLModel.getLoader(info), id, MembershipResultGQLModel(msg="ok", id=None))
+async def membership_delete(self, info: strawberry.types.Info, membership: IDType) -> Union[MembershipGQLModel, DeleteError[MembershipGQLModel]]:
+    result = await Delete[GroupGQLModel].DoItSafeWay(info=info, entity=membership)
+    return result
 

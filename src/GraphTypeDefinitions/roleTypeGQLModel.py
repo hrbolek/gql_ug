@@ -31,7 +31,20 @@ from ._GraphResolvers import (
     encapsulateUpdate,
     encapsulateDelete
 )
+from uoishelpers.resolvers import (
+    createInputs,
 
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
+)
 from src.Dataloaders import (
     getLoadersFromInfo as getLoader,
     getUserFromInfo)
@@ -124,6 +137,11 @@ class RoleTypeInsertGQLModel:
     name_en: Optional[str] = None
     createdby_id: strawberry.Private[IDType] = None
    
+@strawberry.input(description="")
+class RoleTypeDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
+
 
 @strawberry.type(description="")
 class RoleTypeResultGQLModel:
@@ -159,8 +177,8 @@ async def role_type_update(self,
     info: strawberry.types.Info, 
     role_type: RoleTypeUpdateGQLModel
 
-) -> RoleTypeResultGQLModel:
-    result = await encapsulateUpdate(info, RoleTypeGQLModel.getLoader(info), role_type, RoleTypeResultGQLModel(msg="ok", id=role_type.id))   
+) -> Union[RoleTypeGQLModel, UpdateError[RoleTypeGQLModel]]:
+    result = await Update[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
     return result
 
 # class InsertRoleTypePermission(RBACPermission):
@@ -187,9 +205,9 @@ async def role_type_insert(self,
     info: strawberry.types.Info, 
     role_type: RoleTypeInsertGQLModel
 
-) -> RoleTypeResultGQLModel:
-    #print("role_type_update", role_type, flush=True)
-    return await encapsulateInsert(info, RoleTypeGQLModel.getLoader(info), role_type, RoleTypeResultGQLModel(msg="ok", id=None)) 
+) -> Union[RoleTypeGQLModel, InsertError[RoleTypeGQLModel]]:
+    result = await Insert[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
+    return result
 
 @strawberry.mutation(
     description="Deletes the roleType",
@@ -197,6 +215,8 @@ async def role_type_insert(self,
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def role_type_delete(self, info: strawberry.types.Info, id: IDType) -> RoleTypeResultGQLModel:
-    return await encapsulateDelete(info, RoleTypeGQLModel.getLoader(info), id, RoleTypeResultGQLModel(msg="ok", id=None))
+async def role_type_delete(self, info: strawberry.types.Info, role_type: RoleTypeDeleteGQLModel) -> Optional[DeleteError[RoleTypeGQLModel]]:
+    result = await Delete[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
+    return result
+
 

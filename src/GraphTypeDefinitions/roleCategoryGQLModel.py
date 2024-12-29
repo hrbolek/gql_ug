@@ -22,11 +22,20 @@ from ._GraphResolvers import (
     default_page_resolver,
     default_by_id_resolver,
 
-    remove_constructor,
+)
+from uoishelpers.resolvers import (
+    createInputs,
 
-    encapsulateInsert,
-    encapsulateUpdate,
-    encapsulateDelete
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
 )
 
 from src.Dataloaders import (
@@ -112,6 +121,11 @@ class RoleCategoryInsertGQLModel:
     name_en: Optional[str] = None
     createdby_id: strawberry.Private[IDType] = None
 
+@strawberry.input(description="Data structure for D operation")
+class RoleCategoryDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
+
 @strawberry.type(description="")
 class RoleCategoryResultGQLModel:
     id: IDType = None
@@ -146,8 +160,9 @@ async def role_category_update(self,
     info: strawberry.types.Info, 
     role_category: RoleCategoryUpdateGQLModel
 
-) -> RoleCategoryResultGQLModel:
-    return await encapsulateUpdate(info, RoleCategoryGQLModel.getLoader(info), role_category, RoleCategoryResultGQLModel(id=role_category.id, msg="ok"))
+) -> Union[RoleCategoryGQLModel, UpdateError[RoleCategoryGQLModel]]:
+    result = await Update[RoleCategoryGQLModel].DoItSafeWay(info=info, entity=role_category)
+    return result
 
 # class InsertRoleCategoryPermission(RBACPermission):
 #     message = "User is not allowed create new role category"
@@ -172,8 +187,9 @@ async def role_category_insert(self,
     info: strawberry.types.Info, 
     role_category: RoleCategoryInsertGQLModel
 
-) -> RoleCategoryResultGQLModel:
-    return await encapsulateInsert(info, RoleCategoryGQLModel.getLoader(info), role_category, RoleCategoryResultGQLModel(msg="ok", id=None))
+) -> Union[RoleCategoryGQLModel, InsertError[RoleCategoryGQLModel]]:
+    result = await Insert[RoleCategoryGQLModel].DoItSafeWay(info=info, entity=role_category)
+    return result
 
 @strawberry.mutation(
     description="Deletes the role category",
@@ -181,6 +197,6 @@ async def role_category_insert(self,
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def role_category_delete(self, info: strawberry.types.Info, id: IDType) -> RoleCategoryResultGQLModel:
-    return await encapsulateDelete(info, RoleCategoryGQLModel.getLoader(info), id, RoleCategoryResultGQLModel(msg="ok", id=None))
-
+async def role_category_delete(self, info: strawberry.types.Info, role_category: RoleCategoryDeleteGQLModel) -> Optional[DeleteError[RoleCategoryGQLModel]]:
+    result = await Delete[RoleCategoryGQLModel].DoItSafeWay(info=info, entity=role_category)
+    return result

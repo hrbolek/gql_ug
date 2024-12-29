@@ -29,6 +29,23 @@ from ._GraphResolvers import (
     encapsulateDelete
 )
 
+from uoishelpers.resolvers import (
+    createInputs,
+
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
+)
+
+
+
 from src.Dataloaders import getLoadersFromInfo
 from src.DBResolvers import DBResolvers
 
@@ -123,6 +140,11 @@ class GroupTypeInsertGQLModel:
     name_en: Optional[str] = None
     createdby_id: strawberry.Private[IDType] = None
 
+@strawberry.input(description="")
+class GroupTypeDeleteGQLModel:
+    id: IDType
+    lastchange: datetime.datetime
+
 @strawberry.type(description="")
 class GroupTypeResultGQLModel:
     id: IDType = None
@@ -139,8 +161,9 @@ class GroupTypeResultGQLModel:
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def group_type_update(self, info: strawberry.types.Info, group_type: GroupTypeUpdateGQLModel) -> GroupTypeResultGQLModel:
-    return await encapsulateUpdate(info, GroupTypeGQLModel.getLoader(info), group_type, GroupTypeResultGQLModel(id=group_type.id, msg="ok"))
+async def group_type_update(self, info: strawberry.types.Info, group_type: GroupTypeUpdateGQLModel) -> Union[GroupTypeGQLModel, UpdateError[GroupTypeGQLModel]]:
+    result = await Update[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+    return result
 
 @strawberry.mutation(
     description="""Inserts a group type""",
@@ -148,8 +171,9 @@ async def group_type_update(self, info: strawberry.types.Info, group_type: Group
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def group_type_insert(self, info: strawberry.types.Info, group_type: GroupTypeInsertGQLModel) -> GroupTypeResultGQLModel:
-    return await encapsulateInsert(info, GroupTypeGQLModel.getLoader(info), group_type, GroupTypeResultGQLModel(id=None, msg="ok"))
+async def group_type_insert(self, info: strawberry.types.Info, group_type: GroupTypeInsertGQLModel) -> Union[GroupTypeGQLModel, InsertError[GroupTypeGQLModel]]:
+    result = await Insert[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+    return result
 
 @strawberry.mutation(
     description="Deletes the group type",
@@ -157,6 +181,7 @@ async def group_type_insert(self, info: strawberry.types.Info, group_type: Group
         OnlyForAuthentized,
         OnlyForAdmins
     ])
-async def group_type_delete(self, info: strawberry.types.Info, id: IDType) -> GroupTypeResultGQLModel:
-    return await encapsulateDelete(info, GroupTypeGQLModel.getLoader(info), id, GroupTypeResultGQLModel(msg="ok", id=None))
+async def group_type_delete(self, info: strawberry.types.Info, group_type: GroupTypeDeleteGQLModel) -> Optional[DeleteError[GroupTypeGQLModel]]:
+    result = await Delete[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+    return result
 
