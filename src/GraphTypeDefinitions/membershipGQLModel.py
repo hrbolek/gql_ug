@@ -214,7 +214,7 @@ class MembershipUpdateGQLModel:
 class MembershipInsertGQLModel:
     user_id: IDType
     group_id: IDType
-    id: Optional[IDType] = strawberry.field(description="Primary key of entity", default_factory=uuid.uuid1)
+    id: Optional[IDType] = strawberry.field(description="Primary key of entity", default=None)
     valid: Optional[bool] = True
     startdate: Optional[datetime.datetime] = None
     enddate: Optional[datetime.datetime] = None

@@ -107,7 +107,7 @@ class RoleCategoryUpdateGQLModel:
 
 @strawberry.input(description="Initial data structure for C operation")
 class RoleCategoryInsertGQLModel:
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
+    id: Optional[IDType] = strawberry.field(description="primary key", default=None)
     name: Optional[str] = None
     name_en: Optional[str] = None
     createdby_id: strawberry.Private[IDType] = None

@@ -355,7 +355,7 @@ class UserUpdateGQLModel:
 
 @strawberry.input(description="Describes initial values for C operation on UserGQLModel")
 class UserInsertGQLModel:
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
+    id: Optional[IDType] = strawberry.field(description="primary key", default=None)
     name: Optional[str] = None
     surname: Optional[str] = None
     email: Optional[str] = None
@@ -364,7 +364,7 @@ class UserInsertGQLModel:
 
 @strawberry.input(description="Describes D operation on UserGQLModel")
 class UserDeleteGQLModel:
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
+    id: IDType = strawberry.field(description="primary key")
     lastchange: datetime.datetime  # razitko
 
 @strawberry.type

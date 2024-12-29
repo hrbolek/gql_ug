@@ -467,7 +467,7 @@ class GroupUpdateGQLModel:
 class GroupInsertGQLModel:
     name: str
     grouptype_id: IDType
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid4)
+    id: Optional[IDType] = strawberry.field(description="primary key", default=None)
     name_en: Optional[str] = None
     mastergroup_id: Optional[IDType] = None
     valid: Optional[bool] = None

@@ -308,7 +308,7 @@ class RoleInsertGQLModel:
     user_id: IDType
     group_id: IDType
     roletype_id: IDType
-    id: Optional[IDType] = strawberry.field(description="primary key", default_factory=uuid.uuid1)
+    id: Optional[IDType] = strawberry.field(description="primary key", default=None)
     # valid: Optional[bool] = True
     deputy: Optional[bool] = strawberry.field(description="If the role is deputy role", default=False)
     startdate: Optional[datetime.datetime] = strawberry.field(description="start datetime of role", default_factory=datetime.datetime.now)
