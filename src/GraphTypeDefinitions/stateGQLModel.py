@@ -597,7 +597,7 @@ async def statetransition_update(self, info: strawberry.types.Info, statetransit
 @strawberry.mutation(
     description="D operation",
     permission_classes=[OnlyForAuthentized])
-async def statetransition_delete(self, info: strawberry.types.Info, statetransition: StatetransitionDeleteGQLModel) -> typing.Union[StateTransitionGQLModel, DeleteError[StateTransitionGQLModel]]:
+async def statetransition_delete(self, info: strawberry.types.Info, statetransition: StatetransitionDeleteGQLModel) -> typing.Optional[DeleteError[StateTransitionGQLModel]]:
     return await Delete[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
 
 # from enum import Enum
