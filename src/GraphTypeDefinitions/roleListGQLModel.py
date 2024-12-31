@@ -48,11 +48,14 @@ class RoleTypeListGQLModel(BaseGQLModel):
     @classmethod
     async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
         if id is not None:
-            loader = cls.getLoader(info)
-            if isinstance(id, str): id = IDType(id)
-            rows = await loader.filter_by(list_id=id)
-            row = next(rows, None)
-            return None if row is None else cls(id=id) # it has not any real row in a table
+            # loader = cls.getLoader(info)
+            # if isinstance(id, str): id = IDType(id)
+            # rows = await loader.filter_by(list_id=id)
+            # row = next(rows, None)
+            # return None if row is None else cls(id=id) # it has not any real row in a table
+            
+            # empty list :)
+            return cls(id=id)
         return None
 
 
