@@ -56,7 +56,7 @@ class RoleTypeListGQLModel(BaseGQLModel):
         return None
 
 
-    id: IDType = None
+    id: Optional[IDType] = None
 
     # changedby = resolve_changedby
     # lastchange = resolve_lastchange
@@ -114,11 +114,11 @@ class RoleTypeListResult:
         return await RoleTypeListGQLModel.resolve_reference(info=info, id=self.id)
 
 import dataclasses
-@dataclasses.dataclass
+@strawberry.input(description="")
 class RoleTypeInsertIntoList:
     type_id: IDType = None
     id: IDType = None
-    list_id: strawberry.Private[IDType]
+    list_id: strawberry.Private[IDType] = None
     createdby_id: strawberry.Private[IDType] = None
 
 # class InsertMembershipPermission(RBACPermission):
@@ -167,12 +167,12 @@ async def role_type_list_add(
     except Exception as e:
         return InsertError[RoleTypeListGQLModel](msg=f"{e}", _input=entity)
 
-@dataclasses.dataclass
+@strawberry.input(description="")
 class RoleTypeDeleteFormList:
     type_id: IDType = None
     id: IDType = None
-    lastchange: datetime.datetime
-    list_id: strawberry.Private[IDType]
+    # lastchange: datetime.datetime
+    list_id: strawberry.Private[IDType] = None
     createdby_id: strawberry.Private[IDType] = None
 
 
@@ -181,7 +181,7 @@ class RoleTypeDeleteFormList:
     permission_classes=[OnlyForAuthentized])
 async def role_type_list_remove(
     self, info: strawberry.types.Info, entity: RoleTypeDeleteFormList
-) -> Optional[DeleteError[RoleTypeDeleteFormList]]:
+) -> Optional[DeleteError[RoleTypeListGQLModel]]:
     # list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
     # type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
     try:
