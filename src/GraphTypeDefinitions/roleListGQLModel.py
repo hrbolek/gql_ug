@@ -1,6 +1,8 @@
+import sqlalchemy
+import datetime
 import strawberry
 import asyncio
-from typing import List, Annotated, Optional
+from typing import List, Annotated, Optional, Union
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
@@ -16,6 +18,23 @@ from ._GraphPermissions import (
 from src.Dataloaders import (
     getLoadersFromInfo,
     getUserFromInfo)
+
+from uoishelpers.resolvers import (
+    createInputs,
+
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
+)
+
+
 from src.DBResolvers import DBResolvers
 
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy(".roleTypeGQLModel")]
@@ -98,7 +117,8 @@ import dataclasses
 @dataclasses.dataclass
 class RoleTypeInsertIntoList:
     type_id: IDType = None
-    list_id: IDType = None
+    id: IDType = None
+    list_id: strawberry.Private[IDType]
     createdby_id: strawberry.Private[IDType] = None
 
 # class InsertMembershipPermission(RBACPermission):
@@ -118,55 +138,68 @@ class RoleTypeInsertIntoList:
     description="""adds to a list of role types new item""",
     permission_classes=[OnlyForAuthentized])
 async def role_type_list_add(
-    self, info: strawberry.types.Info, role_type_list_id: IDType, role_type_id: IDType
-) -> "RoleTypeListResult":
-    list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
-    type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
-    loader = RoleTypeListGQLModel.getLoader(info)
-    roles = await loader.filter_by(list_id=list_id, type_id=type_id)
-    # roles = [*roles]
-    
-    isIn = next(roles, None)
-    
-    result = RoleTypeListResult(id=list_id, msg="fail")
-    # print(result, flush=True)
-    # print(result.id, type(result.id), flush=True)
-    # result.msg = "fail" if isIn is None else "ok"
-    # result.msg = "fail"
-    if isIn is None:
-        whatToInsert = RoleTypeInsertIntoList(type_id=type_id, list_id=list_id)
-        # print("whatToInsert", whatToInsert, flush=True)
-        # print("whatToInsert", whatToInsert.list_id, flush=True)
-        # print("whatToInsert", whatToInsert.type_id, flush=True)
+    self, info: strawberry.types.Info, entity: RoleTypeInsertIntoList
+) -> Union[RoleTypeListGQLModel, InsertError[RoleTypeListGQLModel]]:
+    # list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
+    # type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
+    try:
+        entity.list_id = entity.id
+        loader = RoleTypeListGQLModel.getLoader(info)
+        roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
+        # roles = [*roles]
+        
+        isIn = next(roles, None)
+        
+        # print(result, flush=True)
+        # print(result.id, type(result.id), flush=True)
+        # result.msg = "fail" if isIn is None else "ok"
+        # result.msg = "fail"
+        if isIn is not None:
+            return InsertError[RoleTypeListGQLModel](msg=f"Already in list", _input=entity)
+        
+
         user = getUserFromInfo(info)
-        whatToInsert.createdby = user["id"]
+        entity.createdby_id = user["id"]
             
-        row = await loader.insert(whatToInsert)
-        result.msg = "fail" if row is None else "ok"
-    return result
+        row = await loader.insert(entity)
+        return RoleTypeListGQLModel.from_dataclass(row)
+        
+    except Exception as e:
+        return InsertError[RoleTypeListGQLModel](msg=f"{e}", _input=entity)
 
 @dataclasses.dataclass
 class RoleTypeDeleteFormList:
+    type_id: IDType = None
     id: IDType = None
+    lastchange: datetime.datetime
+    list_id: strawberry.Private[IDType]
+    createdby_id: strawberry.Private[IDType] = None
+
 
 @strawberry.field(
     description="""Finds an user by their id""",
     permission_classes=[OnlyForAuthentized])
 async def role_type_list_remove(
-    self, info: strawberry.types.Info, role_type_list_id: IDType, role_type_id: IDType
-) -> "RoleTypeListResult":
-    list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
-    type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
-    # print(list_id, type(list_id), flush=True)
-    # print(type_id, type(type_id), flush=True)
-    loader = RoleTypeListGQLModel.getLoader(info)
-    roles = await loader.filter_by(list_id=list_id, type_id=type_id)
-    # isIn = False
-    isIn = next(roles, None)
-    print(isIn, isIn.id, flush=True)
-    result = RoleTypeListResult(id=list_id, msg="ok")
-    result.msg = "fail" if isIn is None else "ok"
-    # if isIn:
-    #     await loader.delete(isIn.id)
-    return result
-    
+    self, info: strawberry.types.Info, entity: RoleTypeDeleteFormList
+) -> Optional[DeleteError[RoleTypeDeleteFormList]]:
+    # list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
+    # type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
+    try:
+        entity.list_id = entity.id
+        # print(list_id, type(list_id), flush=True)
+        # print(type_id, type(type_id), flush=True)
+        loader = RoleTypeListGQLModel.getLoader(info)
+        roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
+        # isIn = False
+        isIn = next(roles, None)
+        dbmodel = loader.getModel()
+        AsyncSessionMaker = loader.getAsyncSessionMaker()
+        async with AsyncSessionMaker() as session:
+            stmt = sqlalchemy.delete(dbmodel).where(dbmodel.list_id==entity.list_id, dbmodel.type_id==entity.type_id)
+            async with session.begin():
+                await session.execute(stmt)
+    except Exception as e:
+        TL = RoleTypeListGQLModel(id=entity.id)
+        return DeleteError[RoleTypeListGQLModel](_entity=TL, _input=entity)
+
+    return None
