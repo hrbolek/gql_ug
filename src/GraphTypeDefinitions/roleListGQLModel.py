@@ -165,13 +165,13 @@ async def role_type_list_add(
         entity.createdby_id = user["id"]
             
         row = await loader.insert(entity)
-        return RoleTypeListGQLModel.from_dataclass(row)
+        return RoleTypeListGQLModel(entity.id)
         
     except Exception as e:
         return InsertError[RoleTypeListGQLModel](msg=f"{e}", _input=entity)
 
 @strawberry.input(description="")
-class RoleTypeDeleteFormList:
+class RoleTypeDeleteFromList:
     type_id: IDType = None
     id: IDType = None
     # lastchange: datetime.datetime
@@ -183,8 +183,8 @@ class RoleTypeDeleteFormList:
     description="""Finds an user by their id""",
     permission_classes=[OnlyForAuthentized])
 async def role_type_list_remove(
-    self, info: strawberry.types.Info, entity: RoleTypeDeleteFormList
-) -> Optional[DeleteError[RoleTypeListGQLModel]]:
+    self, info: strawberry.types.Info, entity: RoleTypeDeleteFromList
+) -> Union[UpdateError[RoleTypeListGQLModel], RoleTypeListGQLModel]:
     # list_id = IDType(role_type_list_id) if isinstance(role_type_list_id, str) else role_type_list_id
     # type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
     try:
@@ -192,9 +192,9 @@ async def role_type_list_remove(
         # print(list_id, type(list_id), flush=True)
         # print(type_id, type(type_id), flush=True)
         loader = RoleTypeListGQLModel.getLoader(info)
-        roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
+        # roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
         # isIn = False
-        isIn = next(roles, None)
+        # isIn = next(roles, None)
         dbmodel = loader.getModel()
         AsyncSessionMaker = loader.getAsyncSessionMaker()
         async with AsyncSessionMaker() as session:
@@ -202,7 +202,7 @@ async def role_type_list_remove(
             async with session.begin():
                 await session.execute(stmt)
     except Exception as e:
-        TL = RoleTypeListGQLModel(id=entity.id)
-        return DeleteError[RoleTypeListGQLModel](_entity=TL, _input=entity)
+        TL = RoleTypeListGQLModel(entity.id)
+        return UpdateError[RoleTypeListGQLModel](_entity=TL, _input=entity)
 
-    return None
+    return RoleTypeListGQLModel(entity.id)
