@@ -387,6 +387,7 @@ class StatemachineInsertGQLModel:
     name: str = strawberry.field(description="name")   
     name_en: typing.Optional[str] = strawberry.field(description="name", default=None)   
     id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
+    states: typing.Optional[typing.List["StateInsertGQLModel"]] = strawberry.field(description="list states to be part of state machine", default=None)
     rbacobject_id: typing.Optional[uuid.UUID] = strawberry.field(description="who can access", default=None)
     createdby_id: strawberry.Private[uuid.UUID] = None 
 
@@ -431,8 +432,39 @@ class StatemachineDeleteGQLModel:
         OnlyForAuthentized,
         SimpleInsertPermission[StateMachineGQLModel](roles=["administrátor"])
     ])
-async def statemachine_insert(self, info: strawberry.types.Info, statemachine: StatemachineInsertGQLModel) -> typing.Union[StateMachineGQLModel, InsertError[StateMachineGQLModel]]:
-    return await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+async def statemachine_insert(
+        self, 
+        info: strawberry.types.Info, 
+        statemachine: StatemachineInsertGQLModel,
+        # openSession: strawberry.Private[object] = None
+    ) -> typing.Union[StateMachineGQLModel, InsertError[StateMachineGQLModel]]:
+    print("statemachine_insert", statemachine)
+    states = statemachine.states
+    statemachine.states = None
+    machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+    if getattr(machineResult, "failed", False):
+        print("statemachine_insert.statemachine failed", machineResult.msg, state)
+        return InsertError[StateMachineGQLModel](msg=machineResult.msg, _input=statemachine)
+    
+    if states is not None:
+        print("statemachine_insert", states)
+        transitions = []
+        for state in states:
+            if state.targets is not None:
+                transitions.extend(state.targets)
+            state.targets = None
+            result = await state_insert_internal(self=self, info=info, state=state)
+            if getattr(result, "failed", False):
+                print("statemachine_insert.state failed", result.msg, state)
+                return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
+        for transition in transitions:
+            result = await statetransition_insert_internal(self=self, info=info, statetransition=transition)
+            if getattr(result, "failed", False):
+                print("statemachine_insert.transition failed", result.msg, transition)
+                return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
+        pass
+    statemachine.states = None
+    return machineResult
 
 # @strawberry.mutation(
 #     description="U operation",
@@ -481,6 +513,7 @@ class StateInsertGQLModel:
     name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
     order: typing.Optional[int] = strawberry.field(description="order of states", default=0)
     id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
+    targets: typing.Optional[typing.List["StatetransitionInsertGQLModel"]] = strawberry.field(description="Transitions from this state", default=None)
     rbacobject_id: typing.Optional[uuid.UUID] = strawberry.field(description="who can access", default=None)
     createdby_id: strawberry.Private[uuid.UUID] = None 
     readerslist_id: strawberry.Private[uuid.UUID] = None 
@@ -517,13 +550,16 @@ class StateDeleteGQLModel:
 #         result = await StateMachineGQLModel.resolve_reference(info=info, id=self.machine_id)
 #         return result
 
+async def state_insert_internal(self, info: strawberry.types.Info, state: StateInsertGQLModel) -> typing.Union[StateGQLModel, InsertError[StateGQLModel]]:
+    state.readerslist_id = uuid.uuid4()
+    state.writerslist_id = uuid.uuid4()
+    return await Insert[StateGQLModel].DoItSafeWay(info=info, entity=state)
+
 @strawberry.mutation(
     description="C operation",
     permission_classes=[OnlyForAuthentized])
 async def state_insert(self, info: strawberry.types.Info, state: StateInsertGQLModel) -> typing.Union[StateGQLModel, InsertError[StateGQLModel]]:
-    state.readerslist_id = uuid.uuid4()
-    state.writerslist_id = uuid.uuid4()
-    return await Insert[StateGQLModel].DoItSafeWay(info=info, entity=state)
+    return await state_insert_internal(self=self, info=info, state=state)
 
 @strawberry.mutation(
     description="U operation",
@@ -582,11 +618,14 @@ class StatetransitionDeleteGQLModel:
 #         result = await StateMachineGQLModel.resolve_reference(info=info, id=self.machine_id)
 #         return result
 
+async def statetransition_insert_internal(self, info: strawberry.types.Info, statetransition: StatetransitionInsertGQLModel) -> typing.Union[StateTransitionGQLModel, InsertError[StateTransitionGQLModel]]:
+    return await Insert[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
+
 @strawberry.mutation(
     description="C operation",
     permission_classes=[OnlyForAuthentized])
 async def statetransition_insert(self, info: strawberry.types.Info, statetransition: StatetransitionInsertGQLModel) -> typing.Union[StateTransitionGQLModel, InsertError[StateTransitionGQLModel]]:
-    return await Insert[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
+    return await statetransition_insert_internal(self=self, info=info, statetransition=statetransition)
 
 @strawberry.mutation(
     description="U operation",

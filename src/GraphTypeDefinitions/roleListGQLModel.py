@@ -163,9 +163,9 @@ async def role_type_list_add(
 
         user = getUserFromInfo(info)
         entity.createdby_id = user["id"]
-            
+        entity.id = None
         row = await loader.insert(entity)
-        return RoleTypeListGQLModel(entity.id)
+        return RoleTypeListGQLModel(id=entity.id)
         
     except Exception as e:
         return InsertError[RoleTypeListGQLModel](msg=f"{e}", _input=entity)
@@ -202,7 +202,7 @@ async def role_type_list_remove(
             async with session.begin():
                 await session.execute(stmt)
     except Exception as e:
-        TL = RoleTypeListGQLModel(entity.id)
+        TL = RoleTypeListGQLModel(id=entity.id)
         return UpdateError[RoleTypeListGQLModel](_entity=TL, _input=entity)
 
-    return RoleTypeListGQLModel(entity.id)
+    return RoleTypeListGQLModel(id=entity.id)
