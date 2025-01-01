@@ -26,3 +26,4 @@ class RoleTypeModel(BaseModel):
     )
 
     category_id: Mapped[int] = mapped_column(ForeignKey("rolecategories.id"), index=True, nullable=True, default=None)
+    category = relationship("rolecategories", uselist=False, viewonly=True)

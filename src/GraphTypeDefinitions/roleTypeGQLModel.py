@@ -81,8 +81,10 @@ from dataclasses import dataclass
 class RoleTypeInputWhereFilter:
     id: IDType
     name: str
-    from .roleGQLModel import RoleInputWhereFilter
-    roles: RoleInputWhereFilter
+    # from .roleGQLModel import RoleInputWhereFilter
+    # roles: RoleInputWhereFilter
+    from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
+    category: RoleCategoryInputWhereFilter
 
 role_type_by_id = strawberry.field(
     description="""Finds a role type by its id""",
