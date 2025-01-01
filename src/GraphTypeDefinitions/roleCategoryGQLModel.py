@@ -68,6 +68,7 @@ from dataclasses import dataclass
 @createInputs
 @dataclass
 class RoleCategoryInputWhereFilter:
+    id: IDType
     name: str
     name_en: str
     roletypes: RoleTypeInputWhereFilter
