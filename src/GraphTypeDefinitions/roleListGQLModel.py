@@ -165,9 +165,10 @@ async def role_type_list_add(
         entity.createdby_id = user["id"]
         entity.id = None
         row = await loader.insert(entity)
-        return RoleTypeListGQLModel(id=entity.id)
+        return RoleTypeListGQLModel(id=entity.list_id)
         
     except Exception as e:
+        print("role_type_list_add.Exception", e)
         return InsertError[RoleTypeListGQLModel](msg=f"{e}", _input=entity)
 
 @strawberry.input(description="")

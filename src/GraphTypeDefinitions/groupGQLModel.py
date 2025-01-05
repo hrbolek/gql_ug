@@ -506,7 +506,7 @@ class UpdateGroupPermission(RBACPermission):
             allowedRoleNames=allowedRoleNames)
         
         if not role: return False
-        roleTypeName = role["type"]["name"]
+        roleTypeName = role["roletype"]["name"]
         if roleTypeName in allowedRoleNames:
             if group.mastergroup_id:
                 raise self.error_class(f"{roleTypeName} cannot change mastergroup_id")
