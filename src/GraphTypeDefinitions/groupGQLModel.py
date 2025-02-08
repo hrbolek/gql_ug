@@ -245,8 +245,9 @@ class GroupGQLModel(NamedGQLModel):
         print(f"path {path}", flush=True)
         print(f"ids {ids}", flush=True)
         futures = [GroupGQLModel.load_with_loader(info=info, id=id) for id in ids]
-        result = await asyncio.gather(*futures)
-        return result
+        results = await asyncio.gather(*futures)
+        groups = [GroupGQLModel.from_dataclass(result) for result in results]
+        return groups
 
 
     path: typing.Optional[str] = strawberry.field(
