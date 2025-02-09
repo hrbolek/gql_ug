@@ -1,12 +1,20 @@
-mutation RoleUpdate($id: UUID!, $lastchange: DateTime!, $startdate: DateTime, $enddate: DateTime, $valid: Boolean) {
+mutation RoleUpdate($id: UUID!, $lastchange: DateTime!, $startdate: DateTime, $enddate: DateTime) {
   result: roleUpdate(
-    role: {id: $id, lastchange: $lastchange, startdate: $startdate, enddate: $enddate, valid: $valid}
+    role: {id: $id, lastchange: $lastchange, startdate: $startdate, enddate: $enddate}
   ) {
-    id
-    msg
-    result: role {
-      ...Role
-    }
+    ...Role
+    ...Error
+  }
+}
+
+
+fragment Error on RoleGQLModelUpdateError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...Role
   }
 }
 

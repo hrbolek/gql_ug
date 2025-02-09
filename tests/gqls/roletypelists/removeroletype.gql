@@ -1,7 +1,24 @@
 mutation roleTypeListRemoveRole($roletypelist_id: UUID!, $roletype_id: UUID!) {
-  result: roleTypeListRemoveRole(roleTypeListId: $roletypelist_id, roleTypeId: $roletype_id){
-    # id
-    msg
-    
+  result: roleTypeListRemoveRole(
+    entity: {typeId: $roletype_id, id: $roletypelist_id}
+  ) {
+    ...RoleTypeList
+    ...Error
   }
+}
+
+fragment Error on RoleTypeListGQLModelUpdateError {
+  __typename
+  failed
+  msg
+  input
+  Entity {
+    ...RoleTypeList
+  }
+}
+
+fragment RoleTypeList on RoleTypeListGQLModel {
+  __typename
+  id
+  lastchange
 }

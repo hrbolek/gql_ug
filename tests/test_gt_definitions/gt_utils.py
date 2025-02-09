@@ -175,19 +175,33 @@ def createUpdateTest2(tableName, variables=None, expectedJson=None):
     async def result_test(SQLite, DemoData, ClientExecutorDemo, SchemaExecutorDemo, Env_GQLUG_ENDPOINT_URL_8124):
         queryUpdate = getQuery(tableName=tableName, queryName=queryName)
         queryRead = getQuery(tableName=tableName, queryName="read")
+
         _variables = variables
         if _variables is None:
             _variables = getVariables(tableName=tableName, queryName=queryName)       
 
-        responseJson = await SchemaExecutorDemo(query=queryRead, variable_values=_variables)
-        responseData = responseJson.get("data")
-        assert responseData is not None, f"got no data while asking for lastchange atribute {responseJson}"
-        
-        [responseEntity, *_] = responseData.values()
-        assert responseEntity is not None, f"got no entity while asking for lastchange atribute {responseJson}"
-        lastchange = responseEntity.get("lastchange", None)
-        assert lastchange is not None, f"query read for table {tableName} is not asking for lastchange which is needed"
-        _variables["lastchange"] = lastchange
+        if "id" not in _variables:
+            queryReadPage = getQuery(tableName=tableName, queryName="readp")
+            responseJson = await SchemaExecutorDemo(query=queryReadPage, variable_values={})
+            assert "data" in responseJson, f"no data while query page for update {responseJson}"
+            responseData = responseJson.get("data")
+            [responseEntity, *_] = responseData.values()
+            assert len(responseEntity) > 0, f"no entities while query page for update {responseJson}"
+            entity = responseEntity[0]
+            assert "id" in entity, f"while query page for update got entity wo id {entity}"
+            _variables["id"] = entity["id"]
+            assert "lastchange" in entity, f"while query page for update got entity wo lastchange {entity}"
+            _variables["lastchange"] = entity["lastchange"]
+        else:
+            responseJson = await SchemaExecutorDemo(query=queryRead, variable_values=_variables)
+            responseData = responseJson.get("data")
+            assert responseData is not None, f"got no data while asking for lastchange atribute {responseJson}"
+            
+            [responseEntity, *_] = responseData.values()
+            assert responseEntity is not None, f"got no entity while asking for lastchange atribute {responseJson}"
+            lastchange = responseEntity.get("lastchange", None)
+            assert lastchange is not None, f"query read for table {tableName} is not asking for lastchange which is needed"
+            _variables["lastchange"] = lastchange
 
         _expectedJson = expectedJson
         if _expectedJson is None:
@@ -198,6 +212,38 @@ def createUpdateTest2(tableName, variables=None, expectedJson=None):
         else:
             assert "errors" not in responseJson, f"update failed {responseJson}"
             logging.info(f"query for {queryUpdate} with {_variables}, no tested response")
+        
+    return result_test
+
+def createDeleteTest2(tableName, variables=None, expectedJson=None):
+    @pytest.mark.asyncio
+    async def result_test(SchemaExecutorDemo):
+        queryCreate = getQuery(tableName=tableName, queryName="create")
+        queryDelete = getQuery(tableName=tableName, queryName="delete")
+        _variables = variables
+        if _variables is None:
+            _variables = getVariables(tableName=tableName, queryName="delete")
+        assert _variables != {}, f"variables must be set"
+
+        responseJson = await SchemaExecutorDemo(query=queryCreate, variable_values=_variables)
+        responseData = responseJson.get("data")
+        assert responseData is not None, f"got no data while creating an entity for delete query {responseJson}"
+        
+        [responseEntity, *_] = responseData.values()
+        assert responseEntity is not None, f"got no entity while asking for lastchange atribute {responseJson}"
+        assert "lastchange" in responseEntity, f"query read for table {tableName} is not asking for lastchange which is needed see {responseJson}"
+        assert "id" in responseEntity is not None, f"variables must have an 'id'"
+        
+        _variables = responseEntity
+        _expectedJson = expectedJson
+        if _expectedJson is None:
+            _expectedJson = getExpectedResult(tableName=tableName, queryName="delete")
+        responseJson = await SchemaExecutorDemo(query=queryDelete, variable_values=_variables)
+        if _expectedJson is not None:
+            assert checkExpected(responseJson, expectedJson), f"unexpected response \n{responseJson}\ninstead\n{_expectedJson}"
+        else:
+            assert "errors" not in responseJson, f"update failed {responseJson}"
+            logging.info(f"query for {queryDelete} with {_variables}, no tested response")
         
     return result_test
 

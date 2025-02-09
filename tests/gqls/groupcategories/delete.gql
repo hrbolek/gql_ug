@@ -1,6 +1,27 @@
 
-mutation groupCategoryDelete($id: UUID!) {
-  result: groupCategoryDelete(id: $id) {
-    msg
+
+mutation groupCategoryDelete($id: UUID!, $lastchange: DateTime!) {
+  result: groupCategoryDelete(groupCategory: {id: $id, lastchange: $lastchange}) {
+    ...Error
   }
+}
+
+fragment Error on GroupCategoryGQLModelDeleteError {
+  __typename
+  failed
+  input
+  Entity {
+    ...GroupCategoryModel
+  }
+  msg
+}
+
+fragment GroupCategoryModel on GroupCategoryGQLModel {
+  __typename
+    id
+    lastchange
+    name
+    nameEn
+
+    rbacobject { id }
 }

@@ -1,10 +1,28 @@
 query ($limit: Int, $skip: Int, $where: UserInputWhereFilter) {
   result: userPage(limit: $limit, skip: $skip, where: $where) {
     __typename
-    id
-    name
-    surname
-    fullname
-    email
+    ...User
   }
+}
+
+fragment User on UserGQLModel {
+  id
+  lastchange
+  name
+  surname
+  email
+  isThisMe
+  rolesOn {
+    id
+    user {
+      email
+    }
+    roletype {
+      name
+    }
+  }
+  memberOf {
+    name
+  }
+  id
 }

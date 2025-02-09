@@ -1,10 +1,21 @@
 mutation roleTypeListAddRole($roletypelist_id: UUID!, $roletype_id: UUID!) {
-  result: roleTypeListAddRole(roleTypeListId: $roletypelist_id, roleTypeId: $roletype_id){
-    id
-    msg
-    result: roleTypelist {
-        # id
-        roletypes { id }
-    }
+  result: roleTypeListAddRole(
+    entity: {typeId: $roletype_id, id: $roletypelist_id}
+  ) {
+    ...RoleTypeList
+    ...Error
   }
+}
+
+fragment Error on InsertError {
+  __typename
+  failed
+  msg
+  input
+}
+
+fragment RoleTypeList on RoleTypeListGQLModel {
+  __typename
+  id
+  lastchange
 }

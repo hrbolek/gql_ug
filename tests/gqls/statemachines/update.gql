@@ -2,14 +2,21 @@ mutation statemachineUpdate($id: UUID!, $lastchange: DateTime!, $name: String!, 
   result: statemachineUpdate(
     statemachine: {id: $id, lastchange: $lastchange, name: $name, nameEn: $name_en}
   ) {
-    id
-    msg
-    result: statemachine {
-      ...StatemachineModel
-    }
+    ...StatemachineModel
+    ...Error
   }
 }
 
+
+fragment Error on StateMachineGQLModelUpdateError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...StatemachineModel
+  }
+}
 
 fragment StatemachineModel on StateMachineGQLModel {
   __typename

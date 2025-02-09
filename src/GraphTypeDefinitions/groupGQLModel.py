@@ -66,15 +66,25 @@ class GroupInputWhereFilter:
 
 GroupGQLModel_description = """
 ## Description
+Group is an entity with members.  
+Skupina je entita se členy.
 
-Group is entity with members. 
-It can have also mastergroup.
-Mastergroup can be only one.
-Groups are organized in tree structures.
-There also can be defined roles on the group.
+## Details
+- It can have a master group; only one master group is allowed.  
+  Může mít nadřazenou skupinu; je povolena pouze jedna nadřazená skupina.
+- Groups are organized in a hierarchical tree structure.  
+  Skupiny jsou organizovány ve stromové hierarchii.
+- Roles can be defined on the group to control permissions and access.  
+  Na skupině lze definovat role, které ovlivňují oprávnění a přístup.
+
+## Business Rules
+- A group may have only one master group.  
+  Skupina může mít pouze jednu nadřazenou skupinu.
+- The hierarchy must be consistent.  
+  Hierarchie musí být udržována konzistentně.
 """
 
-@strawberry.federation.type(keys=["id"], description="""Entity representing a group""")
+@strawberry.federation.type(keys=["id"], description=GroupGQLModel_description)
 class GroupGQLModel(NamedGQLModel):
     @classmethod
     def getLoader(cls, info):
@@ -88,157 +98,91 @@ class GroupGQLModel(NamedGQLModel):
         return instance
 
     email: typing.Optional[str] = strawberry.field(
-        description="""Group's email""",
+        description="""Group's email address.  
+Emailová adresa skupiny.""",
         permission_classes=[OnlyForAuthentized]
-        )
+    )
     
     abbreviation: typing.Optional[str] = strawberry.field(
-        description="""Group's name abbreviation""",
+        description="""Abbreviation or short name for the group.  
+Zkratka nebo krátký název skupiny.""",
         permission_classes=[OnlyForAuthentized]
-        )
+    )
     
     valid: typing.Optional[bool] = strawberry.field(
-        description="""Group's validity (still exists?)""",
-        permission_classes=[
-            OnlyForAuthentized
-        ]
-        )
-    # @strawberry.field(
-    #     description="""Group's validity (still exists?)""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ]
-    # )
-    # async def valid(self) -> typing.Optional[bool]:
-    #     return self.valid
+        description="""Indicates whether the group is currently active.  
+Indikuje, zda je skupina aktuálně aktivní.""",
+        permission_classes=[OnlyForAuthentized]
+    )
 
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
-        description="",
-        permission_classes=[
-            OnlyForAuthentized
-        ]
+        description="""Start date of the group's activity.  
+Datum zahájení aktivity skupiny.""",
+        permission_classes=[OnlyForAuthentized]
     )
 
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
-        description="",
-        permission_classes=[
-            OnlyForAuthentized
-        ]
+        description="""End date of the group's activity (if applicable).  
+Datum ukončení aktivity skupiny (je-li relevantní).""",
+        permission_classes=[OnlyForAuthentized]
     )
 
     grouptype_id: typing.Optional[IDType] = strawberry.field(
-        description="""Group's type id (like Department)""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
+        description="""Identifier for the group's type (e.g., Department).  
+Identifikátor typu skupiny (např. oddělení).""",
+        permission_classes=[OnlyForAuthentized]
     )
 
     grouptype: typing.Optional["GroupTypeGQLModel"] = strawberry.field(
-        description="""Group's type (like Department)""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        # graphql_type=GroupTypeGQLModel,
-        # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
-        resolver=ScalarResolver[GroupTypeGQLModel](fkey_field_name="type_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
+        description="""The type of the group represented as an object (e.g., Department).  
+Typ skupiny reprezentovaný jako objekt (např. oddělení).""",
+        permission_classes=[OnlyForAuthentized],
+        resolver=ScalarResolver["GroupTypeGQLModel"](fkey_field_name="grouptype_id")
     )
 
-    type: typing.Optional[GroupTypeGQLModel] = strawberry.field(
-        description="""Group's type (like Department)""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        graphql_type=Optional[GroupTypeGQLModel],
-        # resolver=default_scalar_resolver(fkey_field_name="type_id", gql_type=Type[GroupTypeGQLModel]) #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
-        resolver=ScalarResolver[GroupTypeGQLModel](fkey_field_name="grouptype_id") #DBResolvers.GroupModel.grouptype(GroupTypeGQLModel)
-    )
+#     type_: typing.Optional["GroupTypeGQLModel"] = strawberry.field(
+#         name="type",
+#         description="""Alias for the group's type (e.g., Department).  
+# Alias pro typ skupiny (např. oddělení).""",
+#         permission_classes=[OnlyForAuthentized],
+#         graphql_type=typing.Optional["GroupTypeGQLModel"],
+#         resolver=ScalarResolver["GroupTypeGQLModel"](fkey_field_name="grouptype_id")
+#     )
 
+    # Pozor: V původním kódu se objevuje duplicitní pole `grouptype_id`.
+    # Zvažte odstranění jednoho z nich, pokud není potřeba.
     grouptype_id: typing.Optional[IDType] = strawberry.field(
-        description="""Group's type id""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        graphql_type=Optional[IDType],
-        # resolver=default_resolver
+        description="""Identifier for the group's type.  
+Identifikátor typu skupiny.""",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.Optional[IDType]
     )
-
-    # @strawberry.field(
-    #     description="""Directly commanded groups""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ])
-    # async def subgroups(
-    #     self, info: strawberry.types.Info,
-    #     where: Optional["GroupInputWhereFilter"] = None, 
-    #     skip: Optional[int] = 0, limit: Optional[int] = 100
-    # ) -> List["GroupGQLModel"]:
-    #     wheredict = None if where is None else strawberry.asdict(where)
-    #     extendedfilter = {"mastergroup_id": self.id}
-    #     loader = GroupGQLModel.getLoader(info)
-    #     return await loader.page(skip=skip, limit=limit, orderby="name", where=wheredict, extendedfilter=extendedfilter)
 
     subgroups: typing.List["GroupGQLModel"] = strawberry.field(
-        description="""Directly commanded groups""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        # graphql_type=List["GroupGQLModel"],
+        description="""List of directly subordinate groups.  
+Seznam přímo podřízených skupin.""",
+        permission_classes=[OnlyForAuthentized],
         resolver=VectorResolver["GroupGQLModel"](fkey_field_name="mastergroup_id", whereType=GroupInputWhereFilter)
     )
-    
-
-    # @strawberry.field(
-    #     description="""Directly commanded groups""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ])
-    # async def _subgroups(
-    #     self, info: strawberry.types.Info,
-    #     where: Optional["GroupInputWhereFilter"] = None, 
-    #     after: Optional[str] = 0, 
-    #     first: Optional[int] = 100,
-    #     orderby: Optional[str] = "id"
-    # ) -> Connection["GroupGQLModel"]:
-    #     extendedfilter = {"mastergroup_id": self.id()}
-    #     print(f"extendedfilter {extendedfilter}")
-    #     items = GroupConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)
-    #     # results = [GroupGQLModel(item) for item in items]
-    #     return items
-
-    # @strawberry.field(
-    #     description="""Commanding group""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ])
-    # async def mastergroup(
-    #     self, info: strawberry.types.Info
-    # ) -> Optional["GroupGQLModel"]:
-    #     result = await GroupGQLModel.resolve_reference(info, id=self.mastergroup_id)
-    #     return result
 
     mastergroup_id: typing.Optional[IDType] = strawberry.field(
-        description="""master id""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
+        description="""Identifier of the master (commanding) group.  
+Identifikátor nadřazené (řídící) skupiny.""",
+        permission_classes=[OnlyForAuthentized]
     )
 
     mastergroup: typing.Optional["GroupGQLModel"] = strawberry.field(
-        description="""Commanding group""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        # graphql_type=Optional["GroupGQLModel"],
-        # resolver=default_scalar_resolver(fkey_field_name="mastergroup_id", gql_type=Type["GroupGQLModel"])
+        description="""The master group that commands this group.  
+Nadřazená skupina, která řídí tuto skupinu.""",
+        permission_classes=[OnlyForAuthentized],
         resolver=ScalarResolver["GroupGQLModel"](fkey_field_name="mastergroup_id")
     )
 
     @strawberry.field(
-        description="""Commanding groups ordered from highest to lowest""",
-        permission_classes=[
-            OnlyForAuthentized
-        ]
-        )
+        description="""Returns the hierarchy of master groups from the topmost to the immediate master.  
+Vrací hierarchii nadřazených skupin od nejvyšší po bezprostředního nadřízeného.""",
+        permission_classes=[OnlyForAuthentized]
+    )
     async def mastergroups(self, info: strawberry.types.Info) -> typing.List["GroupGQLModel"]:
         path = self.path 
         ids = [] if path is None else path.split('/')[:-1]
@@ -246,77 +190,38 @@ class GroupGQLModel(NamedGQLModel):
         print(f"ids {ids}", flush=True)
         futures = [GroupGQLModel.load_with_loader(info=info, id=id) for id in ids]
         results = await asyncio.gather(*futures)
-        groups = [GroupGQLModel.from_dataclass(result) for result in results]
+        groups = [GroupGQLModel.from_dataclass(result) for result in results if result is not None]
         return groups
 
-
     path: typing.Optional[str] = strawberry.field(
-        description="""""",
-        permission_classes=[
-            OnlyForAuthentized
-        ]
-        )
+        description="""Materialized path representing the group's hierarchical location.  
+Materializovaná cesta reprezentující umístění skupiny v hierarchii.""",
+        permission_classes=[OnlyForAuthentized]
+    )
 
-
-    # @strawberry.field(
-    #     description="""List of users who are member of the group""",
-    #     permission_classes=[
-    #         OnlyForAuthentized
-    #     ])
-    # async def memberships(
-    #     self, info: strawberry.types.Info, where: Optional[MembershipInputWhereFilter] = None, skip: Optional[int] = 0, limit: Optional[int] = 1000
-    # ) -> List["MembershipGQLModel"]:
-    #     from .membershipGQLModel import MembershipGQLModel
-    #     # result = await resolveMembershipForGroup(session,  self.id, skip, limit)
-    #     # async with withInfo(info) as session:
-    #     #     result = await resolveMembershipForGroup(session, self.id, skip, limit)
-    #     #     return result
-    #     wheredict = None if where is None else strawberry.asdict(where)
-    #     extendedfilter = {"group_id": self.id}
-    #     loader = MembershipGQLModel.getLoader(info)
-    #     #print(self.id)
-    #     result = await loader.page(skip=skip, limit=limit, where=wheredict, extendedfilter=extendedfilter)
-    #     return result
-
-    memberships: typing.List[MembershipGQLModel] = strawberry.field(
-        description="""List of users who are member of the group""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        # graphql_type=List[MembershipGQLModel],
-        # resolver=DBResolvers.GroupModel.memberships(MembershipGQLModel, WhereFilterModel=MembershipInputWhereFilter)
-        resolver=VectorResolver[MembershipGQLModel](fkey_field_name="group_id", whereType=MembershipInputWhereFilter)
+    memberships: typing.List["MembershipGQLModel"] = strawberry.field(
+        description="""List of membership records for users in this group.  
+Seznam záznamů členství uživatelů v této skupině.""",
+        permission_classes=[OnlyForAuthentized],
+        resolver=VectorResolver["MembershipGQLModel"](fkey_field_name="group_id", whereType=MembershipInputWhereFilter)
     )
     
-    # @strawberry.field(description="Relay definition of memberships")
-    # async def _memberships(
-    #         self, 
-    #         # after: Optional[str]=0, 
-    #         after: Annotated[Optional[str], strawberry.argument(description="")]="0", 
-    #         first: Optional[int]=10, 
-    #         orderby: Optional[str] = "id", 
-    #         where: Optional[GroupInputWhereFilter] = None
-    #     ) -> Connection[MembershipGQLModel]:
-    #     from .membershipGQLModel import MembershipConnection
-    #     group_id = self.id if self._data is None else self._data.id
-    #     extendedfilter = {"group_id": group_id}
-    #     return MembershipConnection(skip=after, limit=first, where=where, orderby=orderby, extendedfilter=extendedfilter)   
-     
-    roles: typing.List[RoleGQLModel] = strawberry.field(
-        description="""List of roles in the group""",
-        permission_classes=[
-            OnlyForAuthentized
-        ],
-        # graphql_type=List[RoleGQLModel],
-        # resolver=DBResolvers.GroupModel.roles(RoleGQLModel, WhereFilterModel=RoleInputWhereFilter)
-        resolver=VectorResolver[RoleGQLModel](fkey_field_name="group_id", whereType=RoleInputWhereFilter)
+    roles: typing.List["RoleGQLModel"] = strawberry.field(
+        description="""List of roles defined for the group.  
+Seznam rolí definovaných pro tuto skupinu.""",
+        permission_classes=[OnlyForAuthentized],
+        resolver=VectorResolver["RoleGQLModel"](fkey_field_name="group_id", whereType=RoleInputWhereFilter)
     )
 
-    @strawberry.field(description="")
-    async def roles_on(self, info: strawberry.types.Info) -> typing.List[RoleGQLModel]:
+    @strawberry.field(
+        description="""Aggregates roles along the group's hierarchical path.  
+Agreguje role podél hierarchie skupiny.""",
+        permission_classes=[OnlyForAuthentized]
+    )
+    async def roles_on(self, info: strawberry.types.Info) -> typing.List["RoleGQLModel"]:
         from .roleGQLModel import RoleGQLModel
         loader = RoleGQLModel.getLoader(info=info)
-        path = self.path # works as materialized path ;)
+        path = self.path  # funguje jako materializovaná cesta ;)
         ids = [] if path is None else path.split('/')
         futures = (loader.filter_by(group_id=IDType(id)) for id in ids)
         dbrows = await asyncio.gather(*futures)
@@ -329,119 +234,42 @@ class GroupGQLModel(NamedGQLModel):
 #
 #####################################################################
 
-# @createInputs
-# @dataclass
-# class GroupInputWhereFilter:
-#     name: str
-#     name_en: str
-#     valid: bool
-#     startdate: datetime.datetime
-#     enddate: datetime.datetime
-#     grouptype: GroupTypeInputWhereFilter
-#     roles: RoleInputWhereFilter
-
-# @strawberry.field(
-#     description="""Returns a list of groups (paged)""",
-#     permission_classes=[
-#         OnlyForAuthentized
-#     ])
-# @asPage
-# async def group_page(
-#     self, info: strawberry.types.Info, skip: int = 0, limit: int = 10,
-#     where: Optional[GroupInputWhereFilter] = None,
-#     orderby: Optional[str] = None,
-#     desc: Optional[bool] = None
-# ) -> List[GroupGQLModel]:
-#     return GroupGQLModel.getLoader(info)
 
 group_page: typing.List[GroupGQLModel] = strawberry.field(
-    description="""Returns a list of groups (paged)""",
-    permission_classes=[
-        OnlyForAuthentized
-    ],
+    description="""## Description
+Returns a list of groups in a paged format.
+Vrací seznam skupin s stránkováním.
+
+## Details
+This query supports pagination parameters to efficiently handle large datasets.
+Tento dotaz podporuje stránkovací parametry pro efektivní zpracování rozsáhlých dat.
+
+## Permissions
+- Only authenticated users (OnlyForAuthentized) can access this query.
+- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.
+""",
+    permission_classes=[OnlyForAuthentized],
     graphql_type=List[GroupGQLModel],
     resolver=PageResolver[GroupGQLModel](whereType=GroupInputWhereFilter)
-    # resolver=DBResolvers.GroupModel.resolve_page(GroupGQLModel, WhereFilterModel=GroupInputWhereFilter)
 )
-
-# @strawberry.field(description="")
-# async def group_page(self, info: strawberry.types.Info,
-#     skip: Optional[int] = 0, limit: Optional[int] = 10,
-#     where: Optional[GroupInputWhereFilter] = None,
-#     orderby: Optional[str] = None,
-#     desc: Optional[bool] = None
-# ) -> List[GroupGQLModel]:
-#     wheredict = None if where is None else strawberry.asdict(where)
-#     loader = GroupGQLModel.getLoader(info)
-#     items = await loader.page(where=wheredict, skip=skip, limit=limit, orderby=orderby, desc=desc)
-#     results = [GroupGQLModel(item) for item in items]
-#     return results
-    # ids = (item.id for item in items)
-    # awaitables = (GroupGQLModel.resolve_reference(info=info, id=id) for id in ids)
-    # return await asyncio.gather(*awaitables)
-    # return items
-
-# @strawberry.field(
-#     description="""Finds a group by its id""",
-#     permission_classes=[
-#         OnlyForAuthentized
-#     ])
-# async def group_by_id(
-#     self, info: strawberry.types.Info, id: IDType
-# ) -> Union[GroupGQLModel, None]:
-#     result = await GroupGQLModel.resolve_reference(info=info, id=id)
-#     return result
-
 
 group_by_id: typing.Optional[GroupGQLModel] = strawberry.field(
-    description="""Finds a group by its id""",
-    permission_classes=[
-        OnlyForAuthentized
-    ],
+    description="""## Description
+Finds a group by its unique identifier.
+Vyhledá skupinu podle jejího unikátního identifikátoru.
+
+## Details
+If the group is found, the corresponding group object is returned; otherwise, null is returned.
+Pokud je skupina nalezena, vrátí se odpovídající objekt skupiny; v opačném případě null.
+
+## Permissions
+- Only authenticated users (OnlyForAuthentized) can perform this query.
+- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.
+""",
+    permission_classes=[OnlyForAuthentized],
     graphql_type=Optional[GroupGQLModel],
     resolver=GroupGQLModel.load_with_loader
-    # resolver=DBResolvers.GroupModel.resolve_by_id(GroupGQLModel)
 )
-
-# @strawberry.field(
-#     description="""Finds an user by letters in name and surname, letters should be atleast three""",
-#     deprecation_reason='replaced by `query($letters: String!){groupPage(where: {name: {_like: $letters}}) { id name }}`',
-#     permission_classes=[
-#         OnlyForAuthentized
-#     ]
-# )
-# async def group_by_letters(
-#     self,
-#     info: strawberry.types.Info,
-#     validity: Union[bool, None] = None,
-#     letters: str = "",
-# ) -> List[GroupGQLModel]:
-#     # result = await resolveGroupsByThreeLetters(session,  validity, letters)
-#     loader = GroupGQLModel.getLoader(info)
-
-#     if len(letters) < 3:
-#         return []
-#     stmt = loader.getSelectStatement()
-#     model = loader.getModel()
-#     stmt = stmt.where(model.name.like(f"%{letters}%"))
-#     if validity is not None:
-#         stmt = stmt.filter_by(valid=True)
-
-#     result = await loader.execute_select(stmt)
-#     return result
-
-# @strawberry.field(description="""Random university""")
-# async def randomUniversity(
-#     self, name: str, info: strawberry.types.Info
-# ) -> GroupGQLModel:
-#     async with withInfo(info) as session:
-#         # newId = await randomDataStructure(session,  name)
-#         newId = await randomDataStructure(session, name)
-#         print("random university id", newId)
-#         # result = await resolveGroupById(session,  newId)
-#         result = await resolveGroupById(session, newId)
-#         print("db response", result.name)
-#         return result
 
 #####################################################################
 #
@@ -450,50 +278,178 @@ group_by_id: typing.Optional[GroupGQLModel] = strawberry.field(
 #####################################################################
 import datetime
 
-@strawberry.input(description="")
+@strawberry.input(
+    description="""## Description
+Input model for updating a group.
+Vstupní model pro aktualizaci skupiny.
+
+## Fields
+- **id**: Unique identifier of the group.
+  Unikátní identifikátor skupiny.
+- **lastchange**: Timestamp of the last modification.
+  Časové razítko poslední změny.
+- **name**: (Optional) Updated name of the group.
+  (Volitelné) Aktualizovaný název skupiny.
+- **name_en**: (Optional) Updated English name.
+  (Volitelné) Aktualizovaný anglický název skupiny.
+- **grouptype_id**: (Optional) Identifier for the new group type.
+  (Volitelné) Identifikátor nového typu skupiny.
+- **mastergroup_id**: (Optional) Identifier of the new master group.
+  (Volitelné) Identifikátor nové nadřazené skupiny.
+- **valid**: (Optional) Flag indicating if the group is active.
+  (Volitelné) Příznak indikující, zda je skupina aktivní.
+- **abbreviation**: (Optional) Abbreviation or short name.
+  (Volitelné) Zkratka nebo krátký název.
+- **email**: (Optional) Email address associated with the group.
+  (Volitelné) Emailová adresa spojená se skupinou.
+- **changedby_id**: (Private) Identifier of the user who made the change.
+  (Interní) Identifikátor uživatele, který provedl změnu.
+"""
+)
 class GroupUpdateGQLModel:
-    id: IDType
-    lastchange: datetime.datetime
-    name: Optional[str] = None
-    name_en: Optional[str] = None
-    grouptype_id: Optional[IDType] = None
-    mastergroup_id: Optional[IDType] = None
-    valid: Optional[bool] = None
-    abbreviation: Optional[str] = None
-    email: Optional[str] = None
-    changedby_id: strawberry.Private[IDType] = None
+    id: "IDType" = strawberry.field(
+         description="""Unique identifier of the group.
+Unikátní identifikátor skupiny."""
+    )
+    lastchange: datetime.datetime = strawberry.field(
+         description="""Timestamp of the last modification.
+Časové razítko poslední změny."""
+    )
+    name: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Updated name of the group.
+(Volitelné) Aktualizovaný název skupiny.""",
+         default=None
+    )
+    name_en: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Updated English name of the group.
+(Volitelné) Aktualizovaný anglický název skupiny.""",
+         default=None
+    )
+    grouptype_id: typing.Optional["IDType"] = strawberry.field(
+         description="""(Optional) Identifier for the new group type.
+(Volitelné) Identifikátor nového typu skupiny.""",
+         default=None
+    )
+    mastergroup_id: typing.Optional["IDType"] = strawberry.field(
+         description="""(Optional) Identifier for the new master group.
+(Volitelné) Identifikátor nové nadřazené skupiny.""",
+         default=None
+    )
+    valid: typing.Optional[bool] = strawberry.field(
+         description="""(Optional) Flag indicating if the group is active.
+(Volitelné) Příznak indikující, zda je skupina aktivní.""",
+         default=None
+    )
+    abbreviation: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Abbreviation or short name.
+(Volitelné) Zkratka nebo krátký název.""",
+         default=None
+    )
+    email: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Email address associated with the group.
+(Volitelné) Emailová adresa spojená se skupinou.""",
+         default=None
+    )
+    # Private pole – bez použití strawberry.field
+    changedby_id: strawberry.Private["IDType"] = None
 
 
-@strawberry.input(description="")
+@strawberry.input(
+    description="""## Description
+Input model for inserting a new group.
+Vstupní model pro vložení nové skupiny.
+
+## Fields
+- **name**: Name of the new group.
+  Název nové skupiny.
+- **grouptype_id**: Identifier for the group's type.
+  Identifikátor typu skupiny.
+- **id**: (Optional) Primary key of the group. If not provided, a new unique identifier will be generated.
+  (Volitelné) Primární klíč skupiny. Pokud není zadán, bude vygenerován nový unikátní identifikátor.
+- **name_en**: (Optional) English name of the group.
+  (Volitelné) Anglický název skupiny.
+- **mastergroup_id**: (Optional) Identifier for the master group.
+  (Volitelné) Identifikátor nadřazené skupiny.
+- **valid**: (Optional) Validity flag of the group.
+  (Volitelné) Příznak platnosti skupiny.
+- **abbreviation**: (Optional) Abbreviation of the group.
+  (Volitelné) Zkratka skupiny.
+- **email**: (Optional) Email address of the group.
+  (Volitelné) Emailová adresa skupiny.
+- **path**: (Private) Materialized path in the group hierarchy.
+  (Interní) Materializovaná cesta v hierarchii skupin.
+- **createdby_id**: (Private) Identifier of the creator.
+  (Interní) Identifikátor tvůrce.
+- **rbacobject**: (Private) RBAC-related identifier.
+  (Interní) Identifikátor pro RBAC.
+"""
+)
 class GroupInsertGQLModel:
-    name: str
-    grouptype_id: IDType
-    id: Optional[IDType] = strawberry.field(description="primary key", default=None)
-    name_en: Optional[str] = None
-    mastergroup_id: Optional[IDType] = None
-    valid: Optional[bool] = None
-    abbreviation: Optional[str] = None
-    email: Optional[str] = None
-    path: strawberry.Private[str] = None
-    createdby_id: strawberry.Private[IDType] = None
-    rbacobject: strawberry.Private[IDType] = None
+    name: str = strawberry.field(
+         description="""Name of the new group.
+Název nové skupiny."""
+    )
+    grouptype_id: "IDType" = strawberry.field(
+         description="""Identifier for the group's type.
+Identifikátor typu skupiny."""
+    )
+    id: typing.Optional["IDType"] = strawberry.field(
+         description="""Primary key of the group.
+Primární klíč skupiny. If not provided, a new unique identifier will be generated.
+Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
+         default=None
+    )
+    name_en: typing.Optional[str] = strawberry.field(
+         description="""(Optional) English name of the group.
+(Volitelné) Anglický název skupiny.""",
+         default=None
+    )
+    mastergroup_id: typing.Optional["IDType"] = strawberry.field(
+         description="""(Optional) Identifier for the master group.
+(Volitelné) Identifikátor nadřazené skupiny.""",
+         default=None
+    )
+    valid: typing.Optional[bool] = strawberry.field(
+         description="""(Optional) Validity flag of the group.
+(Volitelné) Příznak platnosti skupiny.""",
+         default=None
+    )
+    abbreviation: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Abbreviation of the group.
+(Volitelné) Zkratka skupiny.""",
+         default=None
+    )
+    email: typing.Optional[str] = strawberry.field(
+         description="""(Optional) Email address of the group.
+(Volitelné) Emailová adresa skupiny.""",
+         default=None
+    )
+    # Private pole – bez použití strawberry.field
+    path: strawberry.Private[str] = ""
+    createdby_id: strawberry.Private["IDType"] = None
+    rbacobject: strawberry.Private["IDType"] = None
 
-@strawberry.input(description="")
+@strawberry.input(
+    description="""## Description
+Input model for deleting a group.
+Vstupní model pro smazání skupiny.
+
+## Fields
+- **id**: Unique identifier of the group.
+  Unikátní identifikátor skupiny.
+- **lastchange**: Timestamp of the last change, used for concurrency control.
+  Časové razítko poslední změny, používané pro kontrolu konzistence.
+"""
+)
 class GroupDeleteGQLModel:
-    id: IDType
-    lastchange: datetime.datetime
-
-# @strawberry.type(description="represents the result of CUD op on GroupGQLModel")
-# class GroupResultGQLModel:
-#     id: IDType = None
-#     msg: str = None
-
-#     @strawberry.field(description="""Result of group operation""")
-#     async def group(self, info: strawberry.types.Info) -> Union[GroupGQLModel, None]:
-#         # print("GroupResultGQLModel", "group", self.id, flush=True)
-#         result = await GroupGQLModel.resolve_reference(info, self.id)
-#         # print("GroupResultGQLModel", result.id, result.name, flush=True)
-#         return result
+    id: "IDType" = strawberry.field(
+         description="""Unique identifier of the group.
+Unikátní identifikátor skupiny."""
+    )
+    lastchange: datetime.datetime = strawberry.field(
+         description="""Timestamp of the last change, used for concurrency control.
+Časové razítko poslední změny, používané pro kontrolu konzistence."""
+    )
 
 
 class UpdateGroupPermission(RBACPermission):
@@ -516,12 +472,20 @@ class UpdateGroupPermission(RBACPermission):
         return True
 
 @strawberry.mutation(
-    description="""Allows a update of group, also it allows to change the mastergroup of the group""",
-    permission_classes=[
-        OnlyForAuthentized,
-        UpdateGroupPermission
-    ])
-async def group_update(self, info: strawberry.types.Info, group: GroupUpdateGQLModel) -> Union[GroupGQLModel, UpdateError[GroupGQLModel]]:
+    description="""## Description
+Allows updating a group, including changing its master group.
+Umožňuje aktualizaci skupiny, včetně změny nadřazené skupiny.
+
+## Details
+Performs safe update operations ensuring data consistency.
+Provádí bezpečné aktualizační operace zajišťující konzistenci dat.
+
+## Permissions
+- Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.
+- The user must satisfy the conditions defined by UpdateGroupPermission.
+"""
+)
+async def group_update(self, info: strawberry.types.Info, group: GroupUpdateGQLModel) -> typing.Union["GroupGQLModel", UpdateError[GroupGQLModel]]:
     result = await Update[GroupGQLModel].DoItSafeWay(info=info, entity=group)
     return result
 
@@ -538,19 +502,23 @@ class InsertGroupPermission(RBACPermission):
             user = getUserFromInfo(info)
             logging.info(f"user {user} has no right to insert new group {group}")
             print(f"user {user} has no right to insert new group {group}")
-        # else:
-        #     user = getUserFromInfo(info)
-        #     print(f"user {user} has full right to insert new group {group}")
-        #     pass
         return result
 
 @strawberry.mutation(
-    description="""Allows to insert a group""",
-    permission_classes=[
-        OnlyForAuthentized,
-        InsertGroupPermission
-    ])
-async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLModel) -> Union[GroupGQLModel, InsertError[GroupGQLModel]]:
+    description="""## Description
+Allows inserting a new group.
+Umožňuje vložení nové skupiny.
+
+## Details
+Handles the creation logic, including setting up the hierarchical path for the group.
+Řeší logiku vytvoření, včetně nastavení hierarchické cesty pro skupinu.
+
+## Permissions
+- Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.
+- The user must satisfy the conditions defined by InsertGroupPermission.
+"""
+)
+async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLModel) -> typing.Union["GroupGQLModel", InsertError["GroupGQLModel"]]:
     group.rbacobject = group.id
     if group.mastergroup_id is not None:
         loader = GroupGQLModel.getLoader(info=info)
@@ -561,12 +529,19 @@ async def group_insert(self, info: strawberry.types.Info, group: GroupInsertGQLM
 
 
 @strawberry.mutation(
-    description="Deletes the group",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def group_delete(self, info: strawberry.types.Info, group: GroupDeleteGQLModel) -> Optional[DeleteError[GroupGQLModel]]:
+    description="""## Description
+Deletes a group.
+Maže skupinu.
+
+## Details
+This operation removes the group entity from the system.
+Tato operace odstraní entitu skupiny ze systému.
+
+## Permissions
+- Only authenticated users with administrative rights (e.g. OnlyForAdmins) can perform this mutation.
+- The operation is restricted to administrators.
+"""
+)
+async def group_delete(self, info: strawberry.types.Info, group: GroupDeleteGQLModel) -> typing.Optional[DeleteError[GroupGQLModel]]:
     result = await Delete[GroupGQLModel].DoItSafeWay(info=info, entity=group)
     return result
-

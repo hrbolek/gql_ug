@@ -1,9 +1,38 @@
 mutation statetransitionDelete(
-  $id: UUID!
+  $id: UUID!, $lastchange: DateTime!
 ) {
   result: statetransitionDelete(
-    id: $id) {
-    msg
-    statemachine { id }
+    statetransition: {id: $id, lastchange: $lastchange}) {
+    ...Error
   }
+}
+
+
+fragment Error on StateTransitionGQLModelDeleteError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...StateTransitionModel
+  }
+}
+
+
+fragment StateTransitionModel on StateTransitionGQLModel {
+  __typename
+  id
+  name
+  source { id name }
+  target { id name }
+  
+  lastchange
+  created
+  createdby {
+    id
+  }
+  changedby {
+    id
+  }
+  statemachine { id name }
 }

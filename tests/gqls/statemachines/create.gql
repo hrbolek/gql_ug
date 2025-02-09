@@ -2,14 +2,17 @@ mutation statemachineInsert($id: UUID, $name: String!, $name_en: String) {
   result: statemachineInsert(
     statemachine: {id: $id, name: $name, nameEn: $name_en}
   ) {
-    id
-    msg
-    result: statemachine {
-      ...StatemachineModel
-    }
+    ...StatemachineModel
+    ...Error
   }
 }
 
+fragment Error on InsertError {
+  __typename
+  failed
+  input
+  msg
+}
 
 fragment StatemachineModel on StateMachineGQLModel {
   __typename

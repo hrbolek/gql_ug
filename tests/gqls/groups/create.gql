@@ -1,11 +1,29 @@
-
 mutation($id: UUID!, $grouptype_id: UUID!, $mastergroup_id: UUID, $name: String!, $name_en: String) {
   result: groupInsert(group: {id: $id, name: $name, nameEn: $name_en, grouptypeId: $grouptype_id, mastergroupId: $mastergroup_id}) {
-    id
-    msg
-    result: group {
-      id
-      lastchange
-    }
+    ...GroupModel
+    ...Error
   }
+}
+
+fragment Error on InsertError {
+  __typename
+  failed
+  input
+  msg
+}
+
+fragment GroupModel on GroupGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  nameEn
+  rbacobject {
+    id
+  }
+  subgroups {
+    id
+    name
+  }
+
 }

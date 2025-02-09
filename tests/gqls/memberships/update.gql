@@ -1,11 +1,26 @@
 
+
 mutation($id: UUID!, $lastchange: DateTime!, $valid: Boolean, $startdate: DateTime, $enddate: DateTime ) {
   result: membershipUpdate(membership: {id: $id, lastchange: $lastchange, valid: $valid, startdate: $startdate, enddate: $enddate}) {
-    id
-    msg
-    result: membership {
-      id
-      lastchange
-    }
+    ...Membership
+    ...Error
   }
+}
+
+fragment Error on MembershipGQLModelUpdateError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...Membership
+  }
+}
+
+
+fragment Membership on MembershipGQLModel {
+  __typename
+  id
+  lastchange
+  valid
 }

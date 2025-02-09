@@ -1,7 +1,8 @@
 from .gt_utils import (
     createByIdTest2,
     createUpdateTest2,
-    createTest2
+    createTest2,
+    createDeleteTest2
 )
 
 test_user_by_id = createByIdTest2(tableName="users")
@@ -23,7 +24,7 @@ test_user_insert = createTest2(
 test_user_update = createUpdateTest2(
     tableName="users", 
     variables={
-        "id": "2d9dc5ca-a4a2-11ed-b9df-0242ac120003",
+        # "id": "2d9dc5ca-a4a2-11ed-b9df-0242ac120003",
         "name": "user renamed"
     })
 # test_event_delete = createTest2(
@@ -49,7 +50,7 @@ test_group_insert = createTest2(
 test_group_update = createUpdateTest2(
     tableName="groups",
     variables={
-        "id": "2d9dcd22-a4a2-11ed-b9df-0242ac120003",
+        # "id": "2d9dcd22-a4a2-11ed-b9df-0242ac120003",
         "name": "renamed"
     }
 )
@@ -75,15 +76,14 @@ test_group_type_insert = createTest2(
 test_group_type_update = createUpdateTest2(
     tableName="grouptypes",
     variables={
-        "id": "cd49e152-610c-11ed-9f29-001a7dda7110",
         "name": "renamed"
     }
 )
-test_group_type_delete = createTest2(
+
+test_group_type_delete = createDeleteTest2(
     tableName="grouptypes",
-    queryName="delete",
     variables={
-        "id": "b1bedf72-931f-11ed-9b95-0242ac110002"
+        "name": "for delete"
     }
 )
 
@@ -93,7 +93,6 @@ test_group_category_insert = createTest2(
     tableName="groupcategories", 
     queryName="create",
     variables={
-        "id": "4517678b-d564-438a-9a27-8e2a61018d46",
         "name": "new group category",
         "name_en": "new group category"
     }
@@ -101,15 +100,14 @@ test_group_category_insert = createTest2(
 test_group_category_update = createUpdateTest2(
     tableName="groupcategories",
     variables={
-        "id": "be2b2dcc-4bfe-4035-99e8-dd6d6f01562e",
         "name": "renamed"
     }
 )
-test_group_category_delete = createTest2(
+test_group_category_delete = createDeleteTest2(
     tableName="groupcategories", 
-    queryName="delete",
     variables={
-        "id": "6b99de73-205a-41fc-9847-6f04fddc38f1",
+        "name": "new group category",
+        "name_en": "new group category"
     }
 )
 
@@ -119,18 +117,17 @@ test_membership_insert = createTest2(
     tableName="memberships", 
     queryName="create",
     variables={
-        "id": "181bf3b7-8a6d-4338-983c-14b1062d536a",
         "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
         "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
     }
     )
-test_membership_delete = createTest2(
-    tableName="memberships",
-    queryName="delete",
-    variables={
-        "id": "7cea8596-a4a2-11ed-b9df-0242ac120003"
-    }
-)
+# test_membership_delete = createDeleteTest2(
+#     tableName="memberships",
+#     variables={
+#         "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
+#         "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+#     }
+# )
 
 test_role_insert2 = createTest2(
     tableName="roles", 
@@ -147,15 +144,21 @@ test_role_update2 = createUpdateTest2(
     tableName="roles",
     # queryName="update",
     variables={
-        "id": "7cea8802-a4a2-11ed-b9df-0242ac120003", 
-        "valid": False
+        "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
+        "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+        "roletype_id": "ced46aa4-3217-4fc1-b79d-f6be7d21c6b6",
+        "startdate": "2025-02-09T01:00:00",
+        "enddate": "2025-03-09T01:00:00"
     }
     )
-test_role_delete = createTest2(
+test_role_delete = createDeleteTest2(
     tableName="roles",
-    queryName="delete",
     variables={
-        "id": "564b62f4-29f6-48b2-8bc8-ff52c800732a"
+        "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
+        "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+        "roletype_id": "ced46aa4-3217-4fc1-b79d-f6be7d21c6b6",
+        "startdate": "2025-02-09T01:00:00",
+        "enddate": "2025-03-09T01:00:00"
     }
 )
 
@@ -166,7 +169,7 @@ test_role_type_insert = createTest2(
     tableName="roletypes",
     queryName="create",
     variables={
-        "id": "ccede67c-8773-4109-b853-2319a1d06f83",
+        # "id": "ccede67c-8773-4109-b853-2319a1d06f83",
         "name": "new type",
         "name_en": "new type",
         "category_id": "774690a0-56b3-45d9-9887-0989ed3de4c0"
@@ -175,15 +178,17 @@ test_role_type_insert = createTest2(
 test_role_type_update = createUpdateTest2(
     tableName="roletypes",
     variables={
-        "id": "05a3e0f5-f71e-4caa-8012-229d868aa8ca",
+        # "id": "05a3e0f5-f71e-4caa-8012-229d868aa8ca",
         "name": "updated type name"
     }
 )
-test_role_type_delete = createTest2(
+test_role_type_delete = createDeleteTest2(
     tableName="roletypes",
-    queryName="delete",
+    # queryName="delete",
     variables={
-        "id": "05a3e0f5-f71e-4caa-8012-229d868aa8ca",        
+        "name": "new type",
+        "name_en": "new type",
+        "category_id": "774690a0-56b3-45d9-9887-0989ed3de4c0"
     }
 )
 
@@ -221,7 +226,6 @@ test_state_create = createTest2(
     tableName="states", 
     queryName="create",
     variables={
-        "id": "6dee3e2f-9220-4825-b690-7b9d1b7a8a1d",
         "statemachine_id": "15257c8c-a259-46d3-993f-83d2a8d02b85",
         "name": "new state machine"
     }
@@ -229,15 +233,15 @@ test_state_create = createTest2(
 test_state_update = createUpdateTest2(
     tableName="states",
     variables={
-        "id": "eb085919-640b-43f5-863d-2e69e4a86fe4",
         "name": "updated name"
     }
 )
-test_state_delete = createTest2(
+test_state_delete = createDeleteTest2(
     tableName="states",
-    queryName="delete",
+    # queryName="delete",
     variables={
-        "id": "b44b9aef-d895-4ff5-a3ed-2f41ddc81f3a",
+        "statemachine_id": "15257c8c-a259-46d3-993f-83d2a8d02b85",
+        "name": "new state machine"
     }
 )
 
@@ -247,22 +251,19 @@ test_statemachine_create = createTest2(
     tableName="statemachines", 
     queryName="create",
     variables={
-        "id": "6278ca00-a975-435e-afac-62e31c884475",
         "name": "new state machine"
     }
     )
 test_statemachine_update = createUpdateTest2(
     tableName="statemachines",
     variables={
-        "id": "15257c8c-a259-46d3-993f-83d2a8d02b85",
         "name": "updated name"
     }
 )
-test_statemachine_delete = createTest2(
+test_statemachine_delete = createDeleteTest2(
     tableName="statemachines", 
-    queryName="delete",
     variables={
-        "id": "2eea088a-ee0f-4bbd-b0dc-d86a48f0402d"
+        "name": "updated name"
     }
 )
 
@@ -272,7 +273,6 @@ test_statetransition_create = createTest2(
     tableName="statetransitions", 
     queryName="create",
     variables={
-        "id": "078d9ae5-f8a6-47e6-a4ae-f527a49eb6a4",
         "statemachine_id": "15257c8c-a259-46d3-993f-83d2a8d02b85",
         "name": "new state transition",
         "source_id": "eb085919-640b-43f5-863d-2e69e4a86fe4",
@@ -282,15 +282,17 @@ test_statetransition_create = createTest2(
 test_statetransition_update = createUpdateTest2(
     tableName="statetransitions",
     variables={
-        "id": "322cec6a-6c62-4611-8b67-a3b1532a9f17",
         "name": "updated name"
     }
 )
-test_statetransition_delete = createTest2(
+test_statetransition_delete = createDeleteTest2(
     tableName="statetransitions", 
-    queryName="delete",
+    # queryName="delete",
     variables={
-        "id": "322cec6a-6c62-4611-8b67-a3b1532a9f17"
+        "statemachine_id": "15257c8c-a259-46d3-993f-83d2a8d02b85",
+        "name": "new state transition",
+        "source_id": "eb085919-640b-43f5-863d-2e69e4a86fe4",
+        "target_id": "f9632f9a-cb18-4ca3-b71e-0e0c37cf334a",
     }
     )
 

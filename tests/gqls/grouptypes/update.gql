@@ -1,11 +1,25 @@
 
 mutation($id: UUID!, $lastchange: DateTime!, $name: String!, $name_en: String) {
   result: groupTypeUpdate(groupType: {id: $id, lastchange: $lastchange, name: $name, nameEn: $name_en}) {
-    id
-    msg
-    result: groupType {
-      id
-      lastchange
-    }
+    ...Error
+    ...GroupTypeModel
   }
+}
+
+fragment Error on GroupTypeGQLModelUpdateError {
+  __typename
+  failed
+  input
+  Entity {
+    ...GroupTypeModel
+  }
+  msg
+}
+
+fragment GroupTypeModel on GroupTypeGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  nameEn
 }

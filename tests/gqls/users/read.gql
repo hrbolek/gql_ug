@@ -1,24 +1,22 @@
 query ($id: UUID!) {
   result: userById(id: $id) {
     __typename
-    id
-    lastchange
-    name
-    surname
-    email
-		...Coverage
+    ...User
   }
 }
 
-fragment Coverage on UserGQLModel {
-    isThisMe
-    rolesOn {
-      id
-    }
-    gdpr(force: true)
-    memberOf {
-      name
-    }
+fragment User on UserGQLModel {
   id
-  
+  lastchange
+  name
+  surname
+  email
+  isThisMe
+  rolesOn {
+    id
+  }
+  memberOf {
+    name
+  }
+  id
 }

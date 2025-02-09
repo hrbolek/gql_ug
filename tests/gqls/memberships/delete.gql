@@ -1,6 +1,24 @@
 
-mutation($id: UUID!) {
-  result: membershipDelete(id: $id) {
-    msg
+mutation($id: UUID!, $lastchange: DateTime!) {
+  result: membershipDelete(membership: {id: $id, lastchange: $lastchange}) {
+    ...Error
   }
+}
+
+fragment Error on MembershipGQLModelDeleteError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...Membership
+  }
+}
+
+
+fragment Membership on MembershipGQLModel {
+  __typename
+  id
+  lastchange
+  valid
 }

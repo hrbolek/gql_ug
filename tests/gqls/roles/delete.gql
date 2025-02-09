@@ -1,7 +1,35 @@
-mutation roleDelete($id: UUID!) {
+mutation roleDelete($id: UUID!, $lastchange: DateTime!) {
   result: roleDelete(
-    id: $id
+    role: {id: $id, lastchange: $lastchange}
   ) {
-    msg
+    ...Error
+  }
+}
+
+fragment Error on RoleGQLModelDeleteError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...Role
+  }
+}
+
+
+fragment Role on RoleGQLModel {
+  __typename
+  id
+  roletype { id name }
+  
+  lastchange
+  created
+  createdby {
+    id
+    email
+  }
+  changedby {
+    id
+    email
   }
 }

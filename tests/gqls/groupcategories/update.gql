@@ -1,12 +1,18 @@
-
 mutation($id: UUID!, $lastchange: DateTime!, $name: String!, $name_en: String) {
   result: groupCategoryUpdate(groupCategory: {id: $id, lastchange: $lastchange, name: $name, nameEn: $name_en}) {
-    id
-    msg
-    result: category {
-      ...GroupCategoryModel
-    }
+    ...GroupCategoryModel
+    ...Error
   }
+}
+
+fragment Error on GroupCategoryGQLModelUpdateError {
+  __typename
+  failed
+  input
+  Entity {
+    ...GroupCategoryModel
+  }
+  msg
 }
 
 fragment GroupCategoryModel on GroupCategoryGQLModel {
@@ -15,4 +21,6 @@ fragment GroupCategoryModel on GroupCategoryGQLModel {
     lastchange
     name
     nameEn
+
+    rbacobject { id }
 }

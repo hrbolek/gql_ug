@@ -2,18 +2,22 @@ mutation statetransitionInsert(
   $id: UUID, $name: String!, $statemachine_id: UUID!,
   $source_id: UUID!, $target_id: UUID!
 ) {
-  result: statetransitionInsert(
-    statetransition: {id: $id, name: $name, statemachineId: $statemachine_id,
-      sourceId: $source_id, targetId: $target_id
-    }) {
-    id
-    msg
-    result: statetransition{
-    	...StateTransitionModel
-  	}
-    statemachine { id }
+  result: statetransitionInsert(statetransition: {
+    id: $id, name: $name, statemachineId: $statemachine_id,
+    sourceId: $source_id, targetId: $target_id
+  }) {
+    ...StateTransitionModel
+    ...Error
   }
 }
+
+fragment Error on InsertError {
+  __typename
+  failed
+  input
+  msg
+}
+
 
 fragment StateTransitionModel on StateTransitionGQLModel {
   __typename

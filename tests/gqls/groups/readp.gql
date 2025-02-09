@@ -1,8 +1,21 @@
 query($limit: Int, $skip: Int, $where: GroupInputWhereFilter){
   result: groupPage(limit: $limit, skip: $skip, where: $where) {
-    __typename
+    ...GroupModel
+  }
+}
+
+fragment GroupModel on GroupGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  nameEn
+  rbacobject {
+    id
+  }
+  subgroups {
     id
     name
-    nameEn
   }
+
 }

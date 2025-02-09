@@ -1,7 +1,32 @@
-mutation stateDelete($id: UUID!) {
-  result: stateDelete(id: $id) {
-    msg
-    statemachine { id }
+mutation stateDelete($id: UUID!, $lastchange: DateTime!) {
+  stateDelete(state: {id: $id, lastchange: $lastchange}) {
+  ...Error  
   }
 }
 
+
+fragment Error on StateGQLModelDeleteError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...State
+  }
+}
+
+fragment State on StateGQLModel {
+  __typename
+  id
+  name
+  
+  lastchange
+  created
+  createdby {
+    id
+  }
+  changedby {
+    id
+  }
+  statemachine { id name }
+}

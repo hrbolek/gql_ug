@@ -1,35 +1,44 @@
 query statemachinePage($limit: Int, $skip: Int, $where: StateMachineWhereFilter){
   result: statemachinePage(limit: $limit, skip: $skip, where: $where) {
+    ...StatemachineModel
+  }
+}
+
+fragment StatemachineModel on StateMachineGQLModel {
+  __typename
+  lastchange
+  id
+  name
+  states {
     __typename
-    lastchange
     id
     name
-    states {
-      __typename
+    sources {
       id
       name
-      sources {
+      source {
         id
         name
-        source { id name }
-    	}
-      targets { 
-        id
-        name
-        target {
-          id
-          name
-        }
       }
-    
     }
-    transitions {
+    targets {
       id
       name
+      target {
+        id
+        name
+      }
     }
-    
-    created
-    createdby { id }
-    changedby { id }
+  }
+  transitions {
+    id
+    name
+  }
+  created
+  createdby {
+    id
+  }
+  changedby {
+    id
   }
 }

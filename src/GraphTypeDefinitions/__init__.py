@@ -93,7 +93,12 @@ from uoishelpers.schema import WhoAmIExtension
 #         self.execution_context.context["user"] = whoami
 
 
-schema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType), mutation=Mutation, extensions=[])
+schema = strawberry.federation.Schema(
+    query=Query, 
+    types=(RBACObjectGQLModel, IDType), 
+    mutation=Mutation, 
+    extensions=[]
+)
 readonlyschema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType))
 
 # schema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType), mutation=Mutation, extensions=[MyExtension])

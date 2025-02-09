@@ -30,8 +30,8 @@ def DBModels():
         RoleCategoryModel,
         RoleTypeListModel,
         StateMachineModel,
-        StatemachineTypeModel,
-        StatemachineCategoryModel,
+        StateMachineTypeModel,
+        StateMachineCategoryModel,
         StateModel,
         StateTransitionModel
     )
@@ -49,8 +49,8 @@ def DBModels():
         RoleModel,
         RoleTypeListModel,
 
-        StatemachineCategoryModel,
-        StatemachineTypeModel,
+        StateMachineTypeModel,
+        # StateMachineCategoryModel,
         StateMachineModel,
         StateModel,
         StateTransitionModel
@@ -384,7 +384,32 @@ def runOAuthServer(port):
 
     from mockoauthserver import server as OAuthServer
     mainapp = fastapi.FastAPI()
-    app = OAuthServer.createServer(db_users=db_users)
+    
+    async def emailMapper(email):
+        row = db_users[0]
+        result = row.get("id", None)
+        return result
+
+    app = OAuthServer.createServer(
+        db_users=db_users, emailMapper=emailMapper
+    )
+    
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logging.error(f"Unhandled exception: {exc}", exc_info=True)
+        return fastapi.responses.JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "error": "An unexpected error occurred."}
+        )
+        
+    @mainapp.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logging.error(f"Unhandled exception: {exc}", exc_info=True)
+        return fastapi.responses.JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "error": "An unexpected error occurred."}
+        )
+        
     mainapp.mount("/oauth", app)
     uvicorn.run(mainapp, port=port)
 
@@ -465,7 +490,7 @@ async def AccessToken(OAuthport, OAuthServer, AdminUser):
     loginurl = f"http://localhost:{OAuthport}/oauth/login3"
     async with aiohttp.ClientSession() as session:
         async with session.get(loginurl) as resp:
-            assert resp.status == 200, resp
+            assert resp.status == 200, f"Expected status 200 but got {resp.status}. Response: {await resp.text()}"
             accessjson = await resp.json()
         payload = {
             "username": userDict["email"],

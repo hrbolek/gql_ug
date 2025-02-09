@@ -1,11 +1,11 @@
-query RoleTypePage($skip: Int, $limit: Int, $where: RoleTypeInputWhereFilter) {
-  result: roleTypePage(skip: $skip, limit: $limit, where: $where) {
-    ...RoleType
+query RoleTypePage($skip: Int, $limit: Int, $where: RoleCategoryInputWhereFilter) {
+  result: roleCategoryPage(skip: $skip, limit: $limit, where: $where) {
+    ...RoleCategory
   }
 }
 
 
-fragment RoleType on RoleTypeGQLModel {
+fragment RoleCategory on RoleCategoryGQLModel {
 	__typename
   id
   lastchange

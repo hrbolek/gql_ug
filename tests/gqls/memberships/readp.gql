@@ -1,1 +1,12 @@
-{ result: membershipPage { __typename, id, valid }}
+query {
+  result: membershipPage {
+    ...Membership
+  }
+}
+
+fragment Membership on MembershipGQLModel {
+  __typename
+  id
+  lastchange
+  valid
+}

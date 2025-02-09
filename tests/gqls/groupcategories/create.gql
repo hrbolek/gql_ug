@@ -1,12 +1,15 @@
-
-mutation($id: UUID!, $name: String!, $name_en: String) {
+mutation($id: UUID, $name: String!, $name_en: String) {
   result: groupCategoryInsert(groupCategory: {id: $id, name: $name, nameEn: $name_en}) {
-    id
-    msg
-    result: category {
-      ...GroupCategoryModel
-    }
+    ...GroupCategoryModel
+    ...Error
   }
+}
+
+fragment Error on InsertError {
+  __typename
+  failed
+  input
+  msg
 }
 
 fragment GroupCategoryModel on GroupCategoryGQLModel {
@@ -15,4 +18,6 @@ fragment GroupCategoryModel on GroupCategoryGQLModel {
     lastchange
     name
     nameEn
+
+    rbacobject { id }
 }

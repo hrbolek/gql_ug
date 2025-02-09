@@ -1,9 +1,13 @@
 query ($id: UUID!) {
   result: groupTypeById(id: $id) {
-    __typename
-    id
-    lastchange
-    name
-    nameEn
+    ...GroupTypeModel
   }
+}
+
+fragment GroupTypeModel on GroupTypeGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  nameEn
 }

@@ -1,19 +1,23 @@
-mutation statetransitionUpdate(
-  $id: UUID!, $lastchange: DateTime!, $name: String,
-  $source_id: UUID, $target_id: UUID
+mutation statetransitionDelete(
+  $id: UUID!, $lastchange: DateTime!
 ) {
-  result: statetransitionUpdate(
-    statetransition: {id: $id, lastchange: $lastchange, name: $name
-      sourceId: $source_id, targetId: $target_id
-    }) {
-    id
-    msg
-    result: statetransition{
-    	...StateTransitionModel
-  	}
-    statemachine { id }
+  result: statetransitionDelete(
+    statetransition: {id: $id, lastchange: $lastchange}) {
+    ...Error
   }
 }
+
+
+fragment Error on StateTransitionGQLModelDeleteError {
+  __typename
+  failed
+  input
+  msg
+  Entity {
+    ...StateTransitionModel
+  }
+}
+
 
 fragment StateTransitionModel on StateTransitionGQLModel {
   __typename

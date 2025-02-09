@@ -1,11 +1,15 @@
 mutation RoleCategoryInsert($id: UUID, $name: String!) {
   result: roleCategoryInsert(roleCategory: {id: $id, name: $name}) {
-    id
-    msg
-    result: roleCategory {
-    	...RoleCategory
-    }
+    ...RoleCategory
+    ...Error
   }
+}
+
+fragment Error on InsertError {
+  __typename
+  failed
+  input
+  msg
 }
 
 fragment RoleCategory on RoleCategoryGQLModel {
