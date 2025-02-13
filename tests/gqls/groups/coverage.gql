@@ -21,5 +21,11 @@ fragment GroupModel on GroupGQLModel {
     id
     name
   }
+  rolesOn {
+    id
+    valid
+    deputy
+    userId
+  }
 }
 

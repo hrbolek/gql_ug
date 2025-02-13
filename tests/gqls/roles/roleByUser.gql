@@ -1,0 +1,17 @@
+query roleByUser($id: UUID!) {
+  roleByUser(userId: $id) {
+    id
+    lastchange
+    user {
+      email
+    }
+    roletype {
+      id
+      name
+    }
+    group {
+      id
+      name
+    }
+  }
+}

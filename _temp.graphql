@@ -1,0 +1,1088 @@
+#############################
+# Organizational Entities
+#############################
+
+"""Represents an organizational unit that can be arranged hierarchically."""
+type Group {
+  # Basics:
+  """Unique identifier of the group."""
+  id: ID!
+  """The name of the group."""
+  name: String!
+  """A brief description of the group."""
+  description: String
+  """Hierarchical path of the group (e.g., "/University/Faculty/Department")."""
+  path: String
+  """Abbreviated name of the group."""
+  abbreviation: String
+
+  # Scalars:
+  """Reference to the single parent group (optional)."""
+  parent: Group
+  """Reference to the type of the group."""
+  groupType: GroupType
+
+  # Vectors:
+  """Collection of memberships that belong to the group."""
+  memberships: [Membership!]!
+  """Collection of subgroups within the group."""
+  subgroups: [Group!]!
+  """Collection of roles assigned to the group."""
+  roles: [Role!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  """Current state of the group for RBAC."""
+  state: State!
+}
+
+"""Defines the type or category of a group."""
+type GroupType {
+  # Basics:
+  """Unique identifier of the group type."""
+  id: ID!
+  """The name of the group type."""
+  name: String!
+
+  # Scalars: *(None defined)*
+
+  # Vectors: *(None defined)*
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an individual such as a student, teacher, or administrator."""
+type User {
+  # Basics:
+  """Unique identifier of the user."""
+  id: ID!
+  """The first name of the user."""
+  firstName: String!
+  """The last name of the user."""
+  lastName: String!
+  """The email address of the user."""
+  email: String!
+
+  # Scalars: *(None defined)*
+
+  # Vectors:
+  """Collection of memberships associated with the user."""
+  memberships: [Membership!]!
+  """Collection of roles held by the user."""
+  roles: [Role!]!
+  """Collection of study programs in which the user is involved."""
+  studies: [StudyProgram!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Connects a user to a group and contains validity intervals."""
+type Membership {
+  # Basics:
+  """Timestamp when the membership was created."""
+  joinedAt: String!
+  """Timestamp when the membership validity starts."""
+  startAt: String!
+  """Timestamp when the membership validity ends."""
+  endAt: String!
+
+  # Scalars:
+  """Reference to the user in the membership."""
+  person: User!
+  """Reference to the group to which the membership belongs."""
+  group: Group!
+
+  # Vectors: *(None defined)*
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Records the assignment of a role to a user within a group."""
+type Role {
+  # Basics:
+  """Unique identifier of the role."""
+  id: ID!
+  """Timestamp when the role becomes active."""
+  startAt: String!
+  """Timestamp when the role is no longer active."""
+  endAt: String!
+
+  # Scalars:
+  """Reference to the group where the role is assigned."""
+  group: Group!
+  """Reference to the user who holds the role."""
+  person: User!
+  """Reference to the type of the role."""
+  roleType: RoleType!
+
+  # Vectors: *(None defined)*
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Defines the type of a role, categorizing roles into groups."""
+type RoleType {
+  # Basics:
+  """Unique identifier of the role type."""
+  id: ID!
+  """The name of the role type."""
+  name: String!
+  """A description of the role type."""
+  description: String
+
+  # Scalars:
+  """Reference to the category of the role type."""
+  category: Category
+
+  # Vectors:
+  """Collection of roles of this type."""
+  roles: [Role!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a category for classifying role types."""
+type Category {
+  # Basics:
+  """Unique identifier of the category."""
+  id: ID!
+  """The name of the category."""
+  name: String!
+
+  # Scalars: *(None defined)*
+  # Vectors: *(None defined)*
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents the status of an entity used for RBAC access control."""
+type State {
+  # Basics:
+  """Unique identifier of the state."""
+  id: ID!
+  """The name of the state."""
+  name: String!
+  """A description of the state."""
+  description: String
+
+  # Scalars:
+  """Collection of allowed role types for this state."""
+  allowedRoles: [String!]!
+
+  # Vectors:
+  """Collection of incoming transitions (states from which one can transition to this state)."""
+  Ins: [State!]!
+  """Collection of outgoing transitions (states to which one can transition from this state)."""
+  Outs: [State!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Provides storage for sensitive personal data required by GDPR compliance."""
+type PersonGDPR {
+  # Basics:
+  """Unique identifier of the PersonGDPR record."""
+  id: ID!
+  """The personal identification number (birth number)."""
+  birthNumber: String!
+  """The surname at birth (maiden name)."""
+  birthSurname: String!
+  """The identification card number."""
+  idCardNumber: String!
+  """Any other sensitive personal data as required."""
+  otherSensitiveData: String
+
+  # Scalars:
+  """Reference to the user to which these sensitive details belong."""
+  person: User!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Office Entities
+#############################
+
+"""Represents a document containing text and binary data, organized hierarchically."""
+type Document {
+  # Basics:
+  """Unique identifier of the document."""
+  id: ID!
+  """The title of the document."""
+  title: String!
+  """The textual content of the document."""
+  content: String
+  """Materialized path in the document hierarchy (e.g., "/Department/Reports/2025/Report1")."""
+  path: String
+
+  # Scalars:
+  """Reference to the event associated with the document (optional)."""
+  event: Event
+  """Reference to the parent document (optional)."""
+  parent: Document
+
+  # Vectors:
+  """Collection of subdocuments within the document."""
+  subdocuments: [Document!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an event such as a lecture, exam, meeting, or conference."""
+type Event {
+  # Basics:
+  """Unique identifier of the event."""
+  id: ID!
+  """The name of the event."""
+  name: String!
+  """A brief description of the event."""
+  description: String
+  """Materialized path in the event hierarchy (e.g., "/Semester/Week1/Lesson3")."""
+  path: String
+  """A textual description of the event location if a facility is not defined."""
+  location: String
+
+  # Scalars:
+  """Reference to the type of the event."""
+  eventType: EventType!
+  """Reference to the facility where the event takes place (optional)."""
+  facility: Facility
+  """Reference to the parent event in the hierarchy (optional)."""
+  parent: Event
+  """Timestamp when the event starts."""
+  startAt: String!
+  """Timestamp when the event ends."""
+  endAt: String!
+
+  # Vectors:
+  """Collection of documents attached to the event."""
+  documents: [Document!]!
+  """Collection of subevents under this event."""
+  subevents: [Event!]!
+  """Collection of invitations related to the event."""
+  invitations: [Invitation!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Defines the type of an event (e.g., "general", "examTerm")."""
+type EventType {
+  # Basics:
+  """Unique identifier of the event type."""
+  id: ID!
+  """The name of the event type."""
+  name: String!
+  """A description of the event type."""
+  description: String
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an invitation for an event, tracking its status and send time."""
+type Invitation {
+  # Basics:
+  """Unique identifier of the invitation."""
+  id: ID!
+  """The status of the invitation (e.g., "accepted", "declined", "excused")."""
+  status: String!
+
+  # Scalars:
+  """Reference to the event associated with the invitation."""
+  event: Event!
+  """Reference to the user to whom the invitation is addressed."""
+  person: User!
+
+  """Timestamp when the invitation was sent."""
+  sentAt: String!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a physical or virtual location such as a classroom, lab, or office."""
+type Facility {
+  # Basics:
+  """Unique identifier of the facility."""
+  id: ID!
+  """The name of the facility (e.g., "67a")."""
+  name: String!
+  """The address or description of the facility."""
+  address: String!
+  """The full label of the facility (e.g., "KŠ/9a/67a")."""
+  label: String!
+
+  # Scalars:
+  """Reference to the parent facility (optional)."""
+  parent: Facility
+  """Reference to the organizational group responsible for the facility."""
+  group: Group!
+
+  # Vectors:
+  """Collection of subfacilities."""
+  subfacilities: [Facility!]!
+  """Collection of events taking place in the facility."""
+  events: [Event!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a task with support for subtasks and hierarchical search using materialized path."""
+type Task {
+  # Basics:
+  """Unique identifier of the task."""
+  id: ID!
+  """The title of the task."""
+  title: String!
+  """A brief description of the task."""
+  description: String
+  """Due timestamp for task completion (if applicable)."""
+  dueAt: String
+  """The current status of the task (e.g., "pending", "in progress", "completed")."""
+  status: String!
+  """Materialized path for quick hierarchical search of task structure."""
+  path: String!
+
+  # Scalars:
+  """Reference to the user responsible for the task (optional)."""
+  assignedTo: User
+  """Reference to the user who created or owns the task (optional)."""
+  owner: User
+
+  # Vectors:
+  """Collection of sub-tasks that are part of this task."""
+  subTasks: [Task!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Academic and Study Modules
+#############################
+
+"""Represents an accredited study program (e.g., Bachelor's or Master's program)."""
+type StudyProgram {
+  # Basics:
+  """Unique identifier of the study program."""
+  id: ID!
+  """The title of the study program."""
+  title: String!
+  """The level of study (e.g., "Bachelor's", "Master's")."""
+  level: String!
+  """The qualification awarded (e.g., "BSc.", "MSc.")."""
+  qualification: String!
+  """The duration of the program in years."""
+  duration: Float!
+  """A detailed description of the study program."""
+  description: String
+
+  # Scalars:
+  """Reference to the university to which the program belongs."""
+  university: Group!
+  """Reference to the organizational group responsible for the program."""
+  group: Group!
+
+  # Vectors:
+  """Collection of accreditation decisions related to the program."""
+  accreditations: [Accreditation!]!
+  """Collection of subjects included in the study program."""
+  subjects: [Subject!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an accreditation decision for a study program."""
+type Accreditation {
+  # Basics:
+  """Unique identifier of the accreditation."""
+  id: ID!
+  """The decision number."""
+  decisionNumber: String!
+  """Timestamp when the decision was issued."""
+  decisionDateAt: String!
+  """Timestamp when the accreditation validity starts."""
+  validFromAt: String!
+  """Timestamp when the accreditation validity ends."""
+  validToAt: String!
+  """Additional notes regarding the accreditation."""
+  notes: String
+
+  # Scalars:
+  """Reference to the study program being accredited."""
+  studyProgram: StudyProgram!
+  """Reference to the accreditation body that issued the decision."""
+  accreditationBody: AccreditationBody!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents the accreditation body that issues accreditation decisions."""
+type AccreditationBody {
+  # Basics:
+  """Unique identifier of the accreditation body."""
+  id: ID!
+  """The name of the accreditation body."""
+  name: String!
+  """A description of the accreditation body."""
+  description: String
+
+  # Vectors:
+  """Collection of accreditation decisions issued by this body."""
+  accreditations: [Accreditation!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a subject taught within a study program."""
+type Subject {
+  # Basics:
+  """Unique identifier of the subject."""
+  id: ID!
+  """The name of the subject."""
+  name: String!
+  """A detailed description of the subject."""
+  description: String
+  """The category of the subject (e.g., "regular", "admission", "stateFinal")."""
+  type: String!
+
+  # Scalars:
+  """Reference to the study program to which the subject belongs."""
+  studyProgram: StudyProgram!
+  """Reference to the organizational group responsible for the subject."""
+  group: Group!
+
+  # Vectors:
+  """Collection of semesters in which the subject is taught."""
+  semesters: [Semester!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an academic semester during which a subject is taught."""
+type Semester {
+  # Basics:
+  """Unique identifier of the semester."""
+  id: ID!
+  """The term of the semester (e.g., "Fall", "Spring")."""
+  term: String!
+  """The year of the semester."""
+  year: Int!
+  """An optional description of the semester."""
+  description: String
+
+  # Scalars:
+  """Reference to the subject taught in the semester."""
+  subject: Subject!
+
+  # Vectors:
+  """Collection of study plans for the semester."""
+  studyPlans: [StudyPlan!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a thematic grouping of lessons within a semester."""
+type Topic {
+  # Basics:
+  """Unique identifier of the topic."""
+  id: ID!
+  """The name of the topic."""
+  name: String!
+  """A brief description of the topic."""
+  description: String
+
+  # Scalars:
+  """Reference to the semester in which the topic is taught."""
+  semester: Semester!
+
+  # Vectors:
+  """Collection of lessons that belong to the topic."""
+  lessons: [Lesson!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a lesson or lecture in a subject."""
+type Lesson {
+  # Basics:
+  """Unique identifier of the lesson."""
+  id: ID!
+  """The content of the lesson."""
+  content: String!
+  """The duration of the lesson in arbitrary units."""
+  length: Float!
+  """The type of lesson (e.g., "lecture", "exercise")."""
+  lessonType: String!
+
+  # Vectors:
+  """Collection of instructors who teach the lesson."""
+  instructors: [User!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a detailed schedule of lessons for a subject during a specific semester."""
+type StudyPlan {
+  # Basics:
+  """Unique identifier of the study plan."""
+  id: ID!
+  """A title or description of the study plan."""
+  description: String!
+
+  # Scalars:
+  """Reference to the semester for which the study plan is created."""
+  semester: Semester!
+
+  # Vectors:
+  """Collection of scheduled lessons included in the study plan."""
+  scheduledLessons: [ScheduledLesson!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a scheduled instance of a lesson within a study plan."""
+type ScheduledLesson {
+  # Basics:
+  """Unique identifier of the scheduled lesson."""
+  id: ID!
+  """The content or description of the scheduled lesson."""
+  content: String!
+  """The duration of the lesson in arbitrary units."""
+  length: Float!
+  """The type of lesson (e.g., "lecture", "exercise")."""
+  lessonType: String!
+
+  # Scalars:
+  """Reference to the event associated with the scheduled lesson."""
+  event: Event!
+  """Reference to the original lesson (if applicable)."""
+  lesson: Lesson!
+  """Reference to the topic to which the lesson belongs."""
+  topic: Topic!
+  """Reference to the study plan that includes the lesson."""
+  studyPlan: StudyPlan!
+
+  # Vectors:
+  """Collection of instructors assigned to the lesson."""
+  instructors: [User!]!
+  """Collection of groups involved in the lesson."""
+  groups: [Group!]!
+  """Collection of related lessons."""
+  relatedLessons: [Lesson!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a student enrolled in a study program."""
+type Student {
+  # Basics:
+  """Unique identifier of the student."""
+  id: ID!
+
+  # Scalars:
+  """Reference to the user representing the student."""
+  person: User!
+  """Reference to the study program in which the student is enrolled."""
+  studyProgram: StudyProgram!
+  """Reference to the current state of the student."""
+  state: State!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+"""Represents an evaluation given to a student, which may include overall and sub-level assessments."""
+type Evaluation {
+  # Basics:
+  """Unique identifier of the evaluation."""
+  id: ID!
+  """The grade or evaluation according to a defined scale (e.g., A–F, "pass"/"fail")."""
+  grade: String!
+  """The attempt number for the evaluation."""
+  attempt: Int!
+  """The number of points awarded (optional)."""
+  points: Float
+  """Indicates whether the evaluation is passing (optional)."""
+  passed: Boolean
+  """A string representing the hierarchical structure of sub-evaluations."""
+  path: String!
+
+  # Scalars:
+  """Reference to the student who received the evaluation."""
+  student: Student!
+  """Reference to the subject associated with the evaluation (optional)."""
+  subject: Subject
+  """Reference to the semester in which the evaluation was given (optional)."""
+  semester: Semester
+  """Reference to the event representing the exam session (optional)."""
+  examEvent: Event
+  """Reference to the admission process if applicable (optional)."""
+  admissionProcess: AdmissionProcess
+  """Reference to the type or context of the evaluation."""
+  evaluationType: EvaluationType!
+
+  # Vectors:
+  """Collection of sub-evaluations representing a hierarchical breakdown of the overall evaluation."""
+  Evaluations: [Evaluation!]!
+
+  # System:
+  """Identifier for RBAC control (e.g., Group ID for access control)."""
+  rbacId: ID!
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  state: State!
+}
+
+"""Defines the type or context of an evaluation (e.g., semester, admission, stateFinal)."""
+type EvaluationType {
+  # Basics:
+  """Unique identifier of the evaluation type."""
+  id: ID!
+  """The name of the evaluation type."""
+  name: String!
+  """A description of the evaluation type."""
+  description: String
+
+  # Vectors:
+  """Collection of evaluations of this type."""
+  evaluations: [Evaluation!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an exam and its components, defining classification conditions such as minimum and maximum scores."""
+type Exam {
+  # Basics:
+  """Unique identifier of the exam or exam component."""
+  id: ID!
+  """The name of the exam or component."""
+  name: String!
+  """A brief description of the exam or its component."""
+  description: String
+  """The materialized path representing the hierarchical structure (e.g., "/Admission/Exam1" or "/Admission/Exam1/PartA")."""
+  path: String
+
+  # Basics (time fields):
+  """The minimum score required to pass this exam component (optional)."""
+  minScore: Float
+  """The maximum achievable score for this exam component (optional)."""
+  maxScore: Float
+
+  # Scalars:
+  """Reference to the parent exam if this is a sub-component."""
+  parent: Exam
+  """Reference to the event representing the exam period."""
+  event: Event
+
+  # Vectors:
+  """Collection of sub-exams or exam components."""
+  subExams: [Exam!]!
+  """Collection of evaluations associated with this exam or exam component."""
+  evaluations: [Evaluation!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""Represents the admission process for a study program, including key dates and requirements."""
+type AdmissionProcess {
+  # Basics:
+  """Unique identifier of the admission process."""
+  id: ID!
+  """Timestamp when the admission process started."""
+  applicationStartAt: String!
+  """Timestamp when the application deadline occurs."""
+  applicationDeadlineAt: String!
+  """Timestamp when the results are announced."""
+  resultsAnnouncementAt: String!
+  """A description of the admission process."""
+  description: String
+
+  # Scalars:
+  """Reference to the study program for which the admission process is conducted."""
+  studyProgram: StudyProgram!
+
+  # Vectors:
+  """Collection of exams within the admission process."""
+  admissionExams: [Exam!]!
+  """Collection of documents required for application."""
+  requiredDocuments: [Document!]!
+  """Collection of applications submitted by candidates."""
+  admissionApplications: [AdmissionApplication!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents an application submitted by a candidate for the admission process."""
+type AdmissionApplication {
+  # Basics:
+  """Unique identifier of the admission application."""
+  id: ID!
+  """Timestamp when the application was submitted."""
+  applicationDateAt: String!
+
+  # Scalars:
+  """Reference to the current state of the application."""
+  state: State!
+  """Reference to the student (candidate) who submitted the application."""
+  student: Student!
+  """Reference to the admission process to which the application belongs."""
+  admissionProcess: AdmissionProcess!
+
+  # Vectors:
+  """Collection of documents submitted with the application."""
+  submittedDocuments: [Document!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""Represents a digital form that captures user input."""
+type DigitalForm {
+  # Basics:
+  """Unique identifier of the digital form."""
+  id: ID!
+  """The title of the digital form."""
+  title: String!
+  """A brief description of the digital form."""
+  description: String
+  """Version of the form (if applicable)."""
+  version: String
+
+  # Vectors:
+  """Collection of top-level form sections for this form."""
+  sections: [FormSection!]!
+  """Collection of submissions for this form."""
+  submissions: [FormSubmission!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a section (group) of form fields, supporting nested sections and repetition."""
+type FormSection {
+  # Basics:
+  """Unique identifier of the form section."""
+  id: ID!
+  """The title of the section."""
+  title: String!
+  """A brief description of the section."""
+  description: String
+  """Ordering index for the section."""
+  order: Int!
+
+  # Scalars:
+  """Reference to the parent section (optional)."""
+  parent: FormSection
+
+  # Vectors:
+  """Collection of form fields in this section."""
+  fields: [FormField!]!
+  """Collection of nested sub-sections."""
+  sections: [FormSection!]!
+
+  # Repetition:
+  """Indicates if the section is repeatable."""
+  repeatable: Boolean!
+  """Minimum number of repeats (if repeatable)."""
+  minRepeats: Int
+  """Maximum number of repeats (if repeatable)."""
+  maxRepeats: Int
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a field in a digital form."""
+type FormField {
+  # Basics:
+  """Unique identifier of the form field."""
+  id: ID!
+  """The label of the form field."""
+  label: String!
+  """The name of the form field. Must start with a lowercase letter."""
+  name: FieldName!
+  """The type of the field (e.g., "text", "number", "date", "boolean", "select")."""
+  fieldType: String!
+  """Placeholder text for the field."""
+  placeholder: String
+  """Indicates whether this field is required."""
+  required: Boolean!
+  """Ordering index of the field within its section."""
+  order: Int!
+
+  # Scalars:
+  """Reference to the digital form to which this field belongs."""
+  form: DigitalForm!
+  """Reference to the parent section in which this field is placed (optional)."""
+  parentSection: FormSection
+
+  # Repetition:
+  """Indicates if the field is repeatable."""
+  repeatable: Boolean!
+  """Minimum number of repeats (if repeatable)."""
+  minRepeats: Int
+  """Maximum number of repeats (if repeatable)."""
+  maxRepeats: Int
+
+  # Computed:
+  """Indicates if this field's value is computed from other fields."""
+  computed: Boolean!
+  """Mathematical formula to calculate the field's value, using variable references (e.g., price * quantity)."""
+  formula: String
+  """List of dependencies (field names or IDs) that this formula uses."""
+  dependencies: [String!]
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a submission of a digital form filled by a user."""
+type FormSubmission {
+  # Basics:
+  """Unique identifier of the form submission."""
+  id: ID!
+  """Timestamp when the form was submitted."""
+  submittedAt: String!
+
+  # Scalars:
+  """Reference to the user who submitted the form."""
+  submittedBy: User!
+  """Reference to the digital form that was submitted."""
+  form: DigitalForm!
+
+  # Vectors:
+  """Collection of responses for each form field in this submission."""
+  responses: [FieldResponse!]!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""Represents a response for a specific form field within a submission."""
+type FieldResponse {
+  # Basics:
+  """Unique identifier of the field response."""
+  id: ID!
+  """The value provided by the user for this field."""
+  value: String
+
+  # Scalars:
+  """Reference to the form field this response corresponds to."""
+  field: FormField!
+  """Reference to the form submission that contains this response."""
+  submission: FormSubmission!
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Custom Scalars for Name Validation
+#############################
+
+"""A string representing a section name; must start with an uppercase letter."""
+scalar SectionName
+
+"""A string representing a field name; must start with a lowercase letter."""
+scalar FieldName

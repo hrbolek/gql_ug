@@ -47,17 +47,7 @@ class RoleTypeListGQLModel(BaseGQLModel):
     
     @classmethod
     async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
-        if id is not None:
-            # loader = cls.getLoader(info)
-            # if isinstance(id, str): id = IDType(id)
-            # rows = await loader.filter_by(list_id=id)
-            # row = next(rows, None)
-            # return None if row is None else cls(id=id) # it has not any real row in a table
-            
-            # empty list :)
-            return cls(id=id)
-        return None
-
+        return None if id is None else cls(id=id)
 
     id: Optional[IDType] = None
 
@@ -99,22 +89,22 @@ async def role_type_list_by_id(
     return result
 
 import asyncio
-@strawberry.type(description="")
-class RoleTypeListResult:
-    id: IDType = None
-    msg: str = None
+# @strawberry.type(description="")
+# class RoleTypeListResult:
+#     id: IDType = None
+#     msg: str = None
 
-    @strawberry.field(
-        description="""Result of user operation""",
-        permission_classes=[OnlyForAuthentized])
-    async def role_typelist(self, info: strawberry.types.Info) -> Optional["RoleTypeListGQLModel"]:
-        # from .roleTypeGQLModel import RoleTypeGQLModel
+#     @strawberry.field(
+#         description="""Result of user operation""",
+#         permission_classes=[OnlyForAuthentized])
+#     async def role_typelist(self, info: strawberry.types.Info) -> Optional["RoleTypeListGQLModel"]:
+#         # from .roleTypeGQLModel import RoleTypeGQLModel
         
-        # rows = await resolve_role_type_list_by_id(self, info, list_id=self.id)
-        # result = (RoleTypeGQLModel.resolve_reference(info=info, id=r.type_id) for r in rows)
+#         # rows = await resolve_role_type_list_by_id(self, info, list_id=self.id)
+#         # result = (RoleTypeGQLModel.resolve_reference(info=info, id=r.type_id) for r in rows)
         
-        # return await asyncio.gather(*result)
-        return await RoleTypeListGQLModel.resolve_reference(info=info, id=self.id)
+#         # return await asyncio.gather(*result)
+#         return await RoleTypeListGQLModel.resolve_reference(info=info, id=self.id)
 
 import dataclasses
 @strawberry.input(description="")

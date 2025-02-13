@@ -169,7 +169,7 @@ Přístup pouze pro autentizované uživatele.
 async def role_by_user(self, info: strawberry.types.Info, user_id: IDType) -> List["RoleGQLModel"]:
     loader = RoleGQLModel.getLoader(info)
     rows = await loader.filter_by(user_id=user_id)
-    return rows
+    return (RoleGQLModel.from_dataclass(row) for row in rows)
 
 role_by_id = strawberry.field(
     description="""## Description

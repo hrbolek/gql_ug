@@ -1,0 +1,13 @@
+query rolesOnGroup($id: UUID!) {
+  rolesOnGroup(groupId: $id) {
+    id
+    lastchange
+    user {
+      email
+    }
+    roletype {
+      id
+      name
+    }
+  }
+}

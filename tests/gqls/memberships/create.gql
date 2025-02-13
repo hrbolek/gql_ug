@@ -1,6 +1,6 @@
 
-mutation($id: UUID, $user_id: UUID!, $group_id: UUID!, $valid: Boolean, $startdate: DateTime, $enddate: DateTime ) {
-  result: membershipInsert(membership: {id: $id, userId: $user_id, groupId: $group_id, valid: $valid, startdate: $startdate, enddate: $enddate}) {
+mutation($id: UUID, $user_id: UUID!, $group_id: UUID!, $startdate: DateTime, $enddate: DateTime ) {
+  result: membershipInsert(membership: {id: $id, userId: $user_id, groupId: $group_id, startdate: $startdate, enddate: $enddate}) {
     ...Membership
     ...Error
   }

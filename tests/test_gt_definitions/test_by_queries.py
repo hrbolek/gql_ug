@@ -14,7 +14,15 @@ test_user_insert = createTest2(
     queryName="create", 
     variables={
         "id": "aae16f75-e76e-43a7-b0bc-556f0f6dd29d",
-        "name": "new event",
+        "name": "new user",
+        # "type_id": "c0a12392-ae0e-11ed-9bd8-0242ac110002"
+    })
+test_user_delete = createDeleteTest2(
+    tableName="users", 
+    # queryName="create", 
+    variables={
+        "id": "aae16f75-e76e-43a7-b0bc-556f0f6dd29d",
+        "name": "new user",
         # "type_id": "c0a12392-ae0e-11ed-9bd8-0242ac110002"
     })
 # test_event_coverage = createTest2(
@@ -41,7 +49,8 @@ test_group_insert = createTest2(
     tableName="groups", 
     queryName="create",
     variables={
-        "id": "cdaf3926-1962-437c-8cb9-2167aa9e5a7d",
+        # "id": "cdaf3926-1962-437c-8cb9-2167aa9e5a7d",
+        "mastergroup_id": "d75d64a4-bf5f-43c5-9c14-8fda7aff6c09",
         "grouptype_id": "cd49e152-610c-11ed-9f29-001a7dda7110",
         "name": "new group",
         "name_en": "new group"
@@ -54,13 +63,17 @@ test_group_update = createUpdateTest2(
         "name": "renamed"
     }
 )
-# test_group_delete = createTest2(
-#     tableName="groups",
-#     queryName="delete",
-#     variables={
-#         "id": "2d9dcd22-a4a2-11ed-b9df-0242ac120003"
-#     }
-# )
+
+test_group_delete = createDeleteTest2(
+    tableName="groups",
+    # queryName="delete",
+    variables={
+        "mastergroup_id": "d75d64a4-bf5f-43c5-9c14-8fda7aff6c09",
+        "grouptype_id": "cd49e152-610c-11ed-9f29-001a7dda7110",
+        "name": "new group",
+        "name_en": "new group"
+    }
+)
 
 test_group_type_by_id = createByIdTest2(tableName="grouptypes")
 test_group_type_page = createTest2(tableName="grouptypes", queryName="readp")
@@ -119,6 +132,26 @@ test_membership_insert = createTest2(
     variables={
         "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
         "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+    }
+    )
+
+test_membership_update = createUpdateTest2(
+    tableName="memberships", 
+    variables={
+        "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
+        "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+        "startdate": "2025-02-10T18:52:00",
+        "startdate": "2025-03-10T18:52:00"
+    }
+    )
+
+test_membership_delete = createDeleteTest2(
+    tableName="memberships", 
+    variables={
+        "user_id": "89d1f638-ae0f-11ed-9bd8-0242ac110002",
+        "group_id": "cd49e152-610c-11ed-9f29-001a7dda7110", 
+        "startdate": "2025-02-10T18:52:00",
+        "startdate": "2025-03-10T18:52:00"
     }
     )
 # test_membership_delete = createDeleteTest2(
@@ -353,5 +386,39 @@ test_rbac_coverage2 = createTest2(
     variables={
         "id": "2d9dd1c8-a4a2-11ed-b9df-0242ac120003",
         "user_id": "2d9dc868-a4a2-11ed-b9df-0242ac120003"
+    }
+)
+
+test_rbac_resolverbacs = createTest2(
+    tableName="rbacs",
+    queryName="resolverbacs",
+    variables={
+        "rbac_ids": [
+            "2d9dd1c8-a4a2-11ed-b9df-0242ac120003"
+        ]
+    }
+)
+
+test_rbac_rolesOnGroup = createTest2(
+    tableName="roles",
+    queryName="rolesOnGroup",
+    variables={
+        "id": "be0e6b0b-7e5f-4b7a-9d9b-daf3f23bcd7a"
+    }
+)
+
+test_rbac_rolesOnUser = createTest2(
+    tableName="roles",
+    queryName="rolesOnUser",
+    variables={
+        "id": "51d101a0-81f1-44ca-8366-6cf51432e8d6"
+    }
+)
+
+test_rbac_rolesByUser = createTest2(
+    tableName="roles",
+    queryName="roleByUser",
+    variables={
+        "id": "51d101a0-81f1-44ca-8366-6cf51432e8d6"
     }
 )

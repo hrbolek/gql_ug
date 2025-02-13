@@ -1,0 +1,34 @@
+mutation ($id: UUID!, $lastchange: DateTime!) {
+  result: groupDelete(
+    group: {id: $id, lastchange: $lastchange}
+  ) {
+    ...Error
+  }
+}
+
+
+fragment Error on GroupGQLModelDeleteError {
+  __typename
+  failed
+  input
+  Entity {
+    ...GroupModel
+  }
+  msg
+}
+
+fragment GroupModel on GroupGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  nameEn
+  rbacobject {
+    id
+  }
+  subgroups {
+    id
+    name
+  }
+
+}

@@ -1,0 +1,17 @@
+query resolveRBACs($id: UUID!) {
+  rolesOnUser(userId: $id) {
+    id
+    lastchange
+    user {
+      email
+    }
+    roletype {
+      id
+      name
+    }
+    group {
+      id
+      name
+    }
+  }
+}

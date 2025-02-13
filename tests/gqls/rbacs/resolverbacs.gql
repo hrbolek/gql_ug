@@ -1,0 +1,10 @@
+query resolveRBACs($rbac_ids: [UUID!]!) {
+  resolveRBACs(rbacIds: $rbac_ids) {
+    rbacId
+    roles {
+      user {
+        email
+      }
+    }
+  }
+}

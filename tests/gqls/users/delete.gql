@@ -1,0 +1,39 @@
+
+mutation($id: UUID!, $lastchange: DateTime!) {
+  result: userDelete(user: {id: $id, lastchange: $lastchange}) {
+    ...Error
+  }
+}
+
+fragment Error on UserGQLModelDeleteError {
+  __typename
+  failed
+  input
+  Entity {
+    ...User
+  }
+  msg
+}
+
+fragment User on UserGQLModel {
+  __typename
+  id
+  lastchange
+  name
+  surname
+  email
+  isThisMe
+  rolesOn {
+    id
+    user {
+      email
+    }
+    roletype {
+      name
+    }
+  }
+  memberOf {
+    name
+  }
+  id
+}

@@ -232,11 +232,11 @@ Primární klíč entity členství. If not provided, a new unique identifier wi
 Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
          default=None
     )
-    valid: typing.Optional[bool] = strawberry.field(
-         description="""(Optional) Flag indicating if the membership is valid.
-(Volitelné) Příznak platnosti členství.""",
-         default=True
-    )
+#     valid: typing.Optional[bool] = strawberry.field(
+#          description="""(Optional) Flag indicating if the membership is valid.
+# (Volitelné) Příznak platnosti členství.""",
+#          default=True
+#     )
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
          description="""(Optional) Date when the membership starts.
 (Volitelné) Datum začátku členství.""",
@@ -372,7 +372,7 @@ async def membership_update(self,
     info: strawberry.types.Info, 
     membership: "MembershipUpdateGQLModel"
 ) -> Union[MembershipGQLModel, UpdateError[MembershipGQLModel]]:
-    result = await Update[GroupGQLModel].DoItSafeWay(info=info, entity=membership)
+    result = await Update[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
     return result
 
 class InsertMembershipPermission(RBACPermission):
