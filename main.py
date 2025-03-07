@@ -212,6 +212,11 @@ async def graphiql():
     realpath = os.path.realpath("./voyager.html")
     return realpath
 
+@app.get("/doc", response_class=FileResponse)
+async def graphiql():
+    realpath = os.path.realpath("./liveschema.html")
+    return realpath
+
 logging.info("All initialization is done")
 
 # @app.get('/hello')

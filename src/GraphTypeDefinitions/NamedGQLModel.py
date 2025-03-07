@@ -9,11 +9,11 @@ from uoishelpers.gqlpermissions import OnlyForAuthentized
 class NamedGQLModel(BaseGQLModel):
 
     name: typing.Optional[str] = strawberry.field(
-        description="type name",
+        description="name",
         permission_classes=[OnlyForAuthentized]
         )
     
     name_en: typing.Optional[str] = strawberry.field(
-        description="type name",
+        description="english name",
         permission_classes=[OnlyForAuthentized]
         )

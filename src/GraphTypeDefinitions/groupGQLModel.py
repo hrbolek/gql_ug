@@ -90,13 +90,6 @@ class GroupGQLModel(NamedGQLModel):
     def getLoader(cls, info):
         return getLoader(info).GroupModel
 
-    @classmethod
-    def from_dataclass(cls, db_row):
-        db_row_dict = dataclasses.asdict(db_row)
-        db_row_dict["valid"] = db_row.valid
-        instance = cls(**db_row_dict)
-        return instance
-
     email: typing.Optional[str] = strawberry.field(
         description="""Group's email address.  
 Emailová adresa skupiny.""",
@@ -109,11 +102,14 @@ Zkratka nebo krátký název skupiny.""",
         permission_classes=[OnlyForAuthentized]
     )
     
-    valid: typing.Optional[bool] = strawberry.field(
+    @strawberry.field(
         description="""Indicates whether the group is currently active.  
 Indikuje, zda je skupina aktuálně aktivní.""",
         permission_classes=[OnlyForAuthentized]
     )
+    async def valid(self) -> typing.Optional[bool]:
+        result = (self.enddate is None) or (datetime.datetime.now() < self.enddate)
+        return result
 
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""Start date of the group's activity.  
@@ -190,8 +186,8 @@ Vrací hierarchii nadřazených skupin od nejvyšší po bezprostředního nadř
         print(f"ids {ids}", flush=True)
         futures = [GroupGQLModel.load_with_loader(info=info, id=id) for id in ids]
         results = await asyncio.gather(*futures)
-        groups = [GroupGQLModel.from_dataclass(result) for result in results if result is not None]
-        return groups
+        # groups = [GroupGQLModel.from_dataclass(result) for result in results if result is not None]
+        return results
 
     path: typing.Optional[str] = strawberry.field(
         description="""Materialized path representing the group's hierarchical location.  
@@ -225,7 +221,10 @@ Agreguje role podél hierarchie skupiny.""",
         ids = [] if path is None else path.split('/')
         futures = (loader.filter_by(group_id=IDType(id)) for id in ids)
         dbrows = await asyncio.gather(*futures)
-        result = [RoleGQLModel.from_dataclass(row) for row in dbrows if row.valid]
+        index = {
+            id: row for rr in dbrows for row in rr
+        }
+        result = [RoleGQLModel.from_dataclass(row) for row in index.values() if row.valid]
         return result
 
 #####################################################################

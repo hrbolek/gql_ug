@@ -2,342 +2,590 @@
 # Organizational Entities
 #############################
 
-"""Represents an organizational unit that can be arranged hierarchically."""
+"""
+Represents an organizational unit that can be arranged hierarchically.
+This entity holds core information about an organizational unit (e.g., a university, faculty, or department).
+It includes basic descriptive attributes, relationships to parent/child groups, and system fields for audit and RBAC.
+"""
 type Group {
   # Basics:
-  """Unique identifier of the group."""
-  id: ID!
-  """The name of the group."""
+  id: ID! 
+  # Unique identifier for the group.
+
   name: String!
-  """A brief description of the group."""
+  # The full name of the group.
+
   description: String
-  """Hierarchical path of the group (e.g., "/University/Faculty/Department")."""
+  # A brief description providing additional details about the group.
+
   path: String
-  """Abbreviated name of the group."""
+  # The materialized hierarchical path (e.g., "/University/Faculty/Department") for navigation.
+
   abbreviation: String
+  # A short form or abbreviation of the group's name.
 
   # Scalars:
-  """Reference to the single parent group (optional)."""
   parent: Group
-  """Reference to the type of the group."""
+  # Reference to the immediate parent group (if applicable); null for top-level groups.
+
   groupType: GroupType
+  # Reference to the type or category that classifies this group.
 
   # Vectors:
-  """Collection of memberships that belong to the group."""
   memberships: [Membership!]!
-  """Collection of subgroups within the group."""
+  # List of memberships that associate users with this group.
+
   subgroups: [Group!]!
-  """Collection of roles assigned to the group."""
+  # List of subgroups that are contained within this group.
+
   roles: [Role!]!
+  # List of roles that are specifically assigned to this group.
 
   # System:
   createdBy: User!
+  # The user who originally created this group record.
+
   changedBy: User
+  # The user who last updated this group record.
+
   createdAt: String!
+  # Timestamp (ISO 8601 format) marking when this group was created.
+
   changedAt: String
+  # Timestamp marking the last update to this group record.
+
   rbacId: ID!
-  """Current state of the group for RBAC."""
+  # Identifier used in role-based access control to link the group to specific access policies.
+
   state: State!
+  # Current lifecycle state of the group (e.g., Active, Inactive, Archived).
 }
 
-"""Defines the type or category of a group."""
+"""
+Defines the type or category of a group.
+Used to classify groups (e.g., University, Faculty, Department).
+"""
 type GroupType {
   # Basics:
-  """Unique identifier of the group type."""
   id: ID!
-  """The name of the group type."""
+  # Unique identifier for the group type.
+
   name: String!
+  # The name of the group type.
 
-  # Scalars: *(None defined)*
+  # Scalars: (None defined)
 
-  # Vectors: *(None defined)*
+  # Vectors: (None defined)
 
   # System:
   createdBy: User!
+  # User who created this group type record.
+
   changedBy: User
+  # User who last modified this group type.
+
   createdAt: String!
+  # Timestamp when the group type was created.
+
   changedAt: String
+  # Timestamp when the group type was last updated.
+
   rbacId: ID!
+  # Identifier used for RBAC purposes.
+
   state: State!
+  # Current lifecycle state of the group type.
 }
 
-"""Represents an individual such as a student, teacher, or administrator."""
+"""
+Represents an individual (user) such as a student, teacher, or administrator.
+Stores basic personal information and links to organizational data.
+"""
 type User {
   # Basics:
-  """Unique identifier of the user."""
   id: ID!
-  """The first name of the user."""
-  firstName: String!
-  """The last name of the user."""
-  lastName: String!
-  """The email address of the user."""
-  email: String!
+  # Unique identifier for the user.
 
-  # Scalars: *(None defined)*
+  firstName: String!
+  # The user's first name.
+
+  lastName: String!
+  # The user's last name.
+
+  email: String!
+  # The user's email address.
+
+  # Scalars: (None defined)
 
   # Vectors:
-  """Collection of memberships associated with the user."""
   memberships: [Membership!]!
-  """Collection of roles held by the user."""
+  # List of memberships that associate this user with various groups.
+
   roles: [Role!]!
-  """Collection of study programs in which the user is involved."""
+  # List of roles assigned to the user.
+
   studies: [StudyProgram!]!
+  # List of study programs in which the user is involved (if applicable).
 
   # System:
   createdBy: User!
+  # User who created this user record.
+
   changedBy: User
+  # User who last updated this user record.
+
   createdAt: String!
+  # Timestamp when the user record was created.
+
   changedAt: String
+  # Timestamp when the user record was last updated.
+
   rbacId: ID!
+  # Identifier for role-based access control for the user.
+
   state: State!
+  # Current lifecycle state of the user.
 }
 
-"""Connects a user to a group and contains validity intervals."""
+"""
+Connects a user to a group and defines the validity period for the membership.
+This entity is used to determine organizational affiliations and access rights.
+"""
 type Membership {
   # Basics:
-  """Timestamp when the membership was created."""
   joinedAt: String!
-  """Timestamp when the membership validity starts."""
+  # Timestamp when the membership was initially created.
+
   startAt: String!
-  """Timestamp when the membership validity ends."""
+  # Timestamp marking the beginning of the membership's validity period.
+
   endAt: String!
+  # Timestamp marking the end of the membership's validity period.
 
   # Scalars:
-  """Reference to the user in the membership."""
   person: User!
-  """Reference to the group to which the membership belongs."""
-  group: Group!
+  # The user who is a member.
 
-  # Vectors: *(None defined)*
+  group: Group!
+  # The group to which the user belongs.
+
+  # Vectors: (None defined)
 
   # System:
   createdBy: User!
+  # User who created this membership record.
+
   changedBy: User
+  # User who last modified this membership record.
+
   createdAt: String!
+  # Timestamp when the membership was created.
+
   changedAt: String
+  # Timestamp when the membership was last updated.
+
   rbacId: ID!
+  # Identifier used for RBAC in the context of this membership.
+
   state: State!
+  # Current state of the membership.
 }
 
-"""Records the assignment of a role to a user within a group."""
+"""
+Records the assignment of a role to a user within a group.
+Essential for RBAC by linking users to their specific roles and permissions.
+"""
 type Role {
   # Basics:
-  """Unique identifier of the role."""
   id: ID!
-  """Timestamp when the role becomes active."""
+  # Unique identifier for the role assignment.
+
   startAt: String!
-  """Timestamp when the role is no longer active."""
+  # Timestamp when the role becomes active.
+
   endAt: String!
+  # Timestamp when the role is deactivated or expires.
 
   # Scalars:
-  """Reference to the group where the role is assigned."""
   group: Group!
-  """Reference to the user who holds the role."""
-  person: User!
-  """Reference to the type of the role."""
-  roleType: RoleType!
+  # The group context in which the role is assigned.
 
-  # Vectors: *(None defined)*
+  person: User!
+  # The user who holds this role.
+
+  roleType: RoleType!
+  # The type of role that defines permissions and responsibilities.
+
+  # Vectors: (None defined)
 
   # System:
   createdBy: User!
+  # User who created this role record.
+
   changedBy: User
+  # User who last updated this role record.
+
   createdAt: String!
+  # Timestamp when the role record was created.
+
   changedAt: String
+  # Timestamp when the role record was last updated.
+
   rbacId: ID!
+  # Identifier for RBAC purposes.
+
   state: State!
+  # Current lifecycle state of the role.
 }
 
-"""Defines the type of a role, categorizing roles into groups."""
+"""
+Defines the type or context of a role.
+Used to categorize roles and determine their associated permissions.
+"""
 type RoleType {
   # Basics:
-  """Unique identifier of the role type."""
   id: ID!
-  """The name of the role type."""
+  # Unique identifier for the role type.
+
   name: String!
-  """A description of the role type."""
+  # The name of the role type (e.g., Examiner, FacultyAdmin).
+
   description: String
+  # Detailed description of what this role type entails.
 
   # Scalars:
-  """Reference to the category of the role type."""
   category: Category
+  # Reference to a category grouping similar role types.
 
   # Vectors:
-  """Collection of roles of this type."""
   roles: [Role!]!
+  # List of roles that are assigned this role type.
 
   # System:
   createdBy: User!
+  # User who created this role type record.
+
   changedBy: User
+  # User who last updated this role type record.
+
   createdAt: String!
+  # Timestamp when the role type was created.
+
   changedAt: String
+  # Timestamp when the role type was last updated.
+
   rbacId: ID!
+  # Identifier used for RBAC in the context of this role type.
+
   state: State!
+  # Current state of the role type.
 }
 
-"""Represents a category for classifying role types."""
+"""
+Represents a category for classifying role types.
+Helps to group similar role types together for management and filtering.
+"""
 type Category {
   # Basics:
-  """Unique identifier of the category."""
   id: ID!
-  """The name of the category."""
-  name: String!
+  # Unique identifier for the category.
 
-  # Scalars: *(None defined)*
-  # Vectors: *(None defined)*
+  name: String!
+  # The name of the category.
+
+  # Scalars: (None defined)
+  # Vectors: (None defined)
 
   # System:
   createdBy: User!
+  # User who created this category record.
+
   changedBy: User
+  # User who last updated this category record.
+
   createdAt: String!
+  # Timestamp when the category was created.
+
   changedAt: String
+  # Timestamp when the category was last updated.
+
   rbacId: ID!
+  # Identifier for RBAC purposes in the context of this category.
+
   state: State!
+  # Current state of the category.
 }
 
-"""Represents the status of an entity used for RBAC access control."""
+"""
+Represents the state of an entity used for access control and lifecycle tracking.
+This entity defines allowed roles and permitted transitions.
+"""
 type State {
   # Basics:
-  """Unique identifier of the state."""
   id: ID!
-  """The name of the state."""
+  # Unique identifier for the state.
+
   name: String!
-  """A description of the state."""
+  # The name of the state (e.g., Active, Inactive, Archived).
+
   description: String
+  # A detailed description of what the state represents.
 
   # Scalars:
-  """Collection of allowed role types for this state."""
   allowedRoles: [String!]!
+  # List of role types that are permitted for this state; used to dynamically derive access permissions.
 
   # Vectors:
-  """Collection of incoming transitions (states from which one can transition to this state)."""
   Ins: [State!]!
-  """Collection of outgoing transitions (states to which one can transition from this state)."""
+  # List of states from which a transition to this state is allowed.
+
   Outs: [State!]!
+  # List of states to which a transition from this state is allowed.
 
   # System:
   createdBy: User!
+  # User who created this state record.
+
   changedBy: User
+  # User who last updated this state record.
+
   createdAt: String!
+  # Timestamp when the state was created.
+
   changedAt: String
+  # Timestamp when the state was last modified.
+
   rbacId: ID!
+  # Identifier used for RBAC purposes for this state.
+
   state: State!
+  # Current state of the state record (used for nested lifecycle tracking if needed).
 }
 
-"""Provides storage for sensitive personal data required by GDPR compliance."""
-type PersonGDPR {
+"""
+Stores historical records of state changes for any entity.
+This entity allows tracking the complete lifecycle (e.g., applicant → student → graduate) by recording notes and transitions.
+"""
+type History {
   # Basics:
-  """Unique identifier of the PersonGDPR record."""
   id: ID!
-  """The personal identification number (birth number)."""
-  birthNumber: String!
-  """The surname at birth (maiden name)."""
-  birthSurname: String!
-  """The identification card number."""
-  idCardNumber: String!
-  """Any other sensitive personal data as required."""
-  otherSensitiveData: String
+  # Unique identifier for the history record.
+
+  note: String
+  # Detailed note describing the state change, including rationale and any comments.
 
   # Scalars:
-  """Reference to the user to which these sensitive details belong."""
-  person: User!
+  state: State!
+  # Reference to the new state after the change.
+
+  changedEntityId: ID!
+  # Identifier of the entity in which the state change occurred.
+
+  changedEntityType: String!
+  # A string representing the type of the entity (e.g., "Student", "AdmissionApplication").
 
   # System:
   createdBy: User!
+  # User who created this history record.
+
   changedBy: User
+  # User who last modified this history record.
+
   createdAt: String!
+  # Timestamp when the history record was created.
+
   changedAt: String
+  # Timestamp when the history record was last updated.
+
   rbacId: ID!
+  # Identifier for RBAC purposes in the context of this history record.
+
   state: State!
+  # Current state of the history record.
+}
+
+"""
+Stores sensitive personal data required for GDPR compliance.
+This entity holds confidential information that must be protected.
+"""
+type PersonGDPR {
+  # Basics:
+  id: ID!
+  # Unique identifier for the GDPR record.
+
+  birthNumber: String!
+  # The personal identification number (birth number).
+
+  birthSurname: String!
+  # The surname at birth (maiden name).
+
+  idCardNumber: String!
+  # The identification card number.
+
+  otherSensitiveData: String
+  # Any additional sensitive personal data as required.
+
+  # Scalars:
+  person: User!
+  # Reference to the user to whom these sensitive details belong.
+
+  # System:
+  createdBy: User!
+  # User who created this GDPR record.
+
+  changedBy: User
+  # User who last updated this GDPR record.
+
+  createdAt: String!
+  # Timestamp when the GDPR record was created.
+
+  changedAt: String
+  # Timestamp when the GDPR record was last modified.
+
+  rbacId: ID!
+  # Identifier for RBAC purposes.
+
+  state: State!
+  # Current state of the GDPR record.
 }
 
 #############################
 # Office Entities
 #############################
 
-"""Represents a document containing text and binary data, organized hierarchically."""
+"""
+Represents a document containing text and binary data, organized hierarchically.
+Used for storing official records and documents.
+"""
 type Document {
   # Basics:
-  """Unique identifier of the document."""
   id: ID!
-  """The title of the document."""
+  # Unique identifier for the document.
+
   title: String!
-  """The textual content of the document."""
+  # Title or name of the document.
+
   content: String
-  """Materialized path in the document hierarchy (e.g., "/Department/Reports/2025/Report1")."""
+  # The full textual content or description of the document.
+
   path: String
+  # Materialized path showing the document's location in the hierarchy.
 
   # Scalars:
-  """Reference to the event associated with the document (optional)."""
   event: Event
-  """Reference to the parent document (optional)."""
+  # Reference to the event with which this document is associated (optional).
+
   parent: Document
+  # Reference to a parent document if this document is a subdocument.
 
   # Vectors:
-  """Collection of subdocuments within the document."""
   subdocuments: [Document!]!
+  # List of subdocuments contained within this document.
 
   # System:
   createdBy: User!
+  # User who created the document record.
+
   changedBy: User
+  # User who last modified the document.
+
   createdAt: String!
+  # Timestamp when the document was created.
+
   changedAt: String
+  # Timestamp when the document was last updated.
+
   rbacId: ID!
+  # Identifier used for access control.
+
   state: State!
+  # Current lifecycle state of the document.
+
+  ess: ESSLink
+  # Link (URL or identifier) for synchronization with the electronic filing service.
 }
 
-"""Represents an event such as a lecture, exam, meeting, or conference."""
+"""
+Represents an event such as a lecture, exam, meeting, or conference.
+Contains scheduling and location information.
+"""
 type Event {
   # Basics:
-  """Unique identifier of the event."""
   id: ID!
-  """The name of the event."""
+  # Unique identifier for the event.
+
   name: String!
-  """A brief description of the event."""
+  # Name of the event.
+
   description: String
-  """Materialized path in the event hierarchy (e.g., "/Semester/Week1/Lesson3")."""
+  # Brief description of the event.
+
   path: String
-  """A textual description of the event location if a facility is not defined."""
+  # Materialized path indicating the event's position in a hierarchy.
+
   location: String
+  # Description of the event's location (if no facility is defined, this text is used).
 
   # Scalars:
-  """Reference to the type of the event."""
   eventType: EventType!
-  """Reference to the facility where the event takes place (optional)."""
+  # Reference to the event type, which categorizes the event.
+
   facility: Facility
-  """Reference to the parent event in the hierarchy (optional)."""
+  # Reference to the facility where the event takes place (optional).
+
   parent: Event
-  """Timestamp when the event starts."""
+  # Reference to a parent event if this event is a subevent.
+
   startAt: String!
-  """Timestamp when the event ends."""
+  # Timestamp when the event begins.
+
   endAt: String!
+  # Timestamp when the event ends.
 
   # Vectors:
-  """Collection of documents attached to the event."""
   documents: [Document!]!
-  """Collection of subevents under this event."""
+  # List of documents attached to this event.
+
   subevents: [Event!]!
-  """Collection of invitations related to the event."""
+  # List of subevents that occur as part of this event.
+
   invitations: [Invitation!]!
+  # List of invitations sent for this event.
 
   # System:
   createdBy: User!
+  # User who created this event record.
+
   changedBy: User
+  # User who last modified this event.
+
   createdAt: String!
+  # Timestamp when the event was created.
+
   changedAt: String
+  # Timestamp when the event was last updated.
+
   rbacId: ID!
+  # Identifier for RBAC in the context of this event.
+
   state: State!
+  # Current state of the event.
 }
 
-"""Defines the type of an event (e.g., "general", "examTerm")."""
+"""
+Defines the type or category of an event (e.g., "general", "examTerm").
+Used to classify events.
+"""
 type EventType {
   # Basics:
-  """Unique identifier of the event type."""
   id: ID!
-  """The name of the event type."""
+  # Unique identifier for the event type.
+
   name: String!
-  """A description of the event type."""
+  # Name of the event type.
+
   description: String
+  # Detailed description of the event type.
 
   # System:
   createdBy: User!
@@ -348,22 +596,27 @@ type EventType {
   state: State!
 }
 
-"""Represents an invitation for an event, tracking its status and send time."""
+"""
+Represents an invitation for an event.
+Tracks the invitation's status and the time it was sent.
+"""
 type Invitation {
   # Basics:
-  """Unique identifier of the invitation."""
   id: ID!
-  """The status of the invitation (e.g., "accepted", "declined", "excused")."""
+  # Unique identifier for the invitation.
+
   status: String!
+  # Status of the invitation (e.g., "accepted", "declined", "excused").
 
   # Scalars:
-  """Reference to the event associated with the invitation."""
   event: Event!
-  """Reference to the user to whom the invitation is addressed."""
-  person: User!
+  # The event to which the invitation pertains.
 
-  """Timestamp when the invitation was sent."""
+  person: User!
+  # The user to whom the invitation is addressed.
+
   sentAt: String!
+  # Timestamp when the invitation was sent.
 
   # System:
   createdBy: User!
@@ -374,29 +627,37 @@ type Invitation {
   state: State!
 }
 
-"""Represents a physical or virtual location such as a classroom, lab, or office."""
+"""
+Represents a physical or virtual location such as a classroom, lab, or office.
+Provides address and organizational context.
+"""
 type Facility {
   # Basics:
-  """Unique identifier of the facility."""
   id: ID!
-  """The name of the facility (e.g., "67a")."""
+  # Unique identifier for the facility.
+
   name: String!
-  """The address or description of the facility."""
+  # Name of the facility.
+
   address: String!
-  """The full label of the facility (e.g., "KŠ/9a/67a")."""
+  # The physical address or description of the facility.
+
   label: String!
+  # A full label for the facility, used for identification (e.g., "KŠ/9a/67a").
 
   # Scalars:
-  """Reference to the parent facility (optional)."""
   parent: Facility
-  """Reference to the organizational group responsible for the facility."""
+  # Reference to the parent facility if this facility is part of a larger complex.
+
   group: Group!
+  # The organizational group responsible for this facility.
 
   # Vectors:
-  """Collection of subfacilities."""
   subfacilities: [Facility!]!
-  """Collection of events taking place in the facility."""
+  # List of facilities that are nested under this facility.
+
   events: [Event!]!
+  # List of events that take place at this facility.
 
   # System:
   createdBy: User!
@@ -407,31 +668,40 @@ type Facility {
   state: State!
 }
 
-"""Represents a task with support for subtasks and hierarchical search using materialized path."""
+"""
+Represents a task with support for subtasks and a hierarchical structure.
+Useful for modeling workflows or action items.
+"""
 type Task {
   # Basics:
-  """Unique identifier of the task."""
   id: ID!
-  """The title of the task."""
+  # Unique identifier for the task.
+
   title: String!
-  """A brief description of the task."""
+  # Title of the task.
+
   description: String
-  """Due timestamp for task completion (if applicable)."""
+  # Detailed description of what the task entails.
+
   dueAt: String
-  """The current status of the task (e.g., "pending", "in progress", "completed")."""
+  # Deadline (timestamp) by which the task should be completed.
+
   status: String!
-  """Materialized path for quick hierarchical search of task structure."""
+  # Current status of the task (e.g., "pending", "in progress", "completed").
+
   path: String!
+  # Materialized path for locating the task within a task hierarchy.
 
   # Scalars:
-  """Reference to the user responsible for the task (optional)."""
   assignedTo: User
-  """Reference to the user who created or owns the task (optional)."""
+  # User assigned to perform the task (optional).
+
   owner: User
+  # User who owns or created the task (optional).
 
   # Vectors:
-  """Collection of sub-tasks that are part of this task."""
   subTasks: [Task!]!
+  # List of subtasks that are part of this task.
 
   # System:
   createdBy: User!
@@ -443,36 +713,46 @@ type Task {
 }
 
 #############################
-# Academic and Study Modules
+# Academic Entities
 #############################
 
-"""Represents an accredited study program (e.g., Bachelor's or Master's program)."""
+"""
+Represents an accredited study program (e.g., Bachelor's or Master's program).
+Includes academic details and links to organizational units.
+"""
 type StudyProgram {
   # Basics:
-  """Unique identifier of the study program."""
   id: ID!
-  """The title of the study program."""
+  # Unique identifier for the study program.
+
   title: String!
-  """The level of study (e.g., "Bachelor's", "Master's")."""
+  # The title or name of the study program.
+
   level: String!
-  """The qualification awarded (e.g., "BSc.", "MSc.")."""
+  # The academic level (e.g., "Bachelor's", "Master's").
+
   qualification: String!
-  """The duration of the program in years."""
+  # The qualification awarded upon completion (e.g., "BSc.", "MSc.").
+
   duration: Float!
-  """A detailed description of the study program."""
+  # The duration of the program in years.
+
   description: String
+  # A detailed description of the study program.
 
   # Scalars:
-  """Reference to the university to which the program belongs."""
   university: Group!
-  """Reference to the organizational group responsible for the program."""
+  # Reference to the university that offers the program.
+
   group: Group!
+  # Reference to the organizational group responsible for the program.
 
   # Vectors:
-  """Collection of accreditation decisions related to the program."""
   accreditations: [Accreditation!]!
-  """Collection of subjects included in the study program."""
+  # List of accreditation decisions related to this program.
+
   subjects: [Subject!]!
+  # List of subjects that are part of the study program.
 
   # System:
   createdBy: User!
@@ -483,27 +763,36 @@ type StudyProgram {
   state: State!
 }
 
-"""Represents an accreditation decision for a study program."""
+"""
+Represents an accreditation decision for a study program.
+Includes decision number, validity period, and additional notes.
+"""
 type Accreditation {
   # Basics:
-  """Unique identifier of the accreditation."""
   id: ID!
-  """The decision number."""
+  # Unique identifier for the accreditation decision.
+
   decisionNumber: String!
-  """Timestamp when the decision was issued."""
+  # The official decision number.
+
   decisionDateAt: String!
-  """Timestamp when the accreditation validity starts."""
+  # Timestamp when the decision was issued.
+
   validFromAt: String!
-  """Timestamp when the accreditation validity ends."""
+  # Timestamp indicating when the accreditation becomes valid.
+
   validToAt: String!
-  """Additional notes regarding the accreditation."""
+  # Timestamp indicating when the accreditation expires.
+
   notes: String
+  # Additional remarks or notes regarding the decision.
 
   # Scalars:
-  """Reference to the study program being accredited."""
   studyProgram: StudyProgram!
-  """Reference to the accreditation body that issued the decision."""
+  # The study program being accredited.
+
   accreditationBody: AccreditationBody!
+  # The accreditation body that issued the decision.
 
   # System:
   createdBy: User!
@@ -514,19 +803,24 @@ type Accreditation {
   state: State!
 }
 
-"""Represents the accreditation body that issues accreditation decisions."""
+"""
+Represents the accreditation body that issues accreditation decisions.
+Provides descriptive information and a list of decisions it has issued.
+"""
 type AccreditationBody {
   # Basics:
-  """Unique identifier of the accreditation body."""
   id: ID!
-  """The name of the accreditation body."""
+  # Unique identifier for the accreditation body.
+
   name: String!
-  """A description of the accreditation body."""
+  # The name of the accreditation body.
+
   description: String
+  # Detailed description of the accreditation body.
 
   # Vectors:
-  """Collection of accreditation decisions issued by this body."""
   accreditations: [Accreditation!]!
+  # List of accreditation decisions issued by this body.
 
   # System:
   createdBy: User!
@@ -537,27 +831,34 @@ type AccreditationBody {
   state: State!
 }
 
-"""Represents a subject taught within a study program."""
+"""
+Represents a subject taught within a study program.
+Contains descriptive details and links to its study program and managing group.
+"""
 type Subject {
   # Basics:
-  """Unique identifier of the subject."""
   id: ID!
-  """The name of the subject."""
+  # Unique identifier for the subject.
+
   name: String!
-  """A detailed description of the subject."""
+  # The name of the subject.
+
   description: String
-  """The category of the subject (e.g., "regular", "admission", "stateFinal")."""
+  # Detailed description of the subject content.
+
   type: String!
+  # The category of the subject (e.g., "regular", "admission", "stateFinal").
 
   # Scalars:
-  """Reference to the study program to which the subject belongs."""
   studyProgram: StudyProgram!
-  """Reference to the organizational group responsible for the subject."""
+  # Reference to the study program that includes this subject.
+
   group: Group!
+  # The organizational group (e.g., department) responsible for the subject.
 
   # Vectors:
-  """Collection of semesters in which the subject is taught."""
   semesters: [Semester!]!
+  # List of academic semesters during which the subject is taught.
 
   # System:
   createdBy: User!
@@ -568,25 +869,31 @@ type Subject {
   state: State!
 }
 
-"""Represents an academic semester during which a subject is taught."""
+"""
+Represents an academic semester during which a subject is taught.
+Includes term, year, and descriptive information.
+"""
 type Semester {
   # Basics:
-  """Unique identifier of the semester."""
   id: ID!
-  """The term of the semester (e.g., "Fall", "Spring")."""
+  # Unique identifier for the semester.
+
   term: String!
-  """The year of the semester."""
+  # The term of the semester (e.g., "Fall", "Spring").
+
   year: Int!
-  """An optional description of the semester."""
+  # The calendar year of the semester.
+
   description: String
+  # Additional description or remarks regarding the semester.
 
   # Scalars:
-  """Reference to the subject taught in the semester."""
   subject: Subject!
+  # The subject that is taught during this semester.
 
   # Vectors:
-  """Collection of study plans for the semester."""
   studyPlans: [StudyPlan!]!
+  # List of study plans available for the semester.
 
   # System:
   createdBy: User!
@@ -597,23 +904,28 @@ type Semester {
   state: State!
 }
 
-"""Represents a thematic grouping of lessons within a semester."""
+"""
+Represents a thematic grouping of lessons within a semester.
+Helps to organize lessons into logical clusters.
+"""
 type Topic {
   # Basics:
-  """Unique identifier of the topic."""
   id: ID!
-  """The name of the topic."""
+  # Unique identifier for the topic.
+
   name: String!
-  """A brief description of the topic."""
+  # The name of the topic.
+
   description: String
+  # A brief description of the topic.
 
   # Scalars:
-  """Reference to the semester in which the topic is taught."""
   semester: Semester!
+  # The academic semester during which this topic is taught.
 
   # Vectors:
-  """Collection of lessons that belong to the topic."""
   lessons: [Lesson!]!
+  # List of lessons that belong to this topic.
 
   # System:
   createdBy: User!
@@ -624,21 +936,27 @@ type Topic {
   state: State!
 }
 
-"""Represents a lesson or lecture in a subject."""
+"""
+Represents a lesson or lecture in a subject.
+Includes content, duration, and the type of lesson.
+"""
 type Lesson {
   # Basics:
-  """Unique identifier of the lesson."""
   id: ID!
-  """The content of the lesson."""
+  # Unique identifier for the lesson.
+
   content: String!
-  """The duration of the lesson in arbitrary units."""
+  # The main content or description of the lesson.
+
   length: Float!
-  """The type of lesson (e.g., "lecture", "exercise")."""
+  # The duration of the lesson in arbitrary units (could represent hours or credits).
+
   lessonType: String!
+  # The type of lesson (e.g., "lecture", "exercise").
 
   # Vectors:
-  """Collection of instructors who teach the lesson."""
   instructors: [User!]!
+  # List of instructors or teachers who deliver the lesson.
 
   # System:
   createdBy: User!
@@ -649,21 +967,25 @@ type Lesson {
   state: State!
 }
 
-"""Represents a detailed schedule of lessons for a subject during a specific semester."""
+"""
+Represents a detailed schedule of lessons for a subject during a specific semester.
+This plan organizes scheduled lessons and links them to a semester.
+"""
 type StudyPlan {
   # Basics:
-  """Unique identifier of the study plan."""
   id: ID!
-  """A title or description of the study plan."""
+  # Unique identifier for the study plan.
+
   description: String!
+  # A title or description of the study plan.
 
   # Scalars:
-  """Reference to the semester for which the study plan is created."""
   semester: Semester!
+  # The academic semester for which this study plan is prepared.
 
   # Vectors:
-  """Collection of scheduled lessons included in the study plan."""
   scheduledLessons: [ScheduledLesson!]!
+  # List of scheduled lesson instances included in this study plan.
 
   # System:
   createdBy: User!
@@ -674,35 +996,46 @@ type StudyPlan {
   state: State!
 }
 
-"""Represents a scheduled instance of a lesson within a study plan."""
+"""
+Represents a scheduled instance of a lesson within a study plan.
+Links a lesson to an event, topic, and potentially associated groups.
+"""
 type ScheduledLesson {
   # Basics:
-  """Unique identifier of the scheduled lesson."""
   id: ID!
-  """The content or description of the scheduled lesson."""
+  # Unique identifier for the scheduled lesson.
+
   content: String!
-  """The duration of the lesson in arbitrary units."""
+  # A description of the scheduled lesson.
+
   length: Float!
-  """The type of lesson (e.g., "lecture", "exercise")."""
+  # Duration of the lesson instance.
+
   lessonType: String!
+  # The type of lesson for this scheduled instance (e.g., "lecture", "exercise").
 
   # Scalars:
-  """Reference to the event associated with the scheduled lesson."""
   event: Event!
-  """Reference to the original lesson (if applicable)."""
+  # Reference to the event during which this lesson takes place.
+
   lesson: Lesson!
-  """Reference to the topic to which the lesson belongs."""
+  # The base lesson on which this scheduled instance is based.
+
   topic: Topic!
-  """Reference to the study plan that includes the lesson."""
+  # The topic under which this lesson is organized.
+
   studyPlan: StudyPlan!
+  # The study plan that includes this scheduled lesson.
 
   # Vectors:
-  """Collection of instructors assigned to the lesson."""
   instructors: [User!]!
-  """Collection of groups involved in the lesson."""
+  # List of instructors assigned to this scheduled lesson.
+
   groups: [Group!]!
-  """Collection of related lessons."""
+  # List of groups involved in this lesson (e.g., class groups).
+
   relatedLessons: [Lesson!]!
+  # List of lessons that are related to this scheduled lesson (for cross-references).
 
   # System:
   createdBy: User!
@@ -713,19 +1046,24 @@ type ScheduledLesson {
   state: State!
 }
 
-"""Represents a student enrolled in a study program."""
+"""
+Represents a student enrolled in a study program.
+Links a user to a study program and tracks the student's current lifecycle state.
+"""
 type Student {
   # Basics:
-  """Unique identifier of the student."""
   id: ID!
+  # Unique identifier for the student record.
 
   # Scalars:
-  """Reference to the user representing the student."""
   person: User!
-  """Reference to the study program in which the student is enrolled."""
+  # Reference to the user representing this student.
+
   studyProgram: StudyProgram!
-  """Reference to the current state of the student."""
+  # The study program in which the student is enrolled.
+
   state: State!
+  # The current state of the student (e.g., "applicant", "active", "graduate", "archived").
 
   # System:
   createdBy: User!
@@ -735,63 +1073,92 @@ type Student {
   rbacId: ID!
 }
 
-"""Represents an evaluation given to a student, which may include overall and sub-level assessments."""
+"""
+Represents an evaluation given to a student.
+Stores grading details, attempt numbers, points awarded, and a hierarchical path used for computed evaluations.
+"""
 type Evaluation {
   # Basics:
-  """Unique identifier of the evaluation."""
   id: ID!
-  """The grade or evaluation according to a defined scale (e.g., A–F, "pass"/"fail")."""
+  # Unique identifier for the evaluation record.
+
   grade: String!
-  """The attempt number for the evaluation."""
+  # The grade or score assigned (e.g., "A", "B", "pass", "fail").
+
   attempt: Int!
-  """The number of points awarded (optional)."""
+  # Indicates the attempt number for this evaluation (e.g., first, second attempt).
+
   points: Float
-  """Indicates whether the evaluation is passing (optional)."""
+  # The number of points awarded; can be null if not applicable.
+
   passed: Boolean
-  """A string representing the hierarchical structure of sub-evaluations."""
+  # A boolean flag indicating whether the evaluation result is passing.
+
   path: String!
+  # A string representing the hierarchical structure of sub-evaluations,
+  # used for computed or aggregated evaluation values.
 
   # Scalars:
-  """Reference to the student who received the evaluation."""
   student: Student!
-  """Reference to the subject associated with the evaluation (optional)."""
+  # The student to whom this evaluation is assigned.
+
   subject: Subject
-  """Reference to the semester in which the evaluation was given (optional)."""
+  # Reference to the subject for which the evaluation is conducted (optional).
+
   semester: Semester
-  """Reference to the event representing the exam session (optional)."""
+  # Reference to the semester in which the evaluation was given (optional).
+
   examEvent: Event
-  """Reference to the admission process if applicable (optional)."""
+  # Reference to the event representing the exam session (optional).
+
   admissionProcess: AdmissionProcess
-  """Reference to the type or context of the evaluation."""
+  # Reference to the admission process if the evaluation is related to it (optional).
+
   evaluationType: EvaluationType!
+  # The type or context of the evaluation (e.g., "semester", "admission").
 
   # Vectors:
-  """Collection of sub-evaluations representing a hierarchical breakdown of the overall evaluation."""
   Evaluations: [Evaluation!]!
+  # List of sub-evaluations that form a hierarchical breakdown of the overall evaluation.
 
   # System:
-  """Identifier for RBAC control (e.g., Group ID for access control)."""
   rbacId: ID!
+  # Identifier for RBAC control in the context of this evaluation.
+
   createdBy: User!
+  # User who created the evaluation record.
+
   changedBy: User
+  # User who last modified the evaluation record.
+
   createdAt: String!
+  # Timestamp when the evaluation was created.
+
   changedAt: String
+  # Timestamp when the evaluation was last updated.
+
   state: State!
+  # Current state of the evaluation.
 }
 
-"""Defines the type or context of an evaluation (e.g., semester, admission, stateFinal)."""
+"""
+Defines the type or context of an evaluation.
+Used to categorize evaluations (e.g., "semester", "admission", "final").
+"""
 type EvaluationType {
   # Basics:
-  """Unique identifier of the evaluation type."""
   id: ID!
-  """The name of the evaluation type."""
+  # Unique identifier for the evaluation type.
+
   name: String!
-  """A description of the evaluation type."""
+  # Name of the evaluation type.
+
   description: String
+  # Detailed description of what the evaluation type represents.
 
   # Vectors:
-  """Collection of evaluations of this type."""
   evaluations: [Evaluation!]!
+  # List of evaluations associated with this evaluation type.
 
   # System:
   createdBy: User!
@@ -802,35 +1169,44 @@ type EvaluationType {
   state: State!
 }
 
-"""Represents an exam and its components, defining classification conditions such as minimum and maximum scores."""
+"""
+Represents an exam and its components.
+Defines classification conditions such as minimum and maximum scores,
+and supports hierarchical structuring via parent and sub-exams.
+"""
 type Exam {
   # Basics:
-  """Unique identifier of the exam or exam component."""
   id: ID!
-  """The name of the exam or component."""
-  name: String!
-  """A brief description of the exam or its component."""
-  description: String
-  """The materialized path representing the hierarchical structure (e.g., "/Admission/Exam1" or "/Admission/Exam1/PartA")."""
-  path: String
+  # Unique identifier for the exam or exam component.
 
-  # Basics (time fields):
-  """The minimum score required to pass this exam component (optional)."""
+  name: String!
+  # The name of the exam or exam component.
+
+  description: String
+  # A brief description of the exam.
+
+  path: String
+  # Hierarchical path representing the exam's position in a series or structure.
+
   minScore: Float
-  """The maximum achievable score for this exam component (optional)."""
+  # The minimum score required for passing this exam component (if applicable).
+
   maxScore: Float
+  # The maximum achievable score for this exam component (if applicable).
 
   # Scalars:
-  """Reference to the parent exam if this is a sub-component."""
   parent: Exam
-  """Reference to the event representing the exam period."""
+  # Reference to the parent exam (if this is a sub-component).
+
   event: Event
+  # Reference to the event representing the exam period.
 
   # Vectors:
-  """Collection of sub-exams or exam components."""
   subExams: [Exam!]!
-  """Collection of evaluations associated with this exam or exam component."""
+  # List of sub-exams or components of this exam.
+
   evaluations: [Evaluation!]!
+  # List of evaluations associated with this exam or its components.
 
   # System:
   createdBy: User!
@@ -845,31 +1221,40 @@ type Exam {
 # Admission Entities
 #############################
 
-"""Represents the admission process for a study program, including key dates and requirements."""
+"""
+Represents the admission process for a study program, including key dates and requirements.
+This module covers electronic applications, document attachments, test results processing, and more.
+"""
 type AdmissionProcess {
   # Basics:
-  """Unique identifier of the admission process."""
   id: ID!
-  """Timestamp when the admission process started."""
+  # Unique identifier for the admission process.
+
   applicationStartAt: String!
-  """Timestamp when the application deadline occurs."""
+  # Timestamp marking the start of the application period.
+
   applicationDeadlineAt: String!
-  """Timestamp when the results are announced."""
+  # Timestamp when the application submission deadline occurs.
+
   resultsAnnouncementAt: String!
-  """A description of the admission process."""
+  # Timestamp when the results of the admission process are announced.
+
   description: String
+  # A brief description of the admission process and its requirements.
 
   # Scalars:
-  """Reference to the study program for which the admission process is conducted."""
   studyProgram: StudyProgram!
+  # The study program for which this admission process is conducted.
 
   # Vectors:
-  """Collection of exams within the admission process."""
   admissionExams: [Exam!]!
-  """Collection of documents required for application."""
+  # List of exams that are part of the admission process.
+
   requiredDocuments: [Document!]!
-  """Collection of applications submitted by candidates."""
+  # List of documents required to be submitted with the application.
+
   admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
 
   # System:
   createdBy: User!
@@ -880,25 +1265,31 @@ type AdmissionProcess {
   state: State!
 }
 
-"""Represents an application submitted by a candidate for the admission process."""
+"""
+Represents an application submitted by a candidate for the admission process.
+Replaces the previous 'status' attribute with a reference to the current state.
+"""
 type AdmissionApplication {
   # Basics:
-  """Unique identifier of the admission application."""
   id: ID!
-  """Timestamp when the application was submitted."""
+  # Unique identifier for the admission application.
+
   applicationDateAt: String!
+  # Timestamp when the application was submitted.
 
   # Scalars:
-  """Reference to the current state of the application."""
   state: State!
-  """Reference to the student (candidate) who submitted the application."""
+  # The current state of the application (e.g., "submitted", "in review", "approved", "rejected").
+
   student: Student!
-  """Reference to the admission process to which the application belongs."""
+  # The student (candidate) who submitted the application.
+
   admissionProcess: AdmissionProcess!
+  # Reference to the admission process for which the application was submitted.
 
   # Vectors:
-  """Collection of documents submitted with the application."""
   submittedDocuments: [Document!]!
+  # List of documents submitted along with the application.
 
   # System:
   createdBy: User!
@@ -912,23 +1303,30 @@ type AdmissionApplication {
 # Digital Forms
 #############################
 
-"""Represents a digital form that captures user input."""
+"""
+Represents a digital form that captures user input.
+This entity includes the overall structure of the form (sections) and its submissions.
+"""
 type DigitalForm {
   # Basics:
-  """Unique identifier of the digital form."""
   id: ID!
-  """The title of the digital form."""
+  # Unique identifier for the digital form.
+
   title: String!
-  """A brief description of the digital form."""
+  # The title of the form.
+
   description: String
-  """Version of the form (if applicable)."""
+  # A brief description of the purpose or content of the form.
+
   version: String
+  # Version identifier for the form, useful for tracking revisions.
 
   # Vectors:
-  """Collection of top-level form sections for this form."""
   sections: [FormSection!]!
-  """Collection of submissions for this form."""
+  # List of top-level form sections that define the form's structure.
+
   submissions: [FormSubmission!]!
+  # List of submissions (responses) to this form.
 
   # System:
   createdBy: User!
@@ -939,35 +1337,39 @@ type DigitalForm {
   state: State!
 }
 
-"""Represents a section (group) of form fields, supporting nested sections and repetition."""
+"""
+Represents a section (group) of form fields, supporting nested sections and repetition.
+This entity organizes form fields into logical groups.
+"""
 type FormSection {
   # Basics:
-  """Unique identifier of the form section."""
   id: ID!
-  """The title of the section."""
+  # Unique identifier for the form section.
+
   title: String!
-  """A brief description of the section."""
+  # The title of the section; intended to start with an uppercase letter.
+
   description: String
-  """Ordering index for the section."""
+  # A brief description of what this section covers.
+
   order: Int!
+  # Ordering index to determine the display order of sections.
 
   # Scalars:
-  """Reference to the parent section (optional)."""
   parent: FormSection
+  # Reference to the parent section if this is a nested section; null if top-level.
+
+  repetition: RepetitionInfo
+  # Composite repetition settings encapsulated as a JSON object.
+  # Expected structure: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # This object defines whether the section is repeatable and the allowed range of repetitions.
 
   # Vectors:
-  """Collection of form fields in this section."""
   fields: [FormField!]!
-  """Collection of nested sub-sections."""
-  sections: [FormSection!]!
+  # List of form fields that belong to this section.
 
-  # Repetition:
-  """Indicates if the section is repeatable."""
-  repeatable: Boolean!
-  """Minimum number of repeats (if repeatable)."""
-  minRepeats: Int
-  """Maximum number of repeats (if repeatable)."""
-  maxRepeats: Int
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
 
   # System:
   createdBy: User!
@@ -978,45 +1380,61 @@ type FormSection {
   state: State!
 }
 
-"""Represents a field in a digital form."""
+"""
+Represents a field in a digital form.
+Defines the attributes of a form input, including computed fields.
+"""
 type FormField {
   # Basics:
-  """Unique identifier of the form field."""
   id: ID!
-  """The label of the form field."""
+  # Unique identifier for the form field.
+
   label: String!
-  """The name of the form field. Must start with a lowercase letter."""
+  # The display label for the field.
+
   name: FieldName!
-  """The type of the field (e.g., "text", "number", "date", "boolean", "select")."""
+  # The internal name of the field; must start with a lowercase letter.
+  
   fieldType: String!
-  """Placeholder text for the field."""
+  # The type of the field (e.g., "text", "number", "date", "boolean", "select").
+
   placeholder: String
-  """Indicates whether this field is required."""
+  # Placeholder text to be shown in the input box.
+
   required: Boolean!
-  """Ordering index of the field within its section."""
+  # Indicates whether the field is mandatory.
+
   order: Int!
+  # Ordering index for the field within its section.
 
   # Scalars:
-  """Reference to the digital form to which this field belongs."""
   form: DigitalForm!
-  """Reference to the parent section in which this field is placed (optional)."""
+  # Reference to the digital form to which this field belongs.
+
   parentSection: FormSection
+  # Reference to the section in which this field is located.
 
   # Repetition:
-  """Indicates if the field is repeatable."""
   repeatable: Boolean!
-  """Minimum number of repeats (if repeatable)."""
+  # Flag indicating if this field can be repeated.
+
   minRepeats: Int
-  """Maximum number of repeats (if repeatable)."""
+  # Minimum number of repetitions allowed if the field is repeatable.
+
   maxRepeats: Int
+  # Maximum number of repetitions allowed if the field is repeatable.
 
   # Computed:
-  """Indicates if this field's value is computed from other fields."""
   computed: Boolean!
-  """Mathematical formula to calculate the field's value, using variable references (e.g., price * quantity)."""
+  # Indicates whether the field is computed from other fields.
+  
   formula: String
-  """List of dependencies (field names or IDs) that this formula uses."""
+  # A mathematical formula (as a string) used to compute the field's value.
+  # The formula may reference other fields via qualified names (e.g., "orderDetails.price * orderDetails.quantity").
+
   dependencies: [String!]
+  # List of field names or identifiers that are referenced within the formula.
+  # This helps in determining which fields affect the computed value and for validating the formula.
 
   # System:
   createdBy: User!
@@ -1027,23 +1445,28 @@ type FormField {
   state: State!
 }
 
-"""Represents a submission of a digital form filled by a user."""
+"""
+Represents a submission of a digital form filled by a user.
+Contains the user's responses to all the fields in the form.
+"""
 type FormSubmission {
   # Basics:
-  """Unique identifier of the form submission."""
   id: ID!
-  """Timestamp when the form was submitted."""
+  # Unique identifier for the form submission.
+
   submittedAt: String!
+  # Timestamp when the form was submitted.
 
   # Scalars:
-  """Reference to the user who submitted the form."""
   submittedBy: User!
-  """Reference to the digital form that was submitted."""
+  # The user who submitted the form.
+
   form: DigitalForm!
+  # Reference to the digital form that was submitted.
 
   # Vectors:
-  """Collection of responses for each form field in this submission."""
   responses: [FieldResponse!]!
+  # List of responses provided by the user, each linked to a form field.
 
   # System:
   createdBy: User!
@@ -1054,19 +1477,52 @@ type FormSubmission {
   state: State!
 }
 
-"""Represents a response for a specific form field within a submission."""
+"""
+Represents a response for a specific form field within a submission.
+Links a user's answer to the corresponding field.
+"""
 type FieldResponse {
   # Basics:
-  """Unique identifier of the field response."""
   id: ID!
-  """The value provided by the user for this field."""
+  # Unique identifier for the field response.
+
   value: String
+  # The value entered by the user for this field.
 
   # Scalars:
-  """Reference to the form field this response corresponds to."""
   field: FormField!
-  """Reference to the form submission that contains this response."""
+  # Reference to the form field to which this response corresponds.
+
   submission: FormSubmission!
+  # Reference to the overall form submission that contains this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template is used to generate official printed versions or decision documents based on a digital form.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # The title of the template.
+
+  templateText: String!
+  # The full text of the template, which may include placeholders for dynamic data.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this print template.
 
   # System:
   createdBy: User!
@@ -1078,11 +1534,3148 @@ type FieldResponse {
 }
 
 #############################
-# Custom Scalars for Name Validation
+# Admission Entities
 #############################
 
-"""A string representing a section name; must start with an uppercase letter."""
+"""
+Represents the admission process for a study program.
+This module covers the complete electronic application process, including data validation, document submission,
+test result processing, decision generation, and file closure.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp marking the start of the application period.
+
+  applicationDeadlineAt: String!
+  # Timestamp indicating the deadline for application submissions.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the results of the admission process are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # The study program for which this admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams that are part of the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of required documents that candidates must submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+Replaces the previous 'status' field with a direct reference to the current state.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # Current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # Reference to the student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # Reference to the associated admission process.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents that were submitted along with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form that captures user input.
+It contains the structure of the form (sections) and holds the submitted responses.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the form.
+
+  description: String
+  # A brief description outlining the purpose of the form.
+
+  version: String
+  # The version of the form, useful for tracking revisions.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that make up the form structure.
+
+  submissions: [FormSubmission!]!
+  # List of submissions (filled-in forms) by users.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section (group) of form fields.
+Supports nested sections and repetition; repetition settings are encapsulated in a single scalar.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # The title of the section; must start with an uppercase letter.
+
+  description: String
+  # A brief description of what this section covers.
+
+  order: Int!
+  # The display order of the section within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this is nested; null for top-level sections.
+  
+  repetition: RepetitionInfo
+  # A composite JSON object representing repetition settings.
+  # Expected format: {"repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int}.
+  # This object defines whether the section is repeatable and the allowed number of repeats.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained within this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines properties of the input, including support for computed values.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The label displayed to the user for this field.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter.
+  
+  fieldType: String!
+  # The type of the field (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text shown in the field's input box.
+
+  required: Boolean!
+  # Indicates whether the field is mandatory.
+
+  order: Int!
+  # The order index of the field within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form to which this field belongs.
+
+  parentSection: FormSection
+  # Reference to the section in which this field is located.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Indicates if the field is repeatable (i.e., multiple values can be entered).
+
+  minRepeats: Int
+  # The minimum number of repetitions required if the field is repeatable.
+
+  maxRepeats: Int
+  # The maximum number of repetitions allowed if the field is repeatable.
+
+  # Computed:
+  computed: Boolean!
+  # Indicates whether this field is computed from other fields.
+  
+  formula: String
+  # A mathematical formula (as a string) that computes the value of this field.
+  # Example: "price * quantity" where "price" and "quantity" are other field names.
+
+  dependencies: [String!]
+  # A list of field names or IDs that the formula depends on.
+  # This helps validate the formula and determine which fields trigger recalculations.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form filled out by a user.
+Contains the set of responses corresponding to each field in the form.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was submitted.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses provided by the user; each response links to a specific field.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific form field within a submission.
+Links the user’s answer with the corresponding field.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value entered by the user for this particular field.
+
+  # Scalars:
+  field: FormField!
+  # The form field to which this response corresponds.
+
+  submission: FormSubmission!
+  # The overall form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template is used to generate printed versions or official decision documents.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the print template.
+
+  templateText: String!
+  # The textual content of the template, which may include placeholders for dynamic data.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this template.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+Encompasses electronic application submission, document attachments, test results, and decision-making.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp indicating when the application period begins.
+
+  applicationDeadlineAt: String!
+  # Timestamp indicating the application submission deadline.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the results of the admission process are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program for which this admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams that are part of the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of documents that candidates are required to submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+The current state replaces the old 'status' attribute to track the application's lifecycle.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # The current state of the application (e.g., submitted, in review, approved).
+
+  student: Student!
+  # The student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # Reference to the admission process under which the application was submitted.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents that were submitted along with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form designed to capture user input.
+The form's structure is defined by its sections, and user submissions are stored as responses.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the digital form.
+
+  description: String
+  # A brief description of the form's purpose.
+
+  version: String
+  # The version of the form, useful for tracking revisions.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that define the structure of the form.
+
+  submissions: [FormSubmission!]!
+  # List of submissions (completed forms) by users.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section (group) of form fields, supporting nested subsections and repetition.
+Repetition settings are encapsulated within a single scalar attribute.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # The title of the section; should start with an uppercase letter.
+
+  description: String
+  # A brief description providing context for the section.
+
+  order: Int!
+  # The display order of the section within the digital form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this section is nested; null for top-level sections.
+
+  repetition: RepetitionInfo
+  # A JSON object encapsulating repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }.
+  # This object defines whether the section is repeatable and the allowed number of repetitions.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained in this section.
+
+  sections: [FormSection!]!
+  # List of nested subsections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+It defines the input type, display properties, and supports computed values via formulas.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The label shown to users for this field.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter.
+
+  fieldType: String!
+  # The type of input (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text to guide users on what to enter.
+
+  required: Boolean!
+  # Indicates whether this field must be filled out by the user.
+
+  order: Int!
+  # Order index to determine the field's position within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form this field belongs to.
+
+  parentSection: FormSection
+  # Reference to the section that contains this field.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Flag indicating if the field can be repeated (multiple values can be provided).
+
+  minRepeats: Int
+  # Minimum number of repetitions if the field is repeatable.
+
+  maxRepeats: Int
+  # Maximum number of repetitions allowed for this field.
+
+  # Computed:
+  computed: Boolean!
+  # Indicates whether this field's value is computed from other fields.
+  
+  formula: String
+  # A mathematical formula (as a string) for computing the field's value.
+  # The formula may include variable references to other fields (e.g., "price * quantity").
+
+  dependencies: [String!]
+  # List of field names or identifiers that the formula depends on.
+  # This is used to ensure proper re-evaluation when dependent field values change.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form filled out by a user.
+It aggregates all responses provided by the user.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who completed and submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was filled out.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses, each corresponding to a specific form field.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific form field within a submission.
+Links the answer provided by the user with the corresponding field definition.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The user-provided value for the field; may be null if no input was given.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response was given.
+
+  submission: FormSubmission!
+  # Reference to the form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+Used to generate printed or official decision documents based on form data.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # The title of the template.
+
+  templateText: String!
+  # The full template text with placeholders for dynamic data insertion.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this print template.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+Covers all stages from electronic application submission, document attachment, test results processing, to decision generation.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp indicating when the application period begins.
+
+  applicationDeadlineAt: String!
+  # Timestamp marking the deadline for application submissions.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the admission results are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program for which this admission process is active.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams associated with this admission process.
+
+  requiredDocuments: [Document!]!
+  # List of documents that candidates must submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of candidate applications submitted.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+It uses the current state to track the application's lifecycle.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # The current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # Reference to the student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # The admission process under which this application was submitted.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents submitted along with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form used to capture user input.
+It defines the structure of the form through sections and holds user submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the form.
+
+  description: String
+  # A brief description of the form's purpose.
+
+  version: String
+  # The version identifier for the form, useful for revisions.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that define the form's layout.
+
+  submissions: [FormSubmission!]!
+  # List of completed form submissions.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section (group) of a digital form.
+Supports nested sections and repetition.
+The repetition settings are encapsulated in a single scalar attribute.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # The title of the section; should start with an uppercase letter.
+
+  description: String
+  # A brief description explaining the purpose of this section.
+
+  order: Int!
+  # The order in which the section appears within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this is a nested section; null for top-level sections.
+  
+  repetition: RepetitionInfo
+  # A JSON object containing repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # This object determines whether the section is repeatable and specifies the minimum and maximum number of repeats.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained within this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections contained within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines input properties, validation, and computed value functionality.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The display label for the field, shown to the user.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter (used for formula references).
+
+  fieldType: String!
+  # The type of input (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text to guide the user on what to enter.
+
+  required: Boolean!
+  # Flag indicating whether the field is mandatory.
+
+  order: Int!
+  # Numeric order to determine the field's position within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form that includes this field.
+
+  parentSection: FormSection
+  # Reference to the section in which this field is located.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Indicates if the field can have multiple repeated entries.
+
+  minRepeats: Int
+  # Minimum number of repetitions required if the field is repeatable.
+
+  maxRepeats: Int
+  # Maximum number of repetitions allowed if the field is repeatable.
+
+  # Computed:
+  computed: Boolean!
+  # Flag indicating if this field's value is computed automatically.
+  
+  formula: String
+  # A mathematical formula (as a string) used to compute the field's value.
+  # For example: "price * quantity" where "price" and "quantity" refer to other field names.
+
+  dependencies: [String!]
+  # A list of field names or IDs that the formula depends on.
+  # This list is used to validate the formula and trigger recalculations when dependencies change.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form.
+Aggregates user responses for the form's fields.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted by the user.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was submitted.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses for individual form fields provided in this submission.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific form field within a submission.
+It links a user's input with the corresponding field definition.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value entered by the user for the corresponding field.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response was given.
+
+  submission: FormSubmission!
+  # Reference to the overall form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template defines the layout and formatting for printed versions or official decision documents.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # The title of the print template.
+
+  templateText: String!
+  # The textual content of the template, which may include placeholders for dynamic data insertion.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form that this print template is associated with.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+It encompasses the entire application process including submission, document attachment, exam processing, and decision-making.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp indicating when the application period starts.
+
+  applicationDeadlineAt: String!
+  # Timestamp marking the deadline for applications.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the admission results are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program for which this admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams that form part of the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of required documents that candidates must submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+The current state attribute tracks the lifecycle of the application.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # Current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # The student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # Reference to the admission process for which the application is made.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents submitted along with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form designed to capture user input.
+It defines the structure of the form and stores user submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the form.
+
+  description: String
+  # A brief description of the form's purpose.
+
+  version: String
+  # Version identifier for the form (useful for tracking revisions).
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that define the form's layout.
+
+  submissions: [FormSubmission!]!
+  # List of completed form submissions by users.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section of a digital form.
+Supports nested sections and repetition. Repetition settings are encapsulated in one scalar.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # Title of the section; should begin with an uppercase letter.
+
+  description: String
+  # A brief description that provides context for the section.
+
+  order: Int!
+  # Display order of the section within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this section is nested; null if top-level.
+
+  repetition: RepetitionInfo
+  # A JSON object containing repetition settings. Expected format:
+  # { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # This defines whether the section is repeatable and the allowed number of repeats.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields included in this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines the characteristics of an individual input field, including support for computed values.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The display label for the field, visible to the user.
+
+  name: FieldName!
+  # Internal name of the field; must start with a lowercase letter and is used for referencing in formulas.
+
+  fieldType: String!
+  # The type of the field (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text to guide the user.
+
+  required: Boolean!
+  # Indicates if this field is mandatory.
+
+  order: Int!
+  # Order index for display within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form that includes this field.
+
+  parentSection: FormSection
+  # Reference to the section where the field is located.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Flag indicating if the field can be repeated.
+
+  minRepeats: Int
+  # Minimum number of repetitions required (if repeatable).
+
+  maxRepeats: Int
+  # Maximum number of repetitions allowed (if repeatable).
+
+  # Computed:
+  computed: Boolean!
+  # Indicates whether this field's value is computed automatically from other fields.
+
+  formula: String
+  # Mathematical formula (as a string) used to compute the field's value.
+  # Example: "price * quantity" where "price" and "quantity" are references to other fields.
+
+  dependencies: [String!]
+  # List of field names or IDs that the formula depends on; used for re-evaluation and validation.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form.
+Aggregates the responses provided by a user for each field in the form.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was submitted.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses corresponding to each form field in the submission.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific field within a form submission.
+Links a user's input value with the corresponding form field.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value entered by the user for the field.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field that this response addresses.
+
+  submission: FormSubmission!
+  # Reference to the form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+Used to generate printed documents or official decisions from the digital form.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the print template.
+
+  templateText: String!
+  # The template content with placeholders for dynamic data.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form for which this print template is used.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+It covers the complete workflow from application submission to final decision.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp marking the start of the application period.
+
+  applicationDeadlineAt: String!
+  # Timestamp indicating when the application period ends.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the admission results are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # The study program for which this admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams included in the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of documents required to be submitted by candidates.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+Tracks the lifecycle of the application via the state attribute.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the candidate submitted the application.
+
+  # Scalars:
+  state: State!
+  # The current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # Reference to the student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # Reference to the admission process to which the application belongs.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents attached to the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form used to capture user input.
+Defines the structure and holds user submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the digital form.
+
+  description: String
+  # A brief description outlining the form's purpose.
+
+  version: String
+  # The version number of the form, useful for tracking updates.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that define the form structure.
+
+  submissions: [FormSubmission!]!
+  # List of completed form submissions.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section (group) within a digital form.
+Supports nested sections and repetition. Repetition settings are encapsulated in one scalar field.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # Title of the section; must start with an uppercase letter.
+
+  description: String
+  # A brief description of what the section covers.
+
+  order: Int!
+  # Determines the display order of the section within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this section is nested; null for top-level sections.
+
+  repetition: RepetitionInfo
+  # A JSON object representing repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # Defines whether the section can be repeated and the minimum/maximum number of allowed repetitions.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained within this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field within a digital form.
+Defines input properties, validation, repetition, and computed value capabilities.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # Display label shown to the user.
+
+  name: FieldName!
+  # Internal name of the field; must start with a lowercase letter. Used for formula references.
+
+  fieldType: String!
+  # Specifies the type of input (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text to help guide the user.
+
+  required: Boolean!
+  # Indicates if the field is mandatory.
+
+  order: Int!
+  # Determines the position of the field within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form that this field belongs to.
+
+  parentSection: FormSection
+  # Reference to the section containing this field.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Indicates whether the field is repeatable.
+
+  minRepeats: Int
+  # Minimum number of times the field must be repeated (if applicable).
+
+  maxRepeats: Int
+  # Maximum allowed repetitions for this field.
+
+  # Computed:
+  computed: Boolean!
+  # Indicates if the field's value is automatically computed from other fields.
+
+  formula: String
+  # A mathematical formula (expressed as a string) used to compute the field's value.
+  # For example: "price * quantity".
+
+  dependencies: [String!]
+  # List of field names or identifiers that the formula references.
+  # Used to trigger recalculation and validate the formula.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form.
+Aggregates all responses provided by a user for the form's fields.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was completed.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses, with each response corresponding to a specific form field.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific field in a form submission.
+Links the user’s provided answer with the corresponding form field.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value entered by the user for this field.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response was given.
+
+  submission: FormSubmission!
+  # Reference to the overall form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template is used for generating printed or official documents based on form data.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the print template.
+
+  templateText: String!
+  # The text of the template, including placeholders for dynamic data.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this print template.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+It covers all stages from application submission to final decision and file closure.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp when the application period begins.
+
+  applicationDeadlineAt: String!
+  # Timestamp when the application period ends.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the admission results are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program for which this process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams included in the process.
+
+  requiredDocuments: [Document!]!
+  # List of documents required for submission.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+The state attribute tracks the application's lifecycle.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # The current state of the application (e.g., "submitted", "under review", "approved").
+
+  student: Student!
+  # The student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # Reference to the admission process for which the application is made.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents submitted with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form designed to capture user input.
+Defines the overall structure of the form and stores user submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form.
+
+  title: String!
+  # The title of the form.
+
+  description: String
+  # A brief description outlining the purpose of the form.
+
+  version: String
+  # The version of the form, useful for revision tracking.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that structure the form.
+
+  submissions: [FormSubmission!]!
+  # List of completed submissions for the form.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section of a digital form.
+Supports nested sections and repetition, with repetition settings encapsulated in a single scalar.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # Title of the section; must start with an uppercase letter.
+
+  description: String
+  # A brief description of the section's purpose.
+
+  order: Int!
+  # Numerical order for display within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this is a nested section.
+
+  repetition: RepetitionInfo
+  # A JSON object representing repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }.
+  # Determines whether the section is repeatable and the allowed number of repetitions.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained in this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines input characteristics, validation rules, and supports computed values through formulas.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field.
+
+  label: String!
+  # The label that is displayed to users.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter for proper referencing.
+
+  fieldType: String!
+  # The type of the field (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text to guide user input.
+
+  required: Boolean!
+  # Indicates whether the field is mandatory.
+
+  order: Int!
+  # Order index for the field within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form that includes this field.
+
+  parentSection: FormSection
+  # Reference to the section containing this field.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Indicates if the field can be repeated.
+
+  minRepeats: Int
+  # Minimum number of repetitions required if the field is repeatable.
+
+  maxRepeats: Int
+  # Maximum number of repetitions allowed for the field.
+
+  # Computed:
+  computed: Boolean!
+  # Flag indicating if the field's value is computed automatically from other fields.
+
+  formula: String
+  # A mathematical formula (as a string) used to compute the field's value.
+  # For example: "price * quantity" where "price" and "quantity" are references to other fields.
+
+  dependencies: [String!]
+  # List of field names or IDs that the formula depends on.
+  # This list helps ensure that all necessary data is available for computation and to avoid circular dependencies.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form.
+Aggregates user responses for all fields defined in the form.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who completed and submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was filled out.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses provided by the user for each form field.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific form field within a submission.
+Connects the user's provided value to the corresponding field definition.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value entered by the user for the corresponding field.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response was given.
+
+  submission: FormSubmission!
+  # Reference to the overall form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template is used to generate printed versions or official decision documents from the form data.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the print template.
+
+  templateText: String!
+  # The content of the template, including placeholders for dynamic data insertion.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this print template.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+Covers all stages from application submission through to decision-making and file closure.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp marking the beginning of the application period.
+
+  applicationDeadlineAt: String!
+  # Timestamp when the application submission deadline occurs.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the results of the admission process are announced.
+
+  description: String
+  # Detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # The study program for which this admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams that are part of this admission process.
+
+  requiredDocuments: [Document!]!
+  # List of documents that candidates must submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+The 'state' field tracks the application's lifecycle.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # Current state of the application (e.g., submitted, under review, approved).
+
+  student: Student!
+  # The student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # The admission process to which this application belongs.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents attached to the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form used to capture user input.
+Defines the structure of the form (sections) and stores form submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # Title of the form.
+
+  description: String
+  # Brief description outlining the purpose of the form.
+
+  version: String
+  # Version identifier for the form, used for tracking updates.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that structure the form.
+
+  submissions: [FormSubmission!]!
+  # List of user submissions for the form.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section of a digital form.
+Supports nested sections and repetition; repetition settings are grouped into a single scalar field.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # Title of the section (must start with an uppercase letter).
+
+  description: String
+  # A brief description of the section.
+
+  order: Int!
+  # The order index for the section within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this section is nested.
+
+  repetition: RepetitionInfo
+  # A JSON object encapsulating repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # This defines whether the section can be repeated and the allowed number of repetitions.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields included in this section.
+
+  sections: [FormSection!]!
+  # List of nested sub-sections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines properties of an individual input, including support for computed values.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The display label for the field shown to users.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter (used in formulas).
+
+  fieldType: String!
+  # The type of the field (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text for the field to guide user input.
+
+  required: Boolean!
+  # Indicates whether the field is mandatory.
+
+  order: Int!
+  # The order index determining the field's placement within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form to which this field belongs.
+
+  parentSection: FormSection
+  # Reference to the section containing this field.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Flag indicating if the field can have multiple entries.
+
+  minRepeats: Int
+  # Minimum number of repetitions required if the field is repeatable.
+
+  maxRepeats: Int
+  # Maximum number of repetitions allowed for the field.
+
+  # Computed:
+  computed: Boolean!
+  # Indicates whether the field's value is automatically computed.
+
+  formula: String
+  # A mathematical formula (as a string) used to calculate the field's value.
+  # Example: "price * quantity" where "price" and "quantity" are other field names.
+
+  dependencies: [String!]
+  # A list of field names or IDs that the formula depends on.
+  # This ensures that changes in any dependency trigger a recalculation.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form filled out by a user.
+Aggregates responses for all the fields in the form.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was filled out.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses corresponding to individual form fields.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific form field within a submission.
+Links a user's input with the corresponding form field.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value provided by the user for the field.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response was given.
+
+  submission: FormSubmission!
+  # Reference to the overall submission that contains this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+This template is used to generate printed or official documents based on the form data.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the print template.
+
+  templateText: String!
+  # The full text of the template, which may include dynamic placeholders.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form for which this template is used.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+This includes all steps from application submission to final decision.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp when the application period begins.
+
+  applicationDeadlineAt: String!
+  # Timestamp when applications must be submitted.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the admission results are announced.
+
+  description: String
+  # Detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program to which this admission process applies.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams that are part of the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of documents that candidates are required to submit.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+Tracks the lifecycle of the application using the 'state' field.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # Current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # Reference to the student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # The admission process under which this application was submitted.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents attached to the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Academic Entities
+#############################
+
+"""
+Represents an accredited study program (e.g., Bachelor's or Master's program).
+Contains academic details and links to the responsible organizational units.
+"""
+type StudyProgram {
+  # Basics:
+  id: ID!
+  # Unique identifier for the study program.
+
+  title: String!
+  # The title or name of the study program.
+
+  level: String!
+  # Academic level (e.g., "Bachelor's", "Master's").
+
+  qualification: String!
+  # Qualification awarded upon completion (e.g., "BSc.", "MSc.").
+
+  duration: Float!
+  # Duration of the program in years.
+
+  description: String
+  # Detailed description of the study program.
+
+  # Scalars:
+  university: Group!
+  # The university offering this study program.
+
+  group: Group!
+  # The organizational group responsible for the study program.
+
+  # Vectors:
+  accreditations: [Accreditation!]!
+  # List of accreditation decisions associated with this program.
+
+  subjects: [Subject!]!
+  # List of subjects included in the study program.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an accreditation decision for a study program.
+Includes decision number, issue date, validity period, and additional notes.
+"""
+type Accreditation {
+  # Basics:
+  id: ID!
+  # Unique identifier for the accreditation.
+
+  decisionNumber: String!
+  # The official decision number.
+
+  decisionDateAt: String!
+  # Timestamp when the decision was issued.
+
+  validFromAt: String!
+  # Timestamp marking the start of the accreditation's validity.
+
+  validToAt: String!
+  # Timestamp marking the end of the accreditation's validity.
+
+  notes: String
+  # Additional notes or remarks regarding the accreditation decision.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # The study program that is being accredited.
+
+  accreditationBody: AccreditationBody!
+  # The accreditation body that issued this decision.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents the accreditation body that issues accreditation decisions.
+Provides descriptive information and a list of decisions it has issued.
+"""
+type AccreditationBody {
+  # Basics:
+  id: ID!
+  # Unique identifier for the accreditation body.
+
+  name: String!
+  # The name of the accreditation body.
+
+  description: String
+  # A detailed description of the accreditation body.
+
+  # Vectors:
+  accreditations: [Accreditation!]!
+  # List of accreditation decisions issued by this body.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a subject taught within a study program.
+Contains descriptive information and links to the corresponding study program.
+"""
+type Subject {
+  # Basics:
+  id: ID!
+  # Unique identifier for the subject.
+
+  name: String!
+  # The name of the subject.
+
+  description: String
+  # A detailed description of the subject.
+
+  type: String!
+  # The category of the subject (e.g., "regular", "admission", "stateFinal").
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program that includes this subject.
+
+  group: Group!
+  # The organizational group responsible for the subject.
+
+  # Vectors:
+  semesters: [Semester!]!
+  # List of academic semesters during which the subject is taught.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an academic semester during which a subject is taught.
+Includes term, year, and additional descriptive information.
+"""
+type Semester {
+  # Basics:
+  id: ID!
+  # Unique identifier for the semester.
+
+  term: String!
+  # The term of the semester (e.g., "Fall", "Spring").
+
+  year: Int!
+  # The calendar year for the semester.
+
+  description: String
+  # Additional description or remarks about the semester.
+
+  # Scalars:
+  subject: Subject!
+  # The subject taught in this semester.
+
+  # Vectors:
+  studyPlans: [StudyPlan!]!
+  # List of study plans available for this semester.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a thematic grouping of lessons within a semester.
+Helps organize lessons into logical clusters.
+"""
+type Topic {
+  # Basics:
+  id: ID!
+  # Unique identifier for the topic.
+
+  name: String!
+  # The name of the topic.
+
+  description: String
+  # A brief description of what the topic covers.
+
+  # Scalars:
+  semester: Semester!
+  # The academic semester in which this topic is active.
+
+  # Vectors:
+  lessons: [Lesson!]!
+  # List of lessons that belong to this topic.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a lesson or lecture in a subject.
+Contains content details, duration, and the lesson type.
+"""
+type Lesson {
+  # Basics:
+  id: ID!
+  # Unique identifier for the lesson.
+
+  content: String!
+  # The detailed content or description of the lesson.
+
+  length: Float!
+  # Duration of the lesson in arbitrary units (e.g., hours, credits).
+
+  lessonType: String!
+  # The type of lesson (e.g., "lecture", "exercise").
+
+  # Vectors:
+  instructors: [User!]!
+  # List of instructors who deliver this lesson.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a detailed schedule of lessons for a subject during a specific semester.
+It organizes scheduled lessons into a coherent study plan.
+"""
+type StudyPlan {
+  # Basics:
+  id: ID!
+  # Unique identifier for the study plan.
+
+  description: String!
+  # A title or description of the study plan.
+
+  # Scalars:
+  semester: Semester!
+  # The academic semester for which the study plan is applicable.
+
+  # Vectors:
+  scheduledLessons: [ScheduledLesson!]!
+  # List of scheduled lesson instances that are part of this study plan.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a scheduled instance of a lesson within a study plan.
+Links a lesson with a specific event, topic, and study plan.
+"""
+type ScheduledLesson {
+  # Basics:
+  id: ID!
+  # Unique identifier for the scheduled lesson.
+
+  content: String!
+  # A description of the scheduled lesson instance.
+
+  length: Float!
+  # The duration of this scheduled lesson.
+
+  lessonType: String!
+  # The type of lesson for this scheduled instance.
+
+  # Scalars:
+  event: Event!
+  # Reference to the event during which this lesson occurs.
+
+  lesson: Lesson!
+  # Reference to the underlying lesson upon which this schedule is based.
+
+  topic: Topic!
+  # The topic that groups this lesson.
+
+  studyPlan: StudyPlan!
+  # The study plan in which this scheduled lesson is included.
+
+  # Vectors:
+  instructors: [User!]!
+  # List of instructors assigned to this scheduled lesson.
+
+  groups: [Group!]!
+  # List of groups (e.g., class groups) involved in this lesson.
+
+  relatedLessons: [Lesson!]!
+  # List of related lessons for cross-reference or integration.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a student enrolled in a study program.
+Links a user with a study program and tracks the student's current state.
+"""
+type Student {
+  # Basics:
+  id: ID!
+  # Unique identifier for the student record.
+
+  # Scalars:
+  person: User!
+  # Reference to the user representing the student.
+
+  studyProgram: StudyProgram!
+  # The study program in which the student is enrolled.
+
+  state: State!
+  # Current lifecycle state of the student (e.g., "applicant", "active", "graduate", "archived").
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+"""
+Represents an evaluation given to a student.
+Contains grading details, attempt information, and computed evaluation paths.
+"""
+type Evaluation {
+  # Basics:
+  id: ID!
+  # Unique identifier for the evaluation record.
+
+  grade: String!
+  # The grade or score assigned (e.g., "A", "B", "pass", "fail").
+
+  attempt: Int!
+  # The attempt number (e.g., first, second attempt).
+
+  points: Float
+  # The number of points awarded; may be null if not applicable.
+
+  passed: Boolean
+  # Indicates whether the evaluation is considered passing.
+
+  path: String!
+  # A string representing the hierarchical structure for computed evaluations.
+
+  # Scalars:
+  student: Student!
+  # The student who is being evaluated.
+
+  subject: Subject
+  # The subject associated with the evaluation (optional).
+
+  semester: Semester
+  # The semester in which the evaluation took place (optional).
+
+  examEvent: Event
+  # Reference to the event representing the exam session (optional).
+
+  admissionProcess: AdmissionProcess
+  # Reference to the admission process if the evaluation is related to it (optional).
+
+  evaluationType: EvaluationType!
+  # The type or context of the evaluation.
+
+  # Vectors:
+  Evaluations: [Evaluation!]!
+  # List of sub-evaluations forming a hierarchical breakdown.
+
+  # System:
+  rbacId: ID!
+  # Identifier used for access control in the context of this evaluation.
+
+  createdBy: User!
+  # User who created this evaluation record.
+
+  changedBy: User
+  # User who last updated this evaluation.
+
+  createdAt: String!
+  # Timestamp when the evaluation was created.
+
+  changedAt: String
+  # Timestamp when the evaluation was last modified.
+
+  state: State!
+  # Current state of the evaluation.
+}
+
+"""
+Defines the type or context of an evaluation.
+Used to classify evaluations by context (e.g., "semester", "admission", "final").
+"""
+type EvaluationType {
+  # Basics:
+  id: ID!
+  # Unique identifier for the evaluation type.
+
+  name: String!
+  # The name of the evaluation type.
+
+  description: String
+  # Detailed description of the evaluation type.
+
+  # Vectors:
+  evaluations: [Evaluation!]!
+  # List of evaluations that are classified under this type.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an exam and its components.
+Defines conditions such as minimum and maximum scores and supports hierarchical exam structures.
+"""
+type Exam {
+  # Basics:
+  id: ID!
+  # Unique identifier for the exam or exam component.
+
+  name: String!
+  # The name of the exam or component.
+
+  description: String
+  # A brief description of the exam.
+
+  path: String
+  # Hierarchical path representing the exam's position in a structure.
+
+  minScore: Float
+  # The minimum score required for passing (if applicable).
+
+  maxScore: Float
+  # The maximum achievable score (if applicable).
+
+  # Scalars:
+  parent: Exam
+  # Reference to the parent exam if this is a sub-component.
+
+  event: Event
+  # Reference to the event that represents the exam period.
+
+  # Vectors:
+  subExams: [Exam!]!
+  # List of sub-exams or components of this exam.
+
+  evaluations: [Evaluation!]!
+  # List of evaluations associated with this exam or its sub-components.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Admission Entities
+#############################
+
+"""
+Represents the admission process for a study program.
+Covers the complete workflow from application submission to final decision and file closure.
+"""
+type AdmissionProcess {
+  # Basics:
+  id: ID!
+  # Unique identifier for the admission process.
+
+  applicationStartAt: String!
+  # Timestamp marking the start of the application period.
+
+  applicationDeadlineAt: String!
+  # Timestamp when the application period ends.
+
+  resultsAnnouncementAt: String!
+  # Timestamp when the results are announced.
+
+  description: String
+  # A detailed description of the admission process.
+
+  # Scalars:
+  studyProgram: StudyProgram!
+  # Reference to the study program for which the admission process is conducted.
+
+  # Vectors:
+  admissionExams: [Exam!]!
+  # List of exams included in the admission process.
+
+  requiredDocuments: [Document!]!
+  # List of required documents for candidates.
+
+  admissionApplications: [AdmissionApplication!]!
+  # List of applications submitted by candidates.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents an application submitted by a candidate for the admission process.
+The state field tracks the application's lifecycle.
+"""
+type AdmissionApplication {
+  # Basics:
+  id: ID!
+  # Unique identifier for the application.
+
+  applicationDateAt: String!
+  # Timestamp when the application was submitted.
+
+  # Scalars:
+  state: State!
+  # Current state of the application (e.g., "submitted", "in review", "approved").
+
+  student: Student!
+  # Reference to the student (candidate) who submitted the application.
+
+  admissionProcess: AdmissionProcess!
+  # The admission process for which the application is made.
+
+  # Vectors:
+  submittedDocuments: [Document!]!
+  # List of documents submitted with the application.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+}
+
+#############################
+# Digital Forms
+#############################
+
+"""
+Represents a digital form used to capture user input.
+Defines the form structure and stores form submissions.
+"""
+type DigitalForm {
+  # Basics:
+  id: ID!
+  # Unique identifier for the digital form.
+
+  title: String!
+  # The title of the form.
+
+  description: String
+  # A brief description of the form's purpose.
+
+  version: String
+  # The version identifier for tracking form revisions.
+
+  # Vectors:
+  sections: [FormSection!]!
+  # List of top-level sections that structure the form.
+
+  submissions: [FormSubmission!]!
+  # List of user submissions for the form.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a section (group) of a digital form.
+Supports nested sections and repetition; repetition settings are grouped into a single scalar.
+"""
+type FormSection {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form section.
+
+  title: String!
+  # The title of the section; must start with an uppercase letter.
+
+  description: String
+  # A brief description that explains the section's purpose.
+
+  order: Int!
+  # Order index determining the section's position within the form.
+
+  # Scalars:
+  parent: FormSection
+  # Reference to the parent section if this is a nested section.
+
+  repetition: RepetitionInfo
+  # A JSON object encapsulating repetition settings.
+  # Expected format: { "repeatable": Boolean, "minRepeats": Int, "maxRepeats": Int }
+  # Determines whether the section is repeatable and specifies minimum and maximum repeats.
+
+  # Vectors:
+  fields: [FormField!]!
+  # List of form fields contained within this section.
+
+  sections: [FormSection!]!
+  # List of nested subsections within this section.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a field in a digital form.
+Defines properties of the input field, including validation, repetition, and computed value capabilities.
+"""
+type FormField {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form field.
+
+  label: String!
+  # The display label shown to the user.
+
+  name: FieldName!
+  # The internal name of the field; must start with a lowercase letter (used for formula references).
+
+  fieldType: String!
+  # The type of input (e.g., "text", "number", "date", "boolean", "select").
+
+  placeholder: String
+  # Placeholder text displayed in the input field.
+
+  required: Boolean!
+  # Indicates if this field is required.
+
+  order: Int!
+  # Position index for the field within its section.
+
+  # Scalars:
+  form: DigitalForm!
+  # Reference to the digital form that includes this field.
+
+  parentSection: FormSection
+  # Reference to the section that contains this field.
+
+  # Repetition:
+  repeatable: Boolean!
+  # Flag indicating whether the field can be repeated.
+
+  minRepeats: Int
+  # The minimum number of times the field must be repeated (if repeatable).
+
+  maxRepeats: Int
+  # The maximum number of repetitions allowed for the field.
+
+  # Computed:
+  computed: Boolean!
+  # Indicates whether the field's value is computed automatically.
+
+  formula: String
+  # A mathematical formula (expressed as a string) used to compute the field's value.
+  # Example: "price * quantity", where "price" and "quantity" are other field names.
+
+  dependencies: [String!]
+  # A list of field names or IDs that the formula depends on.
+  # This list is used to validate the formula and trigger recalculation if dependencies change.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a submission of a digital form.
+Aggregates all responses provided by a user for the form fields.
+"""
+type FormSubmission {
+  # Basics:
+  id: ID!
+  # Unique identifier for the form submission.
+
+  submittedAt: String!
+  # Timestamp when the form was submitted.
+
+  # Scalars:
+  submittedBy: User!
+  # The user who submitted the form.
+
+  form: DigitalForm!
+  # Reference to the digital form that was completed.
+
+  # Vectors:
+  responses: [FieldResponse!]!
+  # List of responses for individual fields in the submission.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a response for a specific field within a form submission.
+Links the user's input value to the corresponding form field.
+"""
+type FieldResponse {
+  # Basics:
+  id: ID!
+  # Unique identifier for the field response.
+
+  value: String
+  # The value provided by the user for this field; may be empty if no value was provided.
+
+  # Scalars:
+  field: FormField!
+  # Reference to the form field for which this response applies.
+
+  submission: FormSubmission!
+  # Reference to the form submission containing this response.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+"""
+Represents a print template for a digital form.
+Used to generate printed versions or official documents from form data.
+"""
+type DigitalFormPrintTemplate {
+  # Basics:
+  id: ID!
+  # Unique identifier for the print template.
+
+  title: String!
+  # Title of the template.
+
+  templateText: String!
+  # The content of the template, which may include placeholders for dynamic data.
+
+  # Scalars:
+  digitalForm: DigitalForm!
+  # Reference to the digital form associated with this template.
+
+  # System:
+  createdBy: User!
+  changedBy: User
+  createdAt: String!
+  changedAt: String
+  rbacId: ID!
+  state: State!
+}
+
+#############################
+# Custom Scalars
+#############################
+
+"""
+A custom scalar representing repetition information as a JSON object.
+The JSON object must contain:
+  - "repeatable": Boolean indicating if the section/field is repeatable.
+  - "minRepeats": Integer specifying the minimum number of repeats.
+  - "maxRepeats": Integer specifying the maximum number of repeats.
+Example:
+  {"repeatable": true, "minRepeats": 1, "maxRepeats": 5}
+"""
+scalar RepetitionInfo
+
+"""
+A custom scalar representing a field name.
+The field name must begin with a lowercase letter.
+"""
+scalar FieldName
+
+"""
+A custom scalar representing a section name.
+The section name must begin with an uppercase letter.
+"""
 scalar SectionName
 
-"""A string representing a field name; must start with a lowercase letter."""
-scalar FieldName
+"""
+A custom scalar representing a link to the electronic filing service.
+This scalar may contain a URL or identifier used for synchronizing with the external ESS.
+"""
+scalar ESSLink
