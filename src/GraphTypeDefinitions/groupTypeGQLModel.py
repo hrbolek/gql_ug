@@ -68,12 +68,11 @@ class GroupTypeGQLModel(NamedGQLModel):
         ]
     )
 
-    category = strawberry.field(
+    category: typing.Optional[GroupCategoryGQLModel] = strawberry.field(
         description="""Detailed information about the category that this group type is associated with""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        graphql_type=GroupCategoryGQLModel,
         resolver=default_scalar_resolver(fkey_field_name="category_id")
     )
 
