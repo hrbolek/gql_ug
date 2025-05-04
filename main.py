@@ -134,17 +134,17 @@ async def get_context(request: Request):
     #from src.Dataloaders import createLoadersContext, createUgConnectionContext
     from src.Dataloaders import createLoadersContext
     context = createLoadersContext(asyncSessionMaker)
-    i = Item(query = "")
+    # i = Item(query = "")
     # i.query = ""
     # i.variables = {}
-    logging.info(f"before sentinel current user is {request.scope.get('user', None)}")
-    await sentinel(request, i)
-    logging.info(f"after sentinel current user is {request.scope.get('user', None)}")
+    # logging.info(f"before sentinel current user is {request.scope.get('user', None)}")
+    # await sentinel(request, i)
+    # logging.info(f"after sentinel current user is {request.scope.get('user', None)}")
     # connectionContext = createUgConnectionContext(request=request)
     # result = {**context, **connectionContext}
     result = {**context}
     result["request"] = request
-    result["user"] = request.scope.get("user", None)
+    # result["user"] = request.scope.get("user", None)
     logging.info(f"context created {result}")
     print(f"context created {result}")
     return result
@@ -165,51 +165,7 @@ graphql_app = GraphQLRouter(
     context_getter=get_context
 )
 
-@app.get("/gql")
-async def graphiql(request: Request):
-    return await graphql_app.render_graphql_ide(request)
-
-@app.post("/gql")
-async def apollo_gql(request: Request, item: Item):
-    DEMOE = os.getenv("DEMO", None)
-    sentinelResult = await sentinel(request, item)
-    print(f"main.sentinelResult={sentinelResult}:\n{item.query}\nwith\n{item.variables}")
-    
-    if DEMOE in ["False", "false"]:
-        if sentinelResult:
-            logging.info(f"sentinel test failed for query={item} \n request={request}")
-            print(f"sentinel test failed for query={item} \n request={request}")
-            return sentinelResult
-        logging.info(f"sentinel test passed for query={item} for user {request.scope.get('user', None)}")
-    else:
-        request.scope["user"] = {"id": "2d9dc5ca-a4a2-11ed-b9df-0242ac120003"}
-        logging.info(f"sentinel skippend because of DEMO mode for query={item} for user {request.scope['user']}")
-    try:
-        context = await get_context(request)
-        schemaresult = await schema.execute(query=item.query, variable_values=item.variables, operation_name=item.operationName, context_value=context)
-    except Exception as e:
-        logging.info(f"error during schema execute {e}")
-        print(f"error during schema execute {e}")
-        return {"data": None, "errors": [{f"{type(e).__name__}": "{e}"}]}
-    
-    # logging.info(f"schema execute result \n{schemaresult}")
-    # result = {"data": schemaresult.data}
-    # if schemaresult.errors:
-    #     result["errors"] = [
-    #         {
-    #             "msg": error.message,
-    #             "locations": error.locations,
-    #             "path": error.path,
-    #             "nodes": error.nodes,
-    #             "source": error.source,
-    #             "original_error": { "type": f"{type(error.original_error)}", "msg": f"{error.original_error}" },
-    #             # "msg_r": f"{error}",
-    #             "msg_e": f"{error}".split('\n')
-    #         } for error in schemaresult.errors]
-    result = dataclasses.asdict(schemaresult)
-    if result["errors"] is None:
-        del result["errors"]
-    return result
+app.include_router(graphql_app, prefix="/gql")
 
 @app.get("/voyager", response_class=FileResponse)
 async def graphiql():

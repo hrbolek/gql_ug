@@ -152,27 +152,23 @@ class UGWhoAmIExtension(WhoAmIExtension):
     async def ug_query(self, query, variables={}):
         await self.authorize()
         context = self.execution_context.context
-        # print(f"ug_query context A = {context}")
+        print(f"ug_query context A = {context}")
         # result = await self.execution_context.schema.execute(query=query, variable_values=variables, context_value=context)
         result = await readonlyschema.execute(query=query, variable_values=variables, context_value=context)
-        # print(f"ug_query context B = {context}")
+        print(f"ug_query context B = {context}")
         result = strawberry.asdict(result)
         # print(f"result = {result}")
         return result
 
     async def authorize(self):
         request = self.execution_context.context.get("request")
-        print(f"UGWhoAmIExtension.{self.execution_context.context}")
+        # print(f"UGWhoAmIExtension.{self.execution_context.context}")
         item = Item(variables={}, query="")
         
-        sentinelResult = await self.sentinel(request, item)
-        print(f"UGWhoAmIExtension.sentinelResult={sentinelResult}:\n{item.query}\nwith\n{item.variables}")
-        print(f"""{request.scope["user"]}""")
-        if request is not None:
-            # Vytáhnu Authorization hlavičku
-            token = request.headers.get("Authorization")
-            # Uložím ji zpět do kontextu pod klíčem "authorization"
-            self.execution_context.context["authorization"] = token
+        await self.sentinel(request, item)
+        # print(f"UGWhoAmIExtension.sentinelResult={sentinelResult}:\n{item.query}\nwith\n{item.variables}")
+        # print(f"""{request.scope["user"]}""")
+        
 
         
 
@@ -188,14 +184,18 @@ class UGWhoAmIExtension(WhoAmIExtension):
     #     # print("->on_execute", self.execution_context.query, flush=True)
     #     yield
     async def on_execute(self):
-        print(f"UGWhoAmIExtension")
+        # print(f"UGWhoAmIExtension")
         whoami = await self.ug_query(query=WhoAmIExtension.mequery)
         data = whoami.get("data", {"me": {"roles": []}})
         user = data.get("me", {"roles": []})
-        self.execution_context.context["user"] = user
-        self.execution_context.context["ug_client"] = self.ug_query
-        print(f"UGWhoAmIExtension.on_execute {data}:{user}")
-        print(f"""UGWhoAmIExtension.on_execute {self.execution_context.context["user"]}""")
+
+        context = self.execution_context
+        context.context["user"] = user
+        context.context["ug_client"] = self.ug_query
+        # print(f"UGWhoAmIExtension.on_execute {data}:{user}")
+        # print(f"""UGWhoAmIExtension.on_execute {self.execution_context.context["user"]}""")
+
+        print(f"user\n{user}\nquery\n{context.query}\nvariables\n{context.variables}")
         yield
     
 

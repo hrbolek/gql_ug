@@ -41,9 +41,10 @@ def getUserFromInfo(info):
     #print(list(context.keys()))
     result = context.get("user", None)
     if result is None:
+        print(f"user in context is None {context}")
         request = context.get("request", None)
         assert request is not None, context
-        result = request.scope["user"]
+        result = request.scope.get("user", None)
 
     if result is None:
         result = {"id": None}
