@@ -110,11 +110,13 @@ JWTRESOLVEUSERPATHURL = os.environ.get("JWTRESOLVEUSERPATHURL", "http://localhos
 apolloQuery = "query __ApolloGetServiceDefinition__ { _service { sdl } }"
 graphiQLQuery = "\n    query IntrospectionQuery {\n      __schema {\n        \n        queryType { name }\n        mutationType { name }\n        subscriptionType { name }\n        types {\n          ...FullType\n        }\n        directives {\n          name\n          description\n          \n          locations\n          args(includeDeprecated: true) {\n            ...InputValue\n          }\n        }\n      }\n    }\n\n    fragment FullType on __Type {\n      kind\n      name\n      description\n      \n      fields(includeDeprecated: true) {\n        name\n        description\n        args(includeDeprecated: true) {\n          ...InputValue\n        }\n        type {\n          ...TypeRef\n        }\n        isDeprecated\n        deprecationReason\n      }\n      inputFields(includeDeprecated: true) {\n        ...InputValue\n      }\n      interfaces {\n        ...TypeRef\n      }\n      enumValues(includeDeprecated: true) {\n        name\n        description\n        isDeprecated\n        deprecationReason\n      }\n      possibleTypes {\n        ...TypeRef\n      }\n    }\n\n    fragment InputValue on __InputValue {\n      name\n      description\n      type { ...TypeRef }\n      defaultValue\n      isDeprecated\n      deprecationReason\n    }\n\n    fragment TypeRef on __Type {\n      kind\n      name\n      ofType {\n        kind\n        name\n        ofType {\n          kind\n          name\n          ofType {\n            kind\n            name\n            ofType {\n              kind\n              name\n              ofType {\n                kind\n                name\n                ofType {\n                  kind\n                  name\n                  ofType {\n                    kind\n                    name\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  "
 roleTypeQuery = """query($limit: Int) {roleTypePage(limit: $limit) {id, name, nameEn}}"""
+q1 = "query{__schema{types{name}}}"
+q2 = "query IntrospectionQuery{__schema{queryType{name kind}mutationType{name kind}subscriptionType{name kind}types{...FullType}directives{name description locations args{...InputValue}}}}fragment FullType on __Type{kind name description fields(includeDeprecated:true){name description args{...InputValue}type{...TypeRef}isDeprecated deprecationReason}inputFields{...InputValue}interfaces{...TypeRef}enumValues(includeDeprecated:true){name description isDeprecated deprecationReason}possibleTypes{...TypeRef}}fragment InputValue on __InputValue{name description type{...TypeRef}defaultValue}fragment TypeRef on __Type{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name}}}}}}}}}}"
 
 sentinel = createAuthentizationSentinel(
     JWTPUBLICKEY=JWTPUBLICKEYURL,
     JWTRESOLVEUSERPATH=JWTRESOLVEUSERPATHURL,
-    queriesWOAuthentization=[apolloQuery, graphiQLQuery, roleTypeQuery],
+    queriesWOAuthentization=[apolloQuery, graphiQLQuery, roleTypeQuery, q1, q2],
     onAuthenticationError=lambda item: JSONResponse({"data": None, "errors": ["Unauthenticated", item.query, f"{item.variables}"]}, 
     status_code=401))
 
@@ -170,8 +172,9 @@ async def graphiql(request: Request):
 @app.post("/gql")
 async def apollo_gql(request: Request, item: Item):
     DEMOE = os.getenv("DEMO", None)
-
     sentinelResult = await sentinel(request, item)
+    print(f"main.sentinelResult={sentinelResult}:\n{item.query}\nwith\n{item.variables}")
+    
     if DEMOE in ["False", "false"]:
         if sentinelResult:
             logging.info(f"sentinel test failed for query={item} \n request={request}")
@@ -186,6 +189,7 @@ async def apollo_gql(request: Request, item: Item):
         schemaresult = await schema.execute(query=item.query, variable_values=item.variables, operation_name=item.operationName, context_value=context)
     except Exception as e:
         logging.info(f"error during schema execute {e}")
+        print(f"error during schema execute {e}")
         return {"data": None, "errors": [{f"{type(e).__name__}": "{e}"}]}
     
     # logging.info(f"schema execute result \n{schemaresult}")

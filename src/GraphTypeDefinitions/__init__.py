@@ -105,8 +105,52 @@ readonlyschema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLM
 # schema.extensions.append(MyExtension)
 # schema = strawberry.federation.Schema(query=Query)
 
+
+# region Sentinel setup
+JWTPUBLICKEYURL = os.environ.get("JWTPUBLICKEYURL", "http://localhost:8000/oauth/publickey")
+JWTRESOLVEUSERPATHURL = os.environ.get("JWTRESOLVEUSERPATHURL", "http://localhost:8000/oauth/userinfo")
+
+apolloQuery = "query __ApolloGetServiceDefinition__ { _service { sdl } }"
+graphiQLQuery = "\n    query IntrospectionQuery {\n      __schema {\n        \n        queryType { name }\n        mutationType { name }\n        subscriptionType { name }\n        types {\n          ...FullType\n        }\n        directives {\n          name\n          description\n          \n          locations\n          args(includeDeprecated: true) {\n            ...InputValue\n          }\n        }\n      }\n    }\n\n    fragment FullType on __Type {\n      kind\n      name\n      description\n      \n      fields(includeDeprecated: true) {\n        name\n        description\n        args(includeDeprecated: true) {\n          ...InputValue\n        }\n        type {\n          ...TypeRef\n        }\n        isDeprecated\n        deprecationReason\n      }\n      inputFields(includeDeprecated: true) {\n        ...InputValue\n      }\n      interfaces {\n        ...TypeRef\n      }\n      enumValues(includeDeprecated: true) {\n        name\n        description\n        isDeprecated\n        deprecationReason\n      }\n      possibleTypes {\n        ...TypeRef\n      }\n    }\n\n    fragment InputValue on __InputValue {\n      name\n      description\n      type { ...TypeRef }\n      defaultValue\n      isDeprecated\n      deprecationReason\n    }\n\n    fragment TypeRef on __Type {\n      kind\n      name\n      ofType {\n        kind\n        name\n        ofType {\n          kind\n          name\n          ofType {\n            kind\n            name\n            ofType {\n              kind\n              name\n              ofType {\n                kind\n                name\n                ofType {\n                  kind\n                  name\n                  ofType {\n                    kind\n                    name\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  "
+roleTypeQuery = """query($limit: Int) {roleTypePage(limit: $limit) {id, name, nameEn}}"""
+q1 = "query{__schema{types{name}}}"
+q2 = "query IntrospectionQuery{__schema{queryType{name kind}mutationType{name kind}subscriptionType{name kind}types{...FullType}directives{name description locations args{...InputValue}}}}fragment FullType on __Type{kind name description fields(includeDeprecated:true){name description args{...InputValue}type{...TypeRef}isDeprecated deprecationReason}inputFields{...InputValue}interfaces{...TypeRef}enumValues(includeDeprecated:true){name description isDeprecated deprecationReason}possibleTypes{...TypeRef}}fragment InputValue on __InputValue{name description type{...TypeRef}defaultValue}fragment TypeRef on __Type{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name}}}}}}}}}}"
+
+from uoishelpers.authenticationMiddleware import createAuthentizationSentinel
+from fastapi.responses import JSONResponse
+
+sentinel = createAuthentizationSentinel(
+    JWTPUBLICKEY=JWTPUBLICKEYURL,
+    JWTRESOLVEUSERPATH=JWTRESOLVEUSERPATHURL,
+    queriesWOAuthentization=[apolloQuery, graphiQLQuery, roleTypeQuery, q1, q2],
+    onAuthenticationError=lambda item: JSONResponse({"data": None, "errors": ["Unauthenticated", item.query, f"{item.variables}"]}, 
+    status_code=401))
+
+# endregion
+
+from uoishelpers.authenticationMiddleware import createAuthentizationSentinel
+from pydantic import BaseModel
+
+class Item(BaseModel):
+    query: str
+    variables: dict = {}
+    operationName: str = None
+
 class UGWhoAmIExtension(WhoAmIExtension):
+    def __init__(self, execution_context):
+        print(f"UGWhoAmIExtension called")
+        JWTPUBLICKEYURL = os.environ.get("JWTPUBLICKEYURL", "http://localhost:8000/oauth/publickey")
+        JWTRESOLVEUSERPATHURL = os.environ.get("JWTRESOLVEUSERPATHURL", "http://localhost:8000/oauth/userinfo")
+        self.sentinel = createAuthentizationSentinel(
+            queriesWOAuthentization=[],
+            JWTPUBLICKEY=JWTPUBLICKEYURL,
+            JWTRESOLVEUSERPATH=JWTRESOLVEUSERPATHURL,
+            onAuthenticationError=lambda item: JSONResponse({"data": None, "errors": ["Unauthenticated", item.query, f"{item.variables}"]}, 
+                status_code=401)
+        )
+
     async def ug_query(self, query, variables={}):
+        await self.authorize()
         context = self.execution_context.context
         # print(f"ug_query context A = {context}")
         # result = await self.execution_context.schema.execute(query=query, variable_values=variables, context_value=context)
@@ -115,6 +159,22 @@ class UGWhoAmIExtension(WhoAmIExtension):
         result = strawberry.asdict(result)
         # print(f"result = {result}")
         return result
+
+    async def authorize(self):
+        request = self.execution_context.context.get("request")
+        print(f"UGWhoAmIExtension.{self.execution_context.context}")
+        item = Item(variables={}, query="")
+        
+        sentinelResult = await self.sentinel(request, item)
+        print(f"UGWhoAmIExtension.sentinelResult={sentinelResult}:\n{item.query}\nwith\n{item.variables}")
+        print(f"""{request.scope["user"]}""")
+        if request is not None:
+            # Vytáhnu Authorization hlavičku
+            token = request.headers.get("Authorization")
+            # Uložím ji zpět do kontextu pod klíčem "authorization"
+            self.execution_context.context["authorization"] = token
+
+        
 
     # async def on_execute(self):
     #     query = self.execution_context.query
@@ -127,7 +187,18 @@ class UGWhoAmIExtension(WhoAmIExtension):
 
     #     # print("->on_execute", self.execution_context.query, flush=True)
     #     yield
-
-    pass
+    async def on_execute(self):
+        print(f"UGWhoAmIExtension")
+        whoami = await self.ug_query(query=WhoAmIExtension.mequery)
+        data = whoami.get("data", {"me": {"roles": []}})
+        user = data.get("me", {"roles": []})
+        self.execution_context.context["user"] = user
+        self.execution_context.context["ug_client"] = self.ug_query
+        print(f"UGWhoAmIExtension.on_execute {data}:{user}")
+        print(f"""UGWhoAmIExtension.on_execute {self.execution_context.context["user"]}""")
+        yield
+    
 
 schema.extensions.append(UGWhoAmIExtension)
+
+print(f"schema.extensions.length: {len(schema.extensions)}")
