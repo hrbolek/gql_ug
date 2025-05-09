@@ -19,7 +19,7 @@ RoleGQLModel = Annotated["RoleGQLModel", strawberry.lazy(".roleGQLModel")]
 @strawberry.federation.type(keys=["id"])
 class RBACObjectGQLModel:
 
-    id: typing.Optional[IDType] = strawberry.field(description="id", default=None) # = resolve_id
+    id: IDType = strawberry.field(description="id") # = resolve_id
     asUser: strawberry.Private[bool] = False
     asGroup: strawberry.Private[bool] = False
     

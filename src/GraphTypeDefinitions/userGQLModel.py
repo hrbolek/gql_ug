@@ -24,7 +24,7 @@ from uoishelpers.resolvers import (
     Delete
 )
 
-from .BaseGQLModel import BaseGQLModel, IDType
+from .BaseGQLModel import BaseGQLModel, IDType, Relation
 from ._GraphPermissions import (
     RoleBasedPermission, 
     OnlyForAuthentized,

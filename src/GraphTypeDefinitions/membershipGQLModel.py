@@ -6,7 +6,7 @@ import uuid
 from typing import List, Optional, Union, Annotated, Type
 from uoishelpers.resolvers import createInputs
 
-from .BaseGQLModel import BaseGQLModel, IDType
+from .BaseGQLModel import BaseGQLModel, IDType, Relation
 from ._GraphPermissions import (
     RoleBasedPermission, OnlyForAuthentized,
     OnlyForAdmins,
@@ -76,13 +76,23 @@ class MembershipGQLModel(BaseGQLModel):
     user_id: typing.Optional[IDType] = strawberry.field(
         description="""ID of associated user.
 ID spojeného uživatele.""",
-        permission_classes=[OnlyForAuthentized]
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        directives=[
+            Relation(to="UserGQLModel")
+        ]
     )
 
     group_id: typing.Optional[IDType] = strawberry.field(
         description="""ID of associated group.
 ID spojené skupiny.""",
-        permission_classes=[OnlyForAuthentized]
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        directives=[
+            Relation(to="GroupGQLModel")
+        ]
     )
 
     user = strawberry.field(

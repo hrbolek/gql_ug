@@ -49,7 +49,7 @@ class RoleTypeListGQLModel(BaseGQLModel):
     async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
         return None if id is None else cls(id=id)
 
-    id: Optional[IDType] = None
+    # id: IDType = strawberry.field(description="primary key")
 
     # changedby = resolve_changedby
     # lastchange = resolve_lastchange

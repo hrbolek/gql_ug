@@ -44,7 +44,7 @@ from .roleCategoryGQLModel import RoleCategoryGQLModel
 from .roleTypeGQLModel import RoleTypeGQLModel
 
 from .RBACObjectGQLModel import RBACObjectGQLModel
-from .BaseGQLModel import IDType
+from .BaseGQLModel import IDType, Relation
 
 
 from strawberry.extensions import SchemaExtension
@@ -97,7 +97,8 @@ schema = strawberry.federation.Schema(
     query=Query, 
     types=(RBACObjectGQLModel, IDType), 
     mutation=Mutation, 
-    extensions=[]
+    extensions=[],
+    schema_directives=[Relation]
 )
 readonlyschema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType))
 
