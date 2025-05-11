@@ -71,7 +71,7 @@ class BaseGQLModel:
     
     @classmethod
     # def resolve_reference(cls, info: strawberry.types.Info, id: uuid.UUID, **otherdata):
-    def resolve_reference(cls, info: strawberry.types.Info, id: uuid.UUID):
+    async def resolve_reference(cls, info: strawberry.types.Info, id: uuid.UUID):
         """
         Resolves a reference to this entity by its ID.
         
@@ -81,7 +81,7 @@ class BaseGQLModel:
         if id is None:
             return None
         _id = IDType(id) if isinstance(id, str) else id
-        return cls.load_with_loader(info=info, id=_id)
+        return await cls.load_with_loader(info=info, id=_id)
        
     id: IDType = strawberry.field(
         description="""Primary key of the entity.
