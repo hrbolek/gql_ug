@@ -93,12 +93,14 @@ class GroupGQLModel(NamedGQLModel):
     email: typing.Optional[str] = strawberry.field(
         description="""Group's email address.  
 Emailová adresa skupiny.""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
     
     abbreviation: typing.Optional[str] = strawberry.field(
         description="""Abbreviation or short name for the group.  
 Zkratka nebo krátký název skupiny.""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
     
@@ -114,18 +116,21 @@ Indikuje, zda je skupina aktuálně aktivní.""",
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""Start date of the group's activity.  
 Datum zahájení aktivity skupiny.""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
 
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""End date of the group's activity (if applicable).  
 Datum ukončení aktivity skupiny (je-li relevantní).""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
 
     grouptype_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier for the group's type (e.g., Department).  
 Identifikátor typu skupiny (např. oddělení).""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
 
@@ -150,8 +155,8 @@ Typ skupiny reprezentovaný jako objekt (např. oddělení).""",
     grouptype_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier for the group's type.  
 Identifikátor typu skupiny.""",
-        permission_classes=[OnlyForAuthentized],
-        graphql_type=typing.Optional[IDType]
+        default=None,
+        permission_classes=[OnlyForAuthentized]
     )
 
     subgroups: typing.List["GroupGQLModel"] = strawberry.field(
@@ -164,6 +169,7 @@ Seznam přímo podřízených skupin.""",
     mastergroup_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier of the master (commanding) group.  
 Identifikátor nadřazené (řídící) skupiny.""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
 
