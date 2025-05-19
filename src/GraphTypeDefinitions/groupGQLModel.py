@@ -63,6 +63,7 @@ class GroupInputWhereFilter:
     grouptype: GroupTypeInputWhereFilter
     roles: RoleInputWhereFilter
     mastergroup_id: IDType
+    grouptype_id: IDType
 
 GroupGQLModel_description = """
 ## Description
@@ -198,6 +199,7 @@ Vrací hierarchii nadřazených skupin od nejvyšší po bezprostředního nadř
     path: typing.Optional[str] = strawberry.field(
         description="""Materialized path representing the group's hierarchical location.  
 Materializovaná cesta reprezentující umístění skupiny v hierarchii.""",
+        default=None,
         permission_classes=[OnlyForAuthentized]
     )
 

@@ -10,10 +10,12 @@ class NamedGQLModel(BaseGQLModel):
 
     name: typing.Optional[str] = strawberry.field(
         description="name",
+        default=None,
         permission_classes=[OnlyForAuthentized]
         )
     
     name_en: typing.Optional[str] = strawberry.field(
         description="english name",
+        default=None,
         permission_classes=[OnlyForAuthentized]
         )

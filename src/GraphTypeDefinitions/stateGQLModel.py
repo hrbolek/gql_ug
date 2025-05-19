@@ -130,16 +130,19 @@ class StateGQLModel(NamedGQLModel):
     statemachine_id: typing.Optional[IDType] = strawberry.field(
         description="""Id of state machine""",
         permission_classes=[OnlyForAuthentized],
+        default=None
     )
 
     writerslist_id: typing.Optional[IDType] = strawberry.field(
         description="""Id of roletype list""",
         permission_classes=[OnlyForAuthentized],
+        default=None
     )
 
     readerslist_id: typing.Optional[IDType] = strawberry.field(
         description="""Id of roletype list""",
         permission_classes=[OnlyForAuthentized],
+        default=None
     )
 
     statemachine: typing.Optional["StateMachineGQLModel"] = strawberry.field(
@@ -150,7 +153,8 @@ class StateGQLModel(NamedGQLModel):
     
     order: typing.Optional[int] = strawberry.field(
         description="""position in list of states""",
-        permission_classes=[OnlyForAuthentized]
+        permission_classes=[OnlyForAuthentized],
+        default=None
     )
     
     sources: typing.List["StateTransitionGQLModel"] = strawberry.field(
@@ -196,7 +200,8 @@ class StateGQLModel(NamedGQLModel):
 
     readerslist_id: typing.Optional[IDType] = strawberry.field(
         description="list of roles which can read at this state",
-        permission_classes=[OnlyForAuthentized]
+        permission_classes=[OnlyForAuthentized],
+        default=None
     )
 
     # @strawberry.field(
