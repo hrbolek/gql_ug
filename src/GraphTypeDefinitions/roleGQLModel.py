@@ -219,19 +219,35 @@ async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDTy
     
     from .membershipGQLModel import MembershipGQLModel
     loaderm = MembershipGQLModel.getLoader(info)
-    rows = await loaderm.filter_by(user_id = user_id)
-    groupids = [row.group_id for row in rows]
+    membershiprows = await loaderm.filter_by(user_id = user_id)
+    groupids = [row.group_id for row in membershiprows]
+
+    from .groupGQLModel import GroupGQLModel
+    group_loader = GroupGQLModel.getLoader(info)
+    groupfutures = (group_loader.load(gid) for gid in groupids)
+    grouprows = await asyncio.gather(*groupfutures)
+
+    grouppaths = [row.path for row in grouprows if row.path]
+    groupids2 = set(groupids)
+    for path in grouppaths:
+        for id_str in path.split('/'):
+            try:
+                groupids2.add(IDType(id_str))
+            except ValueError:
+                # neplatné UUID, přeskočit nebo logovat
+                pass
+
     # print("groupids", groupids)
     stmt = (
         select(RoleModel).
-        where(RoleModel.group_id.in_(groupids))
+        where(RoleModel.group_id.in_(groupids2))
     )
     # if filter_user_id is not None:
     #     stmt = stmt.filter(RoleModel.user_id == filter_user_id)
         # print("filtered to", filter_user_id, flush=True)
-    loader = RoleGQLModel.getLoader(info)
-    rows = await loader.execute_select(stmt)
-    return rows
+    roleloader = RoleGQLModel.getLoader(info)
+    rolerows = await roleloader.execute_select(stmt)
+    return rolerows
 
 async def resolve_roles_on_user_with_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
     loaderr = RoleGQLModel.getLoader(info=info)

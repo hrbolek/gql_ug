@@ -230,7 +230,7 @@ Agreguje role podél hierarchie skupiny.""",
         futures = (loader.filter_by(group_id=IDType(id)) for id in ids)
         dbrows = await asyncio.gather(*futures)
         index = {
-            id: row for rr in dbrows for row in rr
+            row.id: row for rr in dbrows for row in rr
         }
         result = [RoleGQLModel.from_dataclass(row) for row in index.values() if row.valid]
         return result
