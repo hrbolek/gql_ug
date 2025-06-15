@@ -52,8 +52,24 @@ class UserModel(BaseModel):
             )
         )
 
-    memberships = relationship("MembershipModel", back_populates="user", foreign_keys="MembershipModel.user_id")
-    roles = relationship("RoleModel", back_populates="user", foreign_keys="RoleModel.user_id")
+    memberships = relationship(
+        "MembershipModel", 
+        back_populates="user", 
+        foreign_keys="MembershipModel.user_id",
+        uselist=True,
+        init=True,
+        cascade="save-update"
+    )
+    
+    roles = relationship(
+        "RoleModel", 
+        back_populates="user", 
+        foreign_keys="RoleModel.user_id",
+        uselist=True,
+        init=True,
+        cascade="save-update"
+
+    )
     # groups = relationship("GroupModel", 
     #     secondary="join(MembershipModel, GroupModel, GroupModel.id==MembershipModel.group_id)",
     #     primaryjoin="UserModel.id==MembershipModel.user_id",

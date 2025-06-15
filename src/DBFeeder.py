@@ -951,10 +951,10 @@ async def initDB(asyncSessionMaker):
 
     DEMODATA = os.environ.get("DEMODATA", None) in ["True", "true"]        
     dbModels = [
-        GroupCategoryModel,
+        # GroupCategoryModel,
         GroupTypeModel,
 
-        RoleCategoryModel,
+        # RoleCategoryModel,
         RoleTypeModel,
 
         UserTypeModel,

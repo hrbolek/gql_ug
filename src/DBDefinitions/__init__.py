@@ -21,7 +21,7 @@ from .GroupTypeModel import GroupTypeModel
 from .GroupCategoryModel import GroupCategoryModel
 from .RoleModel import RoleModel
 from .RoleTypeModel import RoleTypeModel
-from .RoleCategoryModel import RoleCategoryModel
+# from .RoleCategoryModel import RoleCategoryModel
 from .RoleTypeListModel import RoleTypeListModel
 
 from .StateTransitionModel import StateTransitionModel

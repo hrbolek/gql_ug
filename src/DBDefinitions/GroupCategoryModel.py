@@ -13,7 +13,7 @@ from .BaseModel import BaseModel
 class GroupCategoryModel(BaseModel):
     """group category"""
 
-    __tablename__ = "groupcategories"
+    __tablename__ = "groupcategories2"
 
 
     name: Mapped[str] = mapped_column(

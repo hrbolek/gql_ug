@@ -360,38 +360,12 @@ Unikátní identifikátor skupiny."""
     # Private pole – bez použití strawberry.field
     changedby_id: strawberry.Private["IDType"] = None
 
-
+from uoishelpers.resolvers import InputModelMixin, TreeInputStructureMixin
 @strawberry.input(
-    description="""## Description
-Input model for inserting a new group.
-Vstupní model pro vložení nové skupiny.
-
-## Fields
-- **name**: Name of the new group.
-  Název nové skupiny.
-- **grouptype_id**: Identifier for the group's type.
-  Identifikátor typu skupiny.
-- **id**: (Optional) Primary key of the group. If not provided, a new unique identifier will be generated.
-  (Volitelné) Primární klíč skupiny. Pokud není zadán, bude vygenerován nový unikátní identifikátor.
-- **name_en**: (Optional) English name of the group.
-  (Volitelné) Anglický název skupiny.
-- **mastergroup_id**: (Optional) Identifier for the master group.
-  (Volitelné) Identifikátor nadřazené skupiny.
-- **valid**: (Optional) Validity flag of the group.
-  (Volitelné) Příznak platnosti skupiny.
-- **abbreviation**: (Optional) Abbreviation of the group.
-  (Volitelné) Zkratka skupiny.
-- **email**: (Optional) Email address of the group.
-  (Volitelné) Emailová adresa skupiny.
-- **path**: (Private) Materialized path in the group hierarchy.
-  (Interní) Materializovaná cesta v hierarchii skupin.
-- **createdby_id**: (Private) Identifier of the creator.
-  (Interní) Identifikátor tvůrce.
-- **rbacobject**: (Private) RBAC-related identifier.
-  (Interní) Identifikátor pro RBAC.
-"""
+    description="""Input model for inserting a new group."""
 )
-class GroupInsertGQLModel:
+class GroupInsertGQLModel(TreeInputStructureMixin):
+    getLoader = GroupGQLModel.getLoader
     name: str = strawberry.field(
          description="""Name of the new group.
 Název nové skupiny."""
@@ -416,11 +390,7 @@ Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
 (Volitelné) Identifikátor nadřazené skupiny.""",
          default=None
     )
-    valid: typing.Optional[bool] = strawberry.field(
-         description="""(Optional) Validity flag of the group.
-(Volitelné) Příznak platnosti skupiny.""",
-         default=None
-    )
+    
     abbreviation: typing.Optional[str] = strawberry.field(
          description="""(Optional) Abbreviation of the group.
 (Volitelné) Zkratka skupiny.""",
@@ -431,6 +401,23 @@ Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
 (Volitelné) Emailová adresa skupiny.""",
          default=None
     )
+
+    subgroups: typing.Optional[typing.List["GroupInsertGQLModel"]] = strawberry.field(
+        description="""""",
+        default_factory=list
+    )
+
+    from .membershipGQLModel import MembershipInsertGQLModel
+    memberships: typing.Optional[typing.List[MembershipInsertGQLModel]] = strawberry.field(
+        description="""""",
+        default_factory=list
+    )
+    from .roleGQLModel import RoleInsertGQLModel
+    roles: Optional[List[RoleInsertGQLModel]] = strawberry.field(
+        description="List of roles assigned to the user\nSeznam rolí přiřazených uživateli",
+        default_factory=list
+    )
+
     # Private pole – bez použití strawberry.field
     path: strawberry.Private[str] = ""
     createdby_id: strawberry.Private["IDType"] = None

@@ -1,75 +1,49 @@
-import typing
-import sys
-import strawberry
-from dataclasses import dataclass
-import datetime
-import logging
-from uoishelpers.resolvers import createInputs
-
-
-from .BaseGQLModel import IDType
-
-
-inputTypeGQLMapper = {}
-
-
-@strawberry.input(description="Str filter methods, only one constrain allowed")
-class StrFilter:
-    _eq: typing.Optional[str] = strawberry.field(name="_eq", description="operation for select.filter() method", default=None)
-    _le: typing.Optional[str] = strawberry.field(name="_le", description="operation for select.filter() method", default=None)
-    _lt: typing.Optional[str] = strawberry.field(name="_lt", description="operation for select.filter() method", default=None)
-    _ge: typing.Optional[str] = strawberry.field(name="_ge", description="operation for select.filter() method", default=None)
-    _gt: typing.Optional[str] = strawberry.field(name="_gt", description="operation for select.filter() method", default=None)
-    _like: typing.Optional[str] = strawberry.field(name="_like", description="operation for select.filter() method", default=None)
-    _ilike: typing.Optional[str] = strawberry.field(name="_ilike", description="operation for select.filter() method", default=None)
-    _startswith: typing.Optional[str] = strawberry.field(name="_startswith", description="operation for select.filter() method", default=None)
-    _endswith: typing.Optional[str] = strawberry.field(name="_endswith", description="operation for select.filter() method", default=None)
-
-@strawberry.input(description="Datetime filter methods, only one constrain allowed")
-class DatetimeFilter:
-    _eq: typing.Optional[datetime.datetime] = strawberry.field(name="_eq", description="operation for select.filter() method", default=None)
-    _le: typing.Optional[datetime.datetime] = strawberry.field(name="_le", description="operation for select.filter() method", default=None)
-    _lt: typing.Optional[datetime.datetime] = strawberry.field(name="_lt", description="operation for select.filter() method", default=None)
-    _ge: typing.Optional[datetime.datetime] = strawberry.field(name="_ge", description="operation for select.filter() method", default=None)
-    _gt: typing.Optional[datetime.datetime] = strawberry.field(name="_gt", description="operation for select.filter() method", default=None)
-
-@strawberry.input(description="Integer filter methods, only one constrain allowed")
-class IntFilter:
-    _eq: typing.Optional[int] = strawberry.field(name="_eq", description="operation for select.filter() method", default=None)
-    _le: typing.Optional[int] = strawberry.field(name="_le", description="operation for select.filter() method", default=None)
-    _lt: typing.Optional[int] = strawberry.field(name="_lt", description="operation for select.filter() method", default=None)
-    _ge: typing.Optional[int] = strawberry.field(name="_ge", description="operation for select.filter() method", default=None)
-    _gt: typing.Optional[int] = strawberry.field(name="_gt", description="operation for select.filter() method", default=None)
-    _in: typing.Optional[typing.List[int]] = strawberry.field(name="_in", description="operation for select.filter() method", default=None)
-
-@strawberry.input(description="Integer filter methods, only one constrain allowed")
-class BoolFilter:
-    _eq: typing.Optional[bool] = strawberry.field(name="_eq", description="operation for select.filter() method", default=None)
-
 import uuid
+import strawberry
 
-@strawberry.input(description="Integer filter methods, only one constrain allowed")
-class UuidFilter:
-    _eq: typing.Optional[IDType] = strawberry.field(name="_eq", description="operation for select.filter() method", default=None)
-    _in: typing.Optional[typing.List[IDType]] = strawberry.field(name="_in", description="operation for select.filter() method", default=None)
+def _convert(info, value):
+    if hasattr(value, "intoModel"):
+        return value.intoModel(info)
+    if isinstance(value, list):
+        return [_convert(info, v) for v in value]
+    return value
 
-inputTypeGQLMapper[IDType] = UuidFilter
-inputTypeGQLMapper[int] = IntFilter
-inputTypeGQLMapper[str] = StrFilter
-inputTypeGQLMapper[datetime.datetime] = DatetimeFilter
-inputTypeGQLMapper[bool] = BoolFilter
+def intoModel(self, info: strawberry.types.Info):
+    loader = self.getLoader(info=info)
+    model = loader.getModel()
+    instance = model()
+    for key in self.__annotations__.keys():
+        original = getattr(self, key)
+        setattr(instance, key, _convert(info, original))
+    return instance
 
 
-# from graphql.language import DirectiveLocation
-# @strawberry.input
-# class ReduceInput:
-#     id: IDType
+class InputModelMixin:
+    """
+    Mixin providing generic intoModel logic for all Strawberry input models.
+    Subclasses must implement getLoader().
+    """
+    @classmethod
+    def getLoader(cls, info: strawberry.types.Info):
+        raise NotImplementedError(
+            f"Class {cls.__name__} must implement getLoader()."
+        )
 
-# @strawberry.directive(
-#     locations=[DirectiveLocation.FIELD], description="returns just first"
-# )
-# def reduce(value, param: ReduceInput) -> IDType :
-#     # values = [v for v in value]
-#     first = next(value, None)
-#     return [] if first is None else [first]
-# schema = strawberryA.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType), mutation=Mutation, directives=[reduce])
+    def intoModel(self, info: strawberry.types.Info):
+        loader = self.getLoader(info)
+        model_cls = loader.getModel()
+        instance = model_cls()
+
+        # … parsování ostatních polí …
+        if self.id in (None, strawberry.UNSET):
+            instance.id = uuid.uuid4()
+        else:
+            instance.id = self.id
+
+        for key in self.__annotations__.keys():
+            original = getattr(self, key)
+            # Skip None values if desired
+            if original is None:
+                continue
+            setattr(instance, key, _convert(info, original))
+        return instance

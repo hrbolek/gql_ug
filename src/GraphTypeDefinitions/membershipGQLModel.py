@@ -205,6 +205,7 @@ Pokud je členství nalezeno, vrací se odpovídající záznam; v opačném př
 #####################################################################
 import datetime
 
+from .utils import InputModelMixin
 @strawberry.input(
     description="""## Description
 Input model for inserting a new membership.
@@ -227,7 +228,8 @@ Vstupní model pro vložení nového členství.
   (Interní) Identifikátor uživatele, který vytvořil členství.
 """
 )
-class MembershipInsertGQLModel:
+class MembershipInsertGQLModel(InputModelMixin):
+    getLoader = MembershipGQLModel.getLoader
     user_id: "IDType" = strawberry.field(
          description="""Unique identifier of the user.
 Unikátní identifikátor uživatele."""

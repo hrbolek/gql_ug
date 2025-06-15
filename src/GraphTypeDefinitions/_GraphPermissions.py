@@ -359,6 +359,7 @@ class RBACPermission(strawberry.permission.BasePermission):
         from .roleGQLModel import RoleGQLModel
         user = getUserFromInfo(info)
         userroles = user.get("roles")
+        print(f"getUserRoles user {user} roles {userroles}")
         if userroles is None:
             loader = RoleGQLModel.getLoader(info)
             rolerows = await loader.filter_by(user_id=user["id"])
@@ -424,6 +425,7 @@ class RBACPermission(strawberry.permission.BasePermission):
     async def testIsAdmin(self, info: strawberry.types.Info, adminRoleNames=["administrátor"]):
         assert len(adminRoleNames) > 0, "as adminRoleNames is empty, this always fails"
         userRoles = await self.getUserRoles(info)
+        print(f"testIsAdmin userRoles {userRoles}")
         adminRoles = filter(lambda role: role["roletype"]["name"] in adminRoleNames, userRoles)
         # isAdmin = next(adminRoles, None) is not None
         return next(adminRoles, None)

@@ -27,6 +27,11 @@ class GroupModel(BaseModel):
 
     __tablename__ = "groups"
 
+    path_attribute_name = "path"
+    parent_attribute_name = "mastergroup"
+    parent_id_attribute_name = "mastergroup_id"
+    children_attribute_name = "subgroups"
+
     # Materialized path technique
     path: Mapped[str] = mapped_column(
         index=True,
@@ -99,15 +104,149 @@ class GroupModel(BaseModel):
             sqlalchemy.or_(cls.enddate >= now, cls.enddate.is_(None))       # Valid if enddate is in the future or missing
         )
 
-    mastergroup = relationship("GroupModel", viewonly=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
-    subgroups = relationship ("GroupModel", remote_side="GroupModel.id", viewonly=True, uselist=True) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
+    mastergroup = relationship(
+        "GroupModel",
+        viewonly=True, 
+        remote_side="GroupModel.id",
+        uselist=False,
+        back_populates="subgroups",
+    ) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
+
+    subgroups = relationship(
+        "GroupModel", 
+        back_populates="mastergroup",
+        uselist=True,
+        init=True,
+        cascade="save-update"
+    ) # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
     # https://docs.sqlalchemy.org/en/20/_modules/examples/materialized_paths/materialized_paths.html
 
 
     grouptype = relationship("GroupTypeModel", viewonly=True)
-    memberships = relationship("MembershipModel", viewonly=True)
-    roles = relationship("RoleModel", viewonly=True)
+    memberships = relationship(
+        "MembershipModel", 
+        foreign_keys="MembershipModel.group_id",
+        back_populates="group", 
+        uselist=True,
+        init=True,
+        cascade="save-update"
+    )
+    roles = relationship(
+        "RoleModel", 
+        foreign_keys="RoleModel.group_id",
+        back_populates="group", 
+        uselist=True,
+        init=True,
+        cascade="save-update"
+    )
 
+    # def buildTreeStructure(self, current_path=None, _visited=None):
+    #     DBModel = type(self)
+    #     if _visited is None:
+    #         _visited = set()
+    #     if self.id in _visited:
+    #         return  # ochrana proti cyklení
+    #     _visited.add(self.id)
+    #     # Pokud je current_path None, nastav na path rodiče nebo na None (pokud není rodič)
+    #     if current_path is None:
+    #         session = Session.object_session(self)
+    #         # Získej path nadřazené skupiny (nebo None, pokud žádná není)
+    #         parent = getattr(self, DBModel.parent_attribute_name, None)
+    #         parent_id = getattr(self, DBModel.parent_id_attribute_name, None)
+    #         if parent:
+    #             current_path = getattr(parent, DBModel.path_attribute_name, None)
+    #         elif parent_id:
+    #             parent = session.get(DBModel, parent_id)
+    #             current_path = getattr(parent, DBModel.path_attribute_name, None) if parent else None
+    #         else:
+    #             current_path = None
+    #     # Nastav path pro aktuální instanci
+    #     self.path = f"{current_path}/{self.id}" if current_path else str(self.id)
+    #     # Rekurzivně nastav path potomkům
+    #     children = getattr(self, DBModel.children_attribute_name, None)
+    #     assert children is not None, "Children should not be None here, probably this method is used in operation other than insert."
+    #     for child in children:
+    #         if child is None:
+    #             continue
+    #         if not isinstance(child, DBModel):
+    #             raise TypeError(f"Expected child of type {DBModel.__name__}, got {type(child).__name__}")
+    #         child.buildTreeStructure(self.path, _visited=_visited)
+    #     return self
+
+# class TreeModelMixin:
+#     path_attribute_name = "path"
+#     parent_attribute_name = "mastergroup"
+#     parent_id_attribute_name = "mastergroup_id"
+#     children_attribute_name = "subgroups"
+
+#     def updateTreeStructure(self, current_path=None, _visited=None):
+#         DBModel = type(self)
+#         if _visited is None:
+#             _visited = set()
+#         if self.id in _visited:
+#             return  # ochrana proti cyklení
+#         _visited.add(self.id)
+#         # Pokud je current_path None, nastav na path rodiče nebo na None (pokud není rodič)
+#         if current_path is None:
+#             session = Session.object_session(self)
+#             # Získej path nadřazené skupiny (nebo None, pokud žádná není)
+#             parent = getattr(self, DBModel.parent_attribute_name, None)
+#             parent_id = getattr(self, DBModel.parent_id_attribute_name, None)
+#             if parent:
+#                 current_path = getattr(parent, DBModel.path_attribute_name, None)
+#             elif parent_id:
+#                 parent = session.get(DBModel, parent_id)
+#                 current_path = getattr(parent, DBModel.path_attribute_name, None) if parent else None
+#             else:
+#                 current_path = None
+#         # Nastav path pro aktuální instanci
+#         self.path = f"{current_path}/{self.id}" if current_path else str(self.id)
+#         # Rekurzivně nastav path potomkům
+#         children = getattr(self, DBModel.children_attribute_name, None)
+#         assert children is not None, "Children should not be None here, probably this method is used in operation other than insert."
+#         for child in children:
+#             child.updateTreeStructure(self.path, _visited=_visited)
+
+#     async def updateTreeStructureAsync(self, session, current_path=None, _visited=None):
+#         """
+#         Asynchronně rekurzivně aktualizuje materialized path této instance a všech potomků.
+#         """
+#         DBModel = type(self)
+#         if _visited is None:
+#             _visited = set()
+#         if self.id in _visited:
+#             return  # ochrana proti cyklení
+#         _visited.add(self.id)
+
+#         # Nastav správnou cestu podle rodiče
+#         parent = getattr(self, DBModel.parent_attribute_name, None)
+#         parent_id = getattr(self, DBModel.parent_id_attribute_name, None)
+#         if current_path is None:
+#             if parent:
+#                 current_path = getattr(parent, DBModel.path_attribute_name, None)
+#             elif parent_id:
+#                 parent_obj = await session.get(DBModel, parent_id)
+#                 current_path = getattr(parent_obj, DBModel.path_attribute_name, None) if parent_obj else None
+#             else:
+#                 current_path = None
+
+#         setattr(
+#             self,
+#             DBModel.path_attribute_name,
+#             f"{current_path}/{self.id}" if current_path else str(self.id)
+#         )
+
+#         # Pokus se načíst děti z relace, jinak fallback na DB
+#         children = getattr(self, DBModel.children_attribute_name, None)
+#         if not children:
+#             result = await session.execute(
+#                 select(DBModel).filter(
+#                     getattr(DBModel, DBModel.parent_id_attribute_name) == self.id
+#                 )
+#             )
+#             children = result.scalars().all()
+#         for child in children:
+#             await child.updateTreeStructureAsync(session, getattr(self, DBModel.path_attribute_name), _visited=_visited)            
 
 from sqlalchemy import select, update
 async def createGroupPaths(asyncsessionmaker):
@@ -143,3 +282,51 @@ async def createGroupPaths(asyncsessionmaker):
         # print(f"groupinfos: {groupinfos}", flush=True)
 
     pass
+
+from sqlalchemy.orm import Session
+from sqlalchemy import event
+
+def create_path_updater(
+    parent_id_attribute_name="mastergroup_id",
+    parent_attribute_name="mastergroup",
+    path_attribute_name="path",
+    children_attribute_name="subgroups",
+    ):
+    
+    async def update_tree_path(mapper, connection, target, current_path=None, _visited=None):
+        if _visited is None:
+            _visited = set()
+        if target.id in _visited:
+            return  # ochrana proti cyklení
+        _visited.add(target.id)
+        # Pokud je current_path None, nastav na path rodiče nebo na None (pokud není rodič)
+        if current_path is None:
+            session = Session.object_session(target)
+            # Získej path nadřazené skupiny (nebo None, pokud žádná není)
+            parent = getattr(target, parent_attribute_name, None)
+            parent_id = getattr(target, parent_id_attribute_name, None)
+            if parent:
+                current_path = getattr(parent, path_attribute_name, None)
+            elif parent_id:
+                parent = await session.get(type(target), parent_id)
+                current_path = getattr(parent, path_attribute_name, None) if parent else None
+            else:
+                current_path = None
+        # Nastav path pro aktuální instanci
+        target.path = f"{current_path}/{target.id}" if current_path else str(target.id)
+        # Rekurzivně nastav path potomkům
+        children = getattr(target, children_attribute_name, None)
+        if children is None:
+            # Fallback: načti děti z DB
+            session = Session.object_session(target)
+            DBModel = type(target)
+            children = await session.execute(
+                select(DBModel).filter(getattr(DBModel, parent_id_attribute_name)==target.id)
+            )
+            children = children.scalars().all()
+        for child in children:
+            await update_tree_path(mapper, connection, child, target.path, _visited=_visited)
+    return update_tree_path
+
+update_group_path = create_path_updater()
+# event.listen(GroupModel, "before_insert", update_group_path)

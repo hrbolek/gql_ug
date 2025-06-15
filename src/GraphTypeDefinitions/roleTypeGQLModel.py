@@ -3,7 +3,7 @@ import strawberry
 import typing
 from typing import List, Optional, Union, Annotated
 from uoishelpers.resolvers import (
-    createInputs,
+    createInputs2,
 
     ScalarResolver
 )
@@ -43,6 +43,16 @@ RoleGQLModel = Annotated["RoleGQLModel", strawberry.lazy(".roleGQLModel")]
 RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleGQLModel")]
 RoleCategoryGQLModel = Annotated["RoleCategoryGQLModel", strawberry.lazy(".roleCategoryGQLModel")]
 
+@createInputs2
+class RoleTypeInputWhereFilter:
+    id: IDType
+    name: str
+    name_en: str
+    # from .roleGQLModel import RoleInputWhereFilter
+    # roles: RoleInputWhereFilter
+    from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
+    category: RoleCategoryInputWhereFilter
+
 
 @strawberry.federation.type(
     keys=["id"], description="""Entity representing a role type (like Dean)"""
@@ -52,39 +62,59 @@ class RoleTypeGQLModel(NamedGQLModel):
     def getLoader(cls, info):
         return getLoader(info).RoleTypeModel
 
-    category_id: typing.Optional[IDType] = strawberry.field(
-        description="",
+    # category_id: typing.Optional[IDType] = strawberry.field(
+    #     description="",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ]
+    # )
+
+    # category: typing.Optional[RoleCategoryGQLModel] = strawberry.field(
+    #     description="""Get role category of this role type""",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ],
+    #     # graphql_type=Optional[RoleCategoryGQLModel],
+    #     resolver=ScalarResolver[RoleCategoryGQLModel](fkey_field_name="category_id")
+    # )
+
+    path: typing.Optional[str] = strawberry.field(
+        description="""Materialized path technique, not implemented""",
         permission_classes=[
-            OnlyForAuthentized
-        ]
+            OnlyForAuthentized  
+        ],
+        default=None
     )
 
-    category: typing.Optional[RoleCategoryGQLModel] = strawberry.field(
-        description="""Get role category of this role type""",
+    mastertype_id: typing.Optional[IDType] = strawberry.field(
+        description="""Unique identifier for the master type of this group type""",
         permission_classes=[
             OnlyForAuthentized
         ],
-        # graphql_type=Optional[RoleCategoryGQLModel],
-        resolver=ScalarResolver[RoleCategoryGQLModel](fkey_field_name="category_id")
+        default=None
     )
 
+    mastertype: typing.Optional["RoleTypeGQLModel"] = strawberry.field(
+        description="""Detailed information about the master type that this group type is associated with""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        resolver=ScalarResolver["RoleTypeGQLModel"](fkey_field_name="mastertype_id")
+    )
+
+    subtypes: typing.Optional[List["RoleTypeGQLModel"]] = strawberry.field(
+        description="""List of subtypes associated with this group type""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        resolver=VectorResolver["RoleTypeGQLModel"](fkey_field_name="mastertype_id", whereType=RoleTypeInputWhereFilter)
+    )
 #####################################################################
 #
 # Special fields for query
 #
 #####################################################################
-from uoishelpers.resolvers import createInputs
-from dataclasses import dataclass
 
-@createInputs
-@dataclass
-class RoleTypeInputWhereFilter:
-    id: IDType
-    name: str
-    # from .roleGQLModel import RoleInputWhereFilter
-    # roles: RoleInputWhereFilter
-    from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
-    category: RoleCategoryInputWhereFilter
 
 role_type_by_id = strawberry.field(
     description="""Finds a role type by its id""",
@@ -110,6 +140,21 @@ role_type_page = strawberry.field(
 #
 #####################################################################
 import datetime
+from uoishelpers.resolvers import ( TreeInputStructureMixin)
+@strawberry.input(description="")
+class RoleTypeInsertGQLModel(TreeInputStructureMixin):
+    # category_id: IDType = None
+    getLoader = RoleTypeGQLModel.getLoader
+    mastertype_id: Optional[IDType] = None
+    id: Optional[IDType] = None
+    name: Optional[str] = None
+    name_en: Optional[str] = None
+    subtypes: Optional[List["RoleTypeInsertGQLModel"]] = strawberry.field(
+        description="""List of subtypes associated with this role type""",
+        default_factory=list,
+    )
+    createdby_id: strawberry.Private[IDType] = None
+   
 @strawberry.input(description="")
 class RoleTypeUpdateGQLModel:
     id: IDType
@@ -118,14 +163,6 @@ class RoleTypeUpdateGQLModel:
     name_en: Optional[str] = None
     changedby_id: strawberry.Private[IDType] = None
 
-@strawberry.input(description="")
-class RoleTypeInsertGQLModel:
-    category_id: IDType = None
-    id: Optional[IDType] = None
-    name: Optional[str] = None
-    name_en: Optional[str] = None
-    createdby_id: strawberry.Private[IDType] = None
-   
 @strawberry.input(description="")
 class RoleTypeDeleteGQLModel:
     id: IDType

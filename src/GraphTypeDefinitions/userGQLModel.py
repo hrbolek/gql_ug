@@ -242,7 +242,7 @@ Načte seznam skupin daného typu, kde je uživatel členem""",
 #
 #####################################################################
 
-from uoishelpers.resolvers import createInputs
+from uoishelpers.resolvers import createInputs2
 from dataclasses import dataclass
 #MembershipInputWhereFilter = Annotated["MembershipInputWhereFilter", strawberry.lazy(".membershipGQLModel")]
 user_by_id = strawberry.field(
@@ -263,8 +263,7 @@ Pouze autentizovaní uživatelé mají přístup k tomuto poli.
     resolver=UserGQLModel.load_with_loader
 )
 
-@createInputs
-@dataclass
+@createInputs2
 class UserInputWhereFilter:
     id: IDType
     name: str
@@ -330,7 +329,7 @@ import datetime
 import datetime
 from typing import Optional
 import strawberry
-
+from uoishelpers.resolvers import InputModelMixin
 @strawberry.input(description="""
 Description:
 Input for updating a UserGQLModel entity.
@@ -362,12 +361,23 @@ Permissions:
 Only authenticated users with appropriate RBAC permissions can perform create operations.
 Pouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto operaci provádět.
 """)
-class UserInsertGQLModel:
+class UserInsertGQLModel(InputModelMixin):
     id: Optional[IDType] = strawberry.field(description="Primary key identifier\nPrimární klíč", default=None)
     name: Optional[str] = strawberry.field(description="User's first name\nJméno uživatele", default=None)
     surname: Optional[str] = strawberry.field(description="User's surname\nPříjmení uživatele", default=None)
     email: Optional[str] = strawberry.field(description="User's email address\nEmail uživatele", default=None)
     valid: Optional[bool] = strawberry.field(description="Validation status of the user\nStav validace uživatele", default=None)
+
+    from .membershipGQLModel import MembershipInsertGQLModel
+    memberships: Optional[List[MembershipInsertGQLModel]] = strawberry.field(
+        description="List of memberships associated with the user\nSeznam členství spojených s uživatelem",
+        default_factory=list
+    )
+    from .roleGQLModel import RoleInsertGQLModel
+    roles: Optional[List[RoleInsertGQLModel]] = strawberry.field(
+        description="List of roles assigned to the user\nSeznam rolí přiřazených uživateli",
+        default_factory=list
+    )
     createdby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="""

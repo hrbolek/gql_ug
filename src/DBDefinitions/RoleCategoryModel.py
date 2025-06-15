@@ -13,7 +13,7 @@ from .BaseModel import BaseModel
 class RoleCategoryModel(BaseModel):
     """role category"""
 
-    __tablename__ = "rolecategories"
+    __tablename__ = "rolecategories2"
 
 
     name: Mapped[str] = mapped_column(
