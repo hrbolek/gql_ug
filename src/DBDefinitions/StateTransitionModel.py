@@ -16,3 +16,21 @@ class StateTransitionModel(BaseModel):
     source_id: Mapped[int] = mapped_column(ForeignKey("states.id"), index=True, nullable=True, default=None)
     target_id: Mapped[int] = mapped_column(ForeignKey("states.id"), index=True, nullable=True, default=None)
     statemachine_id: Mapped[int] = mapped_column(ForeignKey("statemachines.id"), index=True, nullable=True, default=None)
+
+    statemachine = relationship(
+        "StateMachineModel", 
+        back_populates="transitions"
+    )
+    source = relationship(
+        "StateModel",
+        foreign_keys=[source_id],
+        back_populates="outgoing_transitions"
+    )
+    target = relationship(
+        "StateModel",
+        foreign_keys=[target_id],
+        back_populates="incoming_transitions"
+    )
+
+    #b5d63c79-ccc1-43dc-b699-060679e8f255
+    #01c2f968-0585-42ae-a949-13ab67097236

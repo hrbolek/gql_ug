@@ -40,10 +40,9 @@ RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLMo
 # StateMachineTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
 
 from dataclasses import dataclass
-from uoishelpers.resolvers import createInputs, ScalarResolver
+from uoishelpers.resolvers import createInputs2, ScalarResolver
 
-@createInputs
-@dataclass
+@createInputs2
 class StateMachineWhereFilter:
     name: str
     name_en: str
@@ -51,8 +50,7 @@ class StateMachineWhereFilter:
     created: datetime.datetime
     type_id: uuid.UUID
 
-@createInputs
-@dataclass
+@createInputs2
 class StateWhereFilter:
     name: str
     name_en: str
@@ -60,8 +58,7 @@ class StateWhereFilter:
     created: datetime.datetime
     statemachine_id: uuid.UUID
 
-@createInputs
-@dataclass
+@createInputs2
 class StateTransitionWhereFilter:
     name: str
     name_en: str
@@ -386,13 +383,52 @@ statetransition_by_id = strawberry.field(
 # Mutations
 #
 #############################################################
+from uoishelpers.resolvers import InputModelMixin
+
+
 
 @strawberry.input(description="Input structure - C operation")
-class StatemachineInsertGQLModel:
+class StatetransitionInsertGQLModel(InputModelMixin):
+    getLoader = StateTransitionGQLModel.getLoader
+    name: str = strawberry.field(description="name")   
+    statemachine_id: typing.Optional[uuid.UUID] = strawberry.field(description="id of state machine", default=None)
+    source_id: uuid.UUID = strawberry.field(description="id of state source")
+    target_id: uuid.UUID = strawberry.field(description="id of state target")
+    id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
+    name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
+    
+    createdby_id: strawberry.Private[uuid.UUID] = None 
+
+@strawberry.input(description="Update structure - C operation")
+class StatetransitionUpdateGQLModel:
+    lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
+    id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
+
+    name: typing.Optional[str] = strawberry.field(description="name", default=None)   
+    name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
+    source_id: typing.Optional[uuid.UUID] = strawberry.field(description="id of state source", default=None)
+    target_id: typing.Optional[uuid.UUID] = strawberry.field(description="id of state target", default=None)
+    changedby_id: strawberry.Private[uuid.UUID] = None
+
+@strawberry.input(description="Delete structure - D operation")
+class StatetransitionDeleteGQLModel:
+    lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
+    id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
+
+@strawberry.input(description="Input structure - C operation")
+class StatemachineInsertGQLModel(InputModelMixin):
+    getLoader = StateMachineGQLModel.getLoader
     name: str = strawberry.field(description="name")   
     name_en: typing.Optional[str] = strawberry.field(description="name", default=None)   
     id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
-    states: typing.Optional[typing.List["StateInsertGQLModel"]] = strawberry.field(description="list states to be part of state machine", default=None)
+    states: typing.Optional[typing.List["StateInsertGQLModel"]] = strawberry.field(
+        description="list states to be part of state machine", 
+        default_factory=list
+    )
+    transitions: typing.Optional[typing.List["StatetransitionInsertGQLModel"]] = strawberry.field(
+        description="list transitions to be part of state machine", 
+        default_factory=list
+    )
     rbacobject_id: typing.Optional[uuid.UUID] = strawberry.field(description="who can access", default=None)
     createdby_id: strawberry.Private[uuid.UUID] = None 
 
@@ -409,27 +445,6 @@ class StatemachineDeleteGQLModel:
     lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
     id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
     
-# @strawberry.type(description="Result of CU operations")
-# class StatemachineResultGQLModel:
-#     id: uuid.UUID = strawberry.field(description="primary key of CU operation object")
-#     msg: str = strawberry.field(description="""Should be `ok` if descired state has been reached, otherwise `fail`.
-# For update operation fail should be also stated when bad lastchange has been entered.""")
-
-#     @strawberry.field(description="Object of CU operation, final version")
-#     async def statemachine(self, info: strawberry.types.Info) -> StateMachineGQLModel:
-#         result = await StateMachineGQLModel.resolve_reference(info=info, id=self.id)
-#         return result
-
-# @strawberry.mutation(
-#     description="C operation",
-#     permission_classes=[OnlyForAuthentized])
-# async def statemachine_insert(self, info: strawberry.types.Info, statemachine: StatemachineInsertGQLModel) -> StatemachineResultGQLModel:
-#     return await encapsulateInsert(
-#         info=info,
-#         loader=StateMachineGQLModel.getLoader(info),
-#         entity=statemachine,
-#         result=StatemachineResultGQLModel(id=statemachine.id, msg="ok")
-#         )
 
 @strawberry.mutation(
     description="C operation",
@@ -443,32 +458,33 @@ async def statemachine_insert(
         statemachine: StatemachineInsertGQLModel,
         # openSession: strawberry.Private[object] = None
     ) -> typing.Union[StateMachineGQLModel, InsertError[StateMachineGQLModel]]:
-    print("statemachine_insert", statemachine)
-    states = statemachine.states
-    statemachine.states = None
-    machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
-    if getattr(machineResult, "failed", False):
-        print("statemachine_insert.statemachine failed", machineResult.msg, state)
-        return InsertError[StateMachineGQLModel](msg=machineResult.msg, _input=statemachine)
+    # print("statemachine_insert", statemachine)
+    # states = statemachine.states
+    # statemachine.states = None
+    # machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+    # if getattr(machineResult, "failed", False):
+    #     print("statemachine_insert.statemachine failed", machineResult.msg, state)
+    #     return InsertError[StateMachineGQLModel](msg=machineResult.msg, _input=statemachine)
     
-    if states is not None:
-        print("statemachine_insert", states)
-        transitions = []
-        for state in states:
-            if state.targets is not None:
-                transitions.extend(state.targets)
-            state.targets = None
-            result = await state_insert_internal(self=self, info=info, state=state)
-            if getattr(result, "failed", False):
-                print("statemachine_insert.state failed", result.msg, state)
-                return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
-        for transition in transitions:
-            result = await statetransition_insert_internal(self=self, info=info, statetransition=transition)
-            if getattr(result, "failed", False):
-                print("statemachine_insert.transition failed", result.msg, transition)
-                return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
-        pass
-    statemachine.states = None
+    # if states is not None:
+    #     print("statemachine_insert", states)
+    #     transitions = []
+    #     for state in states:
+    #         if state.targets is not None:
+    #             transitions.extend(state.targets)
+    #         state.targets = None
+    #         result = await state_insert_internal(self=self, info=info, state=state)
+    #         if getattr(result, "failed", False):
+    #             print("statemachine_insert.state failed", result.msg, state)
+    #             return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
+    #     for transition in transitions:
+    #         result = await statetransition_insert_internal(self=self, info=info, statetransition=transition)
+    #         if getattr(result, "failed", False):
+    #             print("statemachine_insert.transition failed", result.msg, transition)
+    #             return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
+    #     pass
+    # statemachine.states = None
+    machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
     return machineResult
 
 # @strawberry.mutation(
@@ -512,13 +528,15 @@ async def statemachine_delete(self, info: strawberry.types.Info, statemachine: S
     return await Delete[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
 
 @strawberry.input(description="Input structure - C operation")
-class StateInsertGQLModel:
+class StateInsertGQLModel(InputModelMixin):
+    getLoader = StateGQLModel.getLoader
     name: str = strawberry.field(description="name")   
-    statemachine_id: uuid.UUID = strawberry.field(description="id of machine whichs state belongs to")
+    statemachine_id: typing.Optional[uuid.UUID] = strawberry.field(
+        description="id of machine whichs state belongs to", default=None)
     name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
     order: typing.Optional[int] = strawberry.field(description="order of states", default=0)
     id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
-    targets: typing.Optional[typing.List["StatetransitionInsertGQLModel"]] = strawberry.field(description="Transitions from this state", default=None)
+    #targets: typing.Optional[typing.List["StatetransitionInsertGQLModel"]] = strawberry.field(description="Transitions from this state", default=None)
     rbacobject_id: typing.Optional[uuid.UUID] = strawberry.field(description="who can access", default=None)
     createdby_id: strawberry.Private[uuid.UUID] = None 
     readerslist_id: strawberry.Private[uuid.UUID] = None 
@@ -579,32 +597,6 @@ async def state_delete(self, info: strawberry.types.Info, state: StateDeleteGQLM
     return await Delete[StateGQLModel].DoItSafeWay(info=info, entity=state)
 
 
-@strawberry.input(description="Input structure - C operation")
-class StatetransitionInsertGQLModel:
-    name: str = strawberry.field(description="name")   
-    statemachine_id: uuid.UUID = strawberry.field(description="id of state machine")
-    source_id: uuid.UUID = strawberry.field(description="id of state source")
-    target_id: uuid.UUID = strawberry.field(description="id of state target")
-    id: typing.Optional[uuid.UUID] = strawberry.field(description="primary key (UUID), could be client generated", default=None)
-    name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
-    
-    createdby_id: strawberry.Private[uuid.UUID] = None 
-
-@strawberry.input(description="Update structure - C operation")
-class StatetransitionUpdateGQLModel:
-    lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
-    id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
-
-    name: typing.Optional[str] = strawberry.field(description="name", default=None)   
-    name_en: typing.Optional[str] = strawberry.field(description="eng. name", default=None)   
-    source_id: typing.Optional[uuid.UUID] = strawberry.field(description="id of state source", default=None)
-    target_id: typing.Optional[uuid.UUID] = strawberry.field(description="id of state target", default=None)
-    changedby_id: strawberry.Private[uuid.UUID] = None
-
-@strawberry.input(description="Delete structure - D operation")
-class StatetransitionDeleteGQLModel:
-    lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
-    id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
 
 # @strawberry.type(description="Result of CU operations")
 # class StatetransitionResultGQLModel:

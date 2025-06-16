@@ -27,3 +27,22 @@ class StateModel(BaseModel):
     writerslist_id: Mapped[uuid.UUID] = UUIDFKey(comment="who can update item in this state", default=uuid.uuid4)
 
     statemachine = relationship("StateMachineModel", back_populates="states")
+
+    incoming_transitions = relationship(
+        "StateTransitionModel",
+        foreign_keys="StateTransitionModel.target_id",
+        back_populates="target",
+        uselist=True,
+        viewonly=True,
+        init=True,
+        cascade="save-update"
+    )
+    outgoing_transitions = relationship(
+        "StateTransitionModel",
+        foreign_keys="StateTransitionModel.source_id",
+        back_populates="source",
+        uselist=True,
+        viewonly=True,
+        init=True,
+        cascade="save-update"
+    )

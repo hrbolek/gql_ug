@@ -351,7 +351,7 @@ async def roles_on_group(self, info: strawberry.types.Info, group_id: IDType) ->
 #
 #####################################################################
 import datetime
-
+from uoishelpers.resolvers import InputModelMixin
 @strawberry.input(description="""## Description
 Update input for Role entity.
 Vstup pro aktualizaci entity Role.
@@ -376,7 +376,7 @@ Vstup pro vytvoření entity Role.
 Provides input for creating a new Role, including user, group, and role type identifiers. Optional fields include deputy status and role duration.
 Poskytuje vstup pro vytvoření nové role, včetně identifikátorů uživatele, skupiny a typu role. Volitelná pole zahrnují status zástupce a dobu trvání role.
 """)
-class RoleInsertGQLModel:
+class RoleInsertGQLModel(InputModelMixin):
     user_id: IDType = strawberry.field(description="User identifier\nIdentifikátor uživatele")
     group_id: IDType = strawberry.field(description="Group identifier\nIdentifikátor skupiny")
     roletype_id: IDType = strawberry.field(description="Role type identifier\nIdentifikátor typu role")

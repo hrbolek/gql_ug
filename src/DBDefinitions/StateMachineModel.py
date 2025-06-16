@@ -18,4 +18,19 @@ class StateMachineModel(BaseModel):
     )
 
     type_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("statemachinetypes.id"), index=True, nullable=True, default=None)
-    states = relationship("StateModel", uselist=True, viewonly=True)
+    
+    states = relationship(
+        "StateModel", 
+        uselist=True, 
+        
+        init=True,
+        cascade="save-update"
+    )
+
+    transitions = relationship(
+        "StateTransitionModel", 
+        uselist=True, 
+        
+        init=True,
+        cascade="save-update"
+    )
