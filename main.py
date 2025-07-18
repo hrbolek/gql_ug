@@ -127,27 +127,21 @@ class Item(BaseModel):
     query: str
     variables: dict = {}
     operationName: str = None
+from src.Dataloaders import createLoadersContext
 
-async def get_context(request: Request):
-    asyncSessionMaker = await RunOnceAndReturnSessionMaker()
-        
-    #from src.Dataloaders import createLoadersContext, createUgConnectionContext
-    from src.Dataloaders import createLoadersContext
-    context = createLoadersContext(asyncSessionMaker)
-    # i = Item(query = "")
-    # i.query = ""
-    # i.variables = {}
-    # logging.info(f"before sentinel current user is {request.scope.get('user', None)}")
-    # await sentinel(request, i)
-    # logging.info(f"after sentinel current user is {request.scope.get('user', None)}")
-    # connectionContext = createUgConnectionContext(request=request)
-    # result = {**context, **connectionContext}
-    result = {**context}
-    result["request"] = request
-    # result["user"] = request.scope.get("user", None)
+
+async def get_context(request: Request):    
+    result = {
+        "request": request,
+    }
     logging.info(f"context created {result}")
-    print(f"context created {result}")
     return result
+
+from uoishelpers.schema import SessionCommitExtensionFactory
+
+schema.extensions.append(
+    SessionCommitExtensionFactory(session_maker_factory=RunOnceAndReturnSessionMaker, loaders_factory=createLoadersContext)
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

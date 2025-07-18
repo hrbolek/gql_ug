@@ -245,24 +245,6 @@ Načte seznam skupin daného typu, kde je uživatel členem""",
 from uoishelpers.resolvers import createInputs2
 from dataclasses import dataclass
 #MembershipInputWhereFilter = Annotated["MembershipInputWhereFilter", strawberry.lazy(".membershipGQLModel")]
-user_by_id = strawberry.field(
-    description="""## Description
-Fetches a user by its unique identifier.
-Načte uživatele podle jeho unikátního identifikátoru.
-
-## Details
-Utilizes a data loader to efficiently retrieve user details from the underlying data source.
-Využívá loader pro efektivní načítání detailů uživatele z databáze.
-
-## Permissions
-Only authenticated users can access this field.
-Pouze autentizovaní uživatelé mají přístup k tomuto poli.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=Optional[UserGQLModel],
-    resolver=UserGQLModel.load_with_loader
-)
-
 @createInputs2
 class UserInputWhereFilter:
     id: IDType
@@ -276,8 +258,30 @@ class UserInputWhereFilter:
     from .roleGQLModel import RoleInputWhereFilter
     roles: RoleInputWhereFilter
 
-user_page = strawberry.field(
-    description="""## Description
+@strawberry.interface(description="User queries interface")
+class UserQueries:
+
+    user_by_id = strawberry.field(
+        description="""## Description
+Fetches a user by its unique identifier.
+Načte uživatele podle jeho unikátního identifikátoru.
+
+## Details
+Utilizes a data loader to efficiently retrieve user details from the underlying data source.
+Využívá loader pro efektivní načítání detailů uživatele z databáze.
+
+## Permissions
+Only authenticated users can access this field.
+Pouze autentizovaní uživatelé mají přístup k tomuto poli.
+    """,
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=Optional[UserGQLModel],
+        resolver=UserGQLModel.load_with_loader
+    )
+
+
+    user_page = strawberry.field(
+        description="""## Description
 Fetches a paginated list of users.
 Načte stránkovaný seznam uživatelů.
 
@@ -288,14 +292,14 @@ Vrací seznam uživatelů na základě filtračních kritérií definovaných ve
 ## Permissions
 Accessible only to authenticated users.
 Přístup pouze pro autentizované uživatele.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=List[UserGQLModel],
-    resolver=PageResolver[UserGQLModel](whereType=UserInputWhereFilter)
-)
+    """,
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=List[UserGQLModel],
+        resolver=PageResolver[UserGQLModel](whereType=UserInputWhereFilter)
+    )
 
-@strawberry.field(
-    description="""## Description
+    @strawberry.field(
+        description="""## Description
 Returns the logged in user.
 Vrací přihlášeného uživatele.
 
@@ -306,18 +310,18 @@ Načítá aktuálně autentizovaného uživatele na základě informací v konte
 ## Permissions
 Accessible only to authenticated users.
 Přístup pouze pro autentizované uživatele.
-""",
-    permission_classes=[OnlyForAuthentized]
-)
-async def me(self, info: strawberry.types.Info) -> Optional[UserGQLModel]:
-    user = getUserFromInfo(info)
-    if user is None:
-        return None
-    user_id = user.get("id", None)
-    if user_id is None:
-        return None
-    result = await UserGQLModel.resolve_reference(info=info, id=user_id)
-    return result
+    """,
+        permission_classes=[OnlyForAuthentized]
+    )
+    async def me(self, info: strawberry.types.Info) -> Optional[UserGQLModel]:
+        user = getUserFromInfo(info)
+        if user is None:
+            return None
+        user_id = user.get("id", None)
+        if user_id is None:
+            return None
+        result = await UserGQLModel.resolve_reference(info=info, id=user_id)
+        return result
 
 #####################################################################
 #
@@ -409,8 +413,11 @@ class UpdateUserPermission(RBACPermission):
         if not role: return False
         return True
 
-@strawberry.mutation(
-    description="""
+@strawberry.interface(description="User mutations interface")
+class UserMutations:
+
+    @strawberry.mutation(
+        description="""
 Description:
 Mutation for updating a UserGQLModel entity.
 Mutace pro aktualizaci entity UserGQLModel.
@@ -422,31 +429,31 @@ Provádí bezpečnou aktualizaci s využitím kontroly souběžnosti na základ�
 Permissions:
 Only authenticated users with the necessary update permissions can execute this mutation.
 Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provést.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        UpdateUserPermission
-    ])
-async def user_update(self, info: strawberry.types.Info, user: UserUpdateGQLModel) -> typing.Union[UserGQLModel, UpdateError[UserGQLModel]]:
-    return await Update[UserGQLModel].DoItSafeWay(info=info, entity=user)
+    """,
+        permission_classes=[
+            OnlyForAuthentized,
+            UpdateUserPermission
+        ])
+    async def user_update(self, info: strawberry.types.Info, user: UserUpdateGQLModel) -> typing.Union[UserGQLModel, UpdateError[UserGQLModel]]:
+        return await Update[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
-class InsertUserPermission(RBACPermission):
-    message = "User is not allowed to create an user"
-    async def has_permission(self, source, info: strawberry.types.Info, user: UserInsertGQLModel) -> bool:
-        adminRoleNames = ["administrátor", "personalista"]
-        allowedRoleNames = []
-        role = await self.resolveUserRole(
-            info, 
-            rbacobject=user.id, 
-            adminRoleNames=adminRoleNames, 
-            allowedRoleNames=allowedRoleNames
-        )
-        if not role:
-            return False
-        return True
+    class InsertUserPermission(RBACPermission):
+        message = "User is not allowed to create an user"
+        async def has_permission(self, source, info: strawberry.types.Info, user: UserInsertGQLModel) -> bool:
+            adminRoleNames = ["administrátor", "personalista"]
+            allowedRoleNames = []
+            role = await self.resolveUserRole(
+                info, 
+                rbacobject=user.id, 
+                adminRoleNames=adminRoleNames, 
+                allowedRoleNames=allowedRoleNames
+            )
+            if not role:
+                return False
+            return True
 
-@strawberry.mutation(
-    description="""
+    @strawberry.mutation(
+        description="""
 Description:
 Mutation for inserting a new UserGQLModel entity.
 Mutace pro vytvoření nové entity UserGQLModel.
@@ -456,16 +463,16 @@ Provádí bezpečné vytvoření s kontrolou přístupových práv a validací v
 Permissions:
 Only authenticated users with the necessary insert permissions can perform this mutation.
 Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provádět.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        InsertUserPermission                
-    ])
-async def user_insert(self, info: strawberry.types.Info, user: UserInsertGQLModel) -> typing.Union[UserGQLModel, InsertError[UserGQLModel]]:
-    return await Insert[UserGQLModel].DoItSafeWay(info=info, entity=user)
+    """,
+        permission_classes=[
+            OnlyForAuthentized,
+            InsertUserPermission                
+        ])
+    async def user_insert(self, info: strawberry.types.Info, user: UserInsertGQLModel) -> typing.Union[UserGQLModel, InsertError[UserGQLModel]]:
+        return await Insert[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
-@strawberry.mutation(
-    description="""
+    @strawberry.mutation(
+        description="""
 Description:
 Mutation for deleting a UserGQLModel entity.
 Mutace pro odstranění entity UserGQLModel.
@@ -477,12 +484,12 @@ Vyžaduje id a časové razítko poslední změny pro zajištění bezpečného 
 Permissions:
 Only authenticated users with appropriate RBAC permissions can perform delete operations.
 Pouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto mutaci provádět.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def user_delete(self, info: strawberry.types.Info, user: UserDeleteGQLModel) -> typing.Optional[DeleteError[UserGQLModel]]:
-    return await Delete[UserGQLModel].DoItSafeWay(info=info, entity=user)
+    """,
+        permission_classes=[
+            OnlyForAuthentized,
+            OnlyForAdmins
+        ])
+    async def user_delete(self, info: strawberry.types.Info, user: UserDeleteGQLModel) -> typing.Optional[DeleteError[UserGQLModel]]:
+        return await Delete[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
 

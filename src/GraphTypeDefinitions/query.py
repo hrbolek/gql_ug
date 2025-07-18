@@ -1,23 +1,10 @@
 import strawberry
 
+from .groupGQLModel import GroupQueries
+from .userGQLModel import UserQueries
 @strawberry.type(description="""Type for query root""")
-class Query:
+class Query(GroupQueries, UserQueries):
 
-    from .userGQLModel import (
-        user_by_id, 
-        user_page,
-        # user_page2,
-        me)
-    # user_by_id = user_by_id
-    # user_page = user_page
-    # me = me
-    # users = users
-
-    from .groupGQLModel import group_by_id, group_page
-    # group_by_id = group_by_id
-
-    # from .groupGQLModel import group_page, groups
-    # group_page = group_page
 
     from .roleTypeGQLModel import role_type_by_id, role_type_page
     # role_type_by_id = role_type_by_id

@@ -1,25 +1,11 @@
 import strawberry
 import typing
 
+from .groupGQLModel import GroupMutations
+from .userGQLModel import UserMutations
 @strawberry.type
-class Mutation:
-    from .groupGQLModel import (
-        group_insert,
-        group_update,
-        group_delete
-    )
-    # group_insert = group_insert
-    # group_update = group_update
-    # group_delete = group_delete
+class Mutation(GroupMutations, UserMutations):
 
-    from .userGQLModel import (
-        user_insert,
-        user_update,
-        user_delete
-    )
-    # user_insert = user_insert
-    # user_update = user_update
-    # user_delete = user_delete
 
     from .membershipGQLModel import (
         membership_insert,
