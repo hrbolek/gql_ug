@@ -101,30 +101,35 @@ Křestní jméno uživatele (např. John)""",
     )
 
     surname: Optional[str] = strawberry.field(
+        default=None,
         description="""User's family name (like Obama)
 Rodinné jméno uživatele (např. Obama)""",
         permission_classes=[OnlyForAuthentized]
     )
 
     valid: Optional[bool] = strawberry.field(
+        default=None,
         description="""User validity status
 Stav platnosti uživatele""",
         permission_classes=[OnlyForAuthentized]
     )
 
     startdate: Optional[datetime.datetime] = strawberry.field(
+        default=None,
         description="""Account start date
 Datum zahájení účtu""",
         permission_classes=[OnlyForAuthentized]
     )
 
     enddate: Optional[datetime.datetime] = strawberry.field(
+        default=None,
         description="""Account end date
 Datum ukončení účtu""",
         permission_classes=[OnlyForAuthentized]
     )
 
     type_id: Optional[IDType] = strawberry.field(
+        default=None,
         description="""User type identifier
 Identifikátor typu uživatele""",
         permission_classes=[OnlyForAuthentized]

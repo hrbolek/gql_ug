@@ -250,10 +250,14 @@ async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDTy
     return rolerows
 
 async def resolve_roles_on_user_with_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
+    "find roles for user with id 'filter_user_id' and their relations to user with id 'user_id', so roles of user(id=filter_user_id)  on user(id=user_id)," 
+    "user(id=filter_user_id) RULEZZ :)"
+
     loaderr = RoleGQLModel.getLoader(info=info)
     stmtr = loaderr.getSelectStatement()
     modelr = loaderr.getModel()
-    stmtr = stmtr.filter_by(user_id=filter_user_id).join(modelr.memberships).where(modelr.user_id==user_id)
+    Membership = modelr.memberships.property.mapper.class_
+    stmtr = stmtr.filter_by(user_id=filter_user_id).join(modelr.memberships).where(Membership.user_id==user_id)
     rows = await loaderr.execute_select(stmtr)
     return rows
 

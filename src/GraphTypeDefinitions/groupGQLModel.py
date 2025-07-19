@@ -523,47 +523,9 @@ class FailExtension(FieldExtension):
         else:
             print("FailExtension test OBJECT")
             return None
-    
 
-class UOISError(Exception):
-    def __init__(self, msg: str, code: int, details: str = None, input: typing.Optional[dict]=None):
-        super().__init__(msg)
-        self.code = code
-        self.details = details
-        self.input = input
 
-class GroupSplitExtension(FieldExtension):
-    def __init__(self):
-        print("GroupSplitExtension initialized")
-
-    async def resolve_async(self, next_, source, info: strawberry.types.Info, *args, **kwargs):
-        print(f"GroupSplitExtension test kwargs: {kwargs}")
-        group = kwargs.get("group", None)
-
-        loader = GroupGQLModel.getLoader(info=info)
-        group_row = await loader.load(group.id)
-        if group_row is None:
-            raise UOISError(code="22dcfa59-58b6-487c-aafc-53c9ad5e9440", msg="Group not found", input=group)
-            return InsertError[GroupGQLModel](
-                msg="Group not found",
-                code=IDType("22dcfa59-58b6-487c-aafc-53c9ad5e9440"),
-                _input=group
-            )
-        
-        print(f"GroupSplitExtension test rbacobject_id: {group_row.rbacobject_id}")       
-            
-        user = getUserFromInfo(info=info)
-        print(f"GroupSplitExtension test user {user}, group {group_row}", flush=True)
-        return await next_(source, info, *args, **kwargs)
-        # if info.return_type.__class__.__name__ == "StrawberryList":
-        #     print(f"source {source}, {type(source)}")
-        #     print(f"kwargs {kwargs}, {type(kwargs)}")
-        #     print("FailExtension test LIST")
-        #     return []
-        # else:
-        # print("GroupSplitExtension test OBJECT")
-        
-    
+from uoishelpers.gqlpermissions.InsertPermissionCheckRoleFieldExtension import InsertPermissionCheckRoleFieldExtension
 
 class UpdateGroupPermission(RBACPermission):
     message = "User is not allowed to create a new group"
@@ -602,7 +564,10 @@ class InsertGroupPermission(RBACPermission):
 @strawberry.interface(description="Base interface for group mutations")
 class GroupMutations:
 
-    @strawberry.mutation(extensions=[GroupSplitExtension()])
+    @strawberry.mutation(
+        description="Splits a group into subgroups.",
+        extensions=[InsertPermissionCheckRoleFieldExtension[GroupGQLModel](roles=["administrátor", "garant", "garant předmětu"])],
+    )
     async def group_split(self, info: strawberry.types.Info, group: GroupSplitGQLModel) -> typing.Union[GroupGQLModel, InsertError[GroupGQLModel]]:
         print(f"group_split context: {info.context}", flush=True)
         if not group.subgroups:
@@ -611,10 +576,9 @@ class GroupMutations:
                 "msg": "No subgroups provided for splitting", 
                 "_input": group
             }
-            info.context["error"] = error_description
-            # raise UOISError(code="0098aa36-becf-40f2-9aa6-ff1f06652eca", msg="No subgroups provided for splitting", input=group)
+            info.context["error"] = error_description        
+            return InsertError[GroupGQLModel](**error_description)
         
-            return InsertError[GroupGQLModel](**error_description            )
         group_loader = GroupGQLModel.getLoader(info=info)
         group_row = await group_loader.load(group.id)
         result = GroupGQLModel.from_dataclass(group_row) if group_row is not None else None
@@ -631,7 +595,6 @@ class GroupMutations:
                 "_input": group
             }
             info.context["error"] = error_description
-            # raise UOISError(code="4ac362b7-248d-4662-9ac2-e6f55be17304", msg="Memberships in subgroups do not match the current group memberships", input=group)
             return InsertError[GroupGQLModel](**error_description)
 
         # konverze na modely

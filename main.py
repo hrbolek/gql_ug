@@ -1,16 +1,13 @@
 import os
-import dataclasses
-import strawberry
 import asyncio
 import socket
 
-from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from strawberry.fastapi import GraphQLRouter
-from strawberry.asgi import GraphQL
+
 
 import logging
 import logging.handlers
@@ -18,7 +15,6 @@ import logging.handlers
 from src.GraphTypeDefinitions import schema
 from src.DBDefinitions import startEngine, ComposeConnectionString
 from src.DBFeeder import initDB, createGroupPaths
-from uoishelpers.authenticationMiddleware import createAuthentizationSentinel
 
 # region logging setup
 
@@ -41,16 +37,6 @@ if SYSLOGHOST is not None:
 # endregion
 
 # region DB setup
-
-## Definice GraphQL typu (pomoci strawberry https://strawberry.rocks/)
-## Strawberry zvoleno kvuli moznosti mit federovane GraphQL API (https://strawberry.rocks/docs/guides/federation, https://www.apollographql.com/docs/federation/)
-## Definice DB typu (pomoci SQLAlchemy https://www.sqlalchemy.org/)
-## SQLAlchemy zvoleno kvuli moznost komunikovat s DB asynchronne
-## https://docs.sqlalchemy.org/en/14/core/future.html?highlight=select#sqlalchemy.future.select
-
-
-## Zabezpecuje prvotni inicializaci DB a definovani Nahodne struktury pro "Univerzity"
-# from gql_workflow.DBFeeder import createSystemDataStructureRoleTypes, createSystemDataStructureGroupTypes
 
 connectionString = ComposeConnectionString()
 
@@ -103,30 +89,8 @@ async def RunOnceAndReturnSessionMaker():
 
 # endregion
 
-# region Sentinel setup
-JWTPUBLICKEYURL = os.environ.get("JWTPUBLICKEYURL", "http://localhost:8000/oauth/publickey")
-JWTRESOLVEUSERPATHURL = os.environ.get("JWTRESOLVEUSERPATHURL", "http://localhost:8000/oauth/userinfo")
+# region API endpoints
 
-apolloQuery = "query __ApolloGetServiceDefinition__ { _service { sdl } }"
-graphiQLQuery = "\n    query IntrospectionQuery {\n      __schema {\n        \n        queryType { name }\n        mutationType { name }\n        subscriptionType { name }\n        types {\n          ...FullType\n        }\n        directives {\n          name\n          description\n          \n          locations\n          args(includeDeprecated: true) {\n            ...InputValue\n          }\n        }\n      }\n    }\n\n    fragment FullType on __Type {\n      kind\n      name\n      description\n      \n      fields(includeDeprecated: true) {\n        name\n        description\n        args(includeDeprecated: true) {\n          ...InputValue\n        }\n        type {\n          ...TypeRef\n        }\n        isDeprecated\n        deprecationReason\n      }\n      inputFields(includeDeprecated: true) {\n        ...InputValue\n      }\n      interfaces {\n        ...TypeRef\n      }\n      enumValues(includeDeprecated: true) {\n        name\n        description\n        isDeprecated\n        deprecationReason\n      }\n      possibleTypes {\n        ...TypeRef\n      }\n    }\n\n    fragment InputValue on __InputValue {\n      name\n      description\n      type { ...TypeRef }\n      defaultValue\n      isDeprecated\n      deprecationReason\n    }\n\n    fragment TypeRef on __Type {\n      kind\n      name\n      ofType {\n        kind\n        name\n        ofType {\n          kind\n          name\n          ofType {\n            kind\n            name\n            ofType {\n              kind\n              name\n              ofType {\n                kind\n                name\n                ofType {\n                  kind\n                  name\n                  ofType {\n                    kind\n                    name\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  "
-roleTypeQuery = """query($limit: Int) {roleTypePage(limit: $limit) {id, name, nameEn}}"""
-q1 = "query{__schema{types{name}}}"
-q2 = "query IntrospectionQuery{__schema{queryType{name kind}mutationType{name kind}subscriptionType{name kind}types{...FullType}directives{name description locations args{...InputValue}}}}fragment FullType on __Type{kind name description fields(includeDeprecated:true){name description args{...InputValue}type{...TypeRef}isDeprecated deprecationReason}inputFields{...InputValue}interfaces{...TypeRef}enumValues(includeDeprecated:true){name description isDeprecated deprecationReason}possibleTypes{...TypeRef}}fragment InputValue on __InputValue{name description type{...TypeRef}defaultValue}fragment TypeRef on __Type{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name ofType{kind name}}}}}}}}}}"
-
-sentinel = createAuthentizationSentinel(
-    JWTPUBLICKEY=JWTPUBLICKEYURL,
-    JWTRESOLVEUSERPATH=JWTRESOLVEUSERPATHURL,
-    queriesWOAuthentization=[apolloQuery, graphiQLQuery, roleTypeQuery, q1, q2],
-    onAuthenticationError=lambda item: JSONResponse({"data": None, "errors": ["Unauthenticated", item.query, f"{item.variables}"]}, 
-    status_code=401))
-
-# endregion
-
-# region FastAPI setup
-class Item(BaseModel):
-    query: str
-    variables: dict = {}
-    operationName: str = None
 from src.Dataloaders import createLoadersContext
 
 
@@ -173,15 +137,6 @@ async def graphiql():
 
 logging.info("All initialization is done")
 
-# @app.get('/hello')
-# def hello():
-#    return {'hello': 'world'}
-
-###########################################################################################################################
-#
-# pokud jste pripraveni testovat GQL funkcionalitu, rozsirte apollo/server.js
-#
-###########################################################################################################################
 # endregion
 
 # region ENV setup tests

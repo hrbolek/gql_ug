@@ -55,13 +55,14 @@ import aiohttp
 import os
 
 from uoishelpers.schema import WhoAmIExtension
+from uoishelpers.gqlpermissions.UpdatePermissionCheckRoleFieldExtension import PermissionCheckRoleDirective
 
 schema = strawberry.federation.Schema(
     query=Query, 
     types=(RBACObjectGQLModel, IDType), 
     mutation=Mutation, 
     extensions=[],
-    schema_directives=[Relation]
+    schema_directives=[Relation, PermissionCheckRoleDirective]
 )
 
 readonlyschema = strawberry.federation.Schema(query=Query, types=(RBACObjectGQLModel, IDType))
@@ -112,10 +113,10 @@ class UGWhoAmIExtension(WhoAmIExtension):
     async def ug_query(self, query, variables={}):
         await self.authorize()
         context = self.execution_context.context
-        print(f"ug_query context A = {context}")
+        # print(f"ug_query context A = {context}")
         # result = await self.execution_context.schema.execute(query=query, variable_values=variables, context_value=context)
         result = await readonlyschema.execute(query=query, variable_values=variables, context_value=context)
-        print(f"ug_query context B = {context}")
+        # print(f"ug_query context B = {context}")
         result = strawberry.asdict(result)
         # print(f"result = {result}")
         return result
@@ -164,7 +165,15 @@ class UGWhoAmIExtension(WhoAmIExtension):
         yield
         # print(f"UGWhoAmIExtension.on_execute ended", flush=True)
     
+from uoishelpers.schema import PrometheusExtension, ProfilingExtension
+if os.getenv("DEMO", None) in ["True", "true", True]:
+    print("ProfilingExtension is enabled")
+    schema.extensions.append(ProfilingExtension)
 
-schema.extensions.append(UGWhoAmIExtension)
+schema.extensions.extend([PrometheusExtension(prefix="prom"), UGWhoAmIExtension])
+
+from uoishelpers.gqlpermissions.RolePermissionSchemaExtension import RolePermissionSchemaExtension
+schema.extensions.append(RolePermissionSchemaExtension)
+
 
 print(f"schema.extensions.length: {len(schema.extensions)}")

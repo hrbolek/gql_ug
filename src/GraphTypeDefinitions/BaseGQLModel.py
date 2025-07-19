@@ -66,7 +66,7 @@ class BaseGQLModel:
         _id = IDType(id) if isinstance(id, str) else id
         loader = cls.getLoader(info=info)
         db_row = await loader.load(_id)
-        
+        # print(f"{cls.__name__}.load_with_loader: \n\tid={type(_id)}('{_id}'), \n\tdb_row={db_row}", flush=True)
         return cls(id=_id) if db_row is None else cls.from_dataclass(db_row=db_row)
     
     @classmethod
@@ -77,15 +77,14 @@ class BaseGQLModel:
         
         Vyřeší referenci na tuto entitu pomocí jejího ID.
         """
-        print(f"resolving reference for {cls} with id='{id}'")
+        # print(f"resolving reference for {cls} with id='{id}'")
         if id is None:
             return None
         _id = IDType(id) if isinstance(id, str) else id
         return await cls.load_with_loader(info=info, id=_id)
        
     id: IDType = strawberry.field(
-        description="""Primary key of the entity.
-Primární klíč entity.""", 
+        description="""Primary key of the entity.""", 
         permission_classes=[OnlyForAuthentized]
     )
     

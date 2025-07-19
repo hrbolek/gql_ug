@@ -60,11 +60,14 @@ class RBACObjectGQLModel:
         asUser = rows[0] is not None
         asGroup = rows[1] is not None
 
+        # urows = await loaderU.load(id)
+        # print(f"RBACObjectGQLModel.resolve_reference: asUser={asUser}, asGroup={asGroup}, id={id}", flush=True)
+        # print(f"RBACObjectGQLModel.resolve_reference: {urows} ({id} {type(id)})", flush=True)
         if asUser is None and asGroup is None: return None
         
-        result = RBACObjectGQLModel(asGroup=asGroup, asUser=asUser)
-        result.id = id
-        result._data = None
+        result = RBACObjectGQLModel(id=id, asGroup=asGroup, asUser=asUser)
+        # result.id = id
+        # result._data = None
         return result
 
     @strawberry.field(
@@ -124,16 +127,18 @@ class RBACObjectGQLModel:
             # setthistottrue: bool,
             # strawberry.types.StrawberryArgument(description="roles needed to have access", ),           
             user_id: Optional[uuid.UUID] = None) -> Optional[bool]:
-        
         from .roleTypeGQLModel import RoleTypeGQLModel
         loader = RoleTypeGQLModel.getLoader(info=info)
 
         _user_id = getUserFromInfo(info=info)["id"] if user_id is None else user_id
-
+        # print(f"user_can_without_state called with roles_needed={roles_needed} and user_id={user_id} / _user_id={_user_id}", flush=True)
+        # print(f"self.asUser {self.asUser}, self.asGroup {self.asGroup}", flush=True)
         from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group
         rbac_roles = []
         if self.asUser:
             rbac_roles = await resolve_roles_on_user(self, info, user_id=self.id, filter_user_id=_user_id)
+            # rbac_roles = list(rbac_roles)
+            # print(f"rbac_roles {self.id} roles_needed {roles_needed} rbac_roles {rbac_roles}", flush=True)
         if self.asGroup:
             rbac_roles = await resolve_roles_on_group(self, info, group_id=self.id, filter_user_id=_user_id)        
 
