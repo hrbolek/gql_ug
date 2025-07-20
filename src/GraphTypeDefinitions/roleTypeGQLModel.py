@@ -115,24 +115,26 @@ class RoleTypeGQLModel(NamedGQLModel):
 #
 #####################################################################
 
+from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
+@strawberry.interface(description="Role type related queries")
+class RoleTypeQueries:
+    role_type_by_id = strawberry.field(
+        description="""Finds a role type by its id""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=Optional[RoleTypeGQLModel],
+        resolver=default_by_id_resolver()
+    )
 
-role_type_by_id = strawberry.field(
-    description="""Finds a role type by its id""",
-    permission_classes=[
-        OnlyForAuthentized
-    ],
-    graphql_type=Optional[RoleTypeGQLModel],
-    resolver=default_by_id_resolver()
-)
-
-role_type_page = strawberry.field(
-    description="""Finds all role types paged""",
-    permission_classes=[
-        # OnlyForAuthentized
-    ],
-    graphql_type=List[RoleTypeGQLModel],
-    resolver=PageResolver[RoleTypeGQLModel](whereType=RoleTypeInputWhereFilter)
-)
+    role_type_page = strawberry.field(
+        description="""Finds all role types paged""",
+        permission_classes=[
+            # OnlyForAuthentized
+        ],
+        graphql_type=List[RoleTypeGQLModel],
+        resolver=PageResolver[RoleTypeGQLModel](whereType=RoleTypeInputWhereFilter)
+    )
 
 #####################################################################
 #
@@ -169,15 +171,15 @@ class RoleTypeDeleteGQLModel:
     lastchange: datetime.datetime
 
 
-@strawberry.type(description="")
-class RoleTypeResultGQLModel:
-    id: IDType = None
-    msg: str = None
+# @strawberry.type(description="")
+# class RoleTypeResultGQLModel:
+#     id: IDType = None
+#     msg: str = None
 
-    @strawberry.field(description="""Result of role type operation""")
-    async def role_type(self, info: strawberry.types.Info) -> Union[RoleTypeGQLModel, None]:
-        result = await RoleTypeGQLModel.resolve_reference(info, self.id)
-        return result
+#     @strawberry.field(description="""Result of role type operation""")
+#     async def role_type(self, info: strawberry.types.Info) -> Union[RoleTypeGQLModel, None]:
+#         result = await RoleTypeGQLModel.resolve_reference(info, self.id)
+#         return result
     
 # class UpdateRoleTypePermission(RBACPermission):
 #     message = "User is not allowed create new membership"
@@ -192,57 +194,71 @@ class RoleTypeResultGQLModel:
 #         if not role: return False
 #         return True
 
-@strawberry.mutation(
-    description="""Updates existing roleType record""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-        # UpdateRoleTypePermission
-    ])
-async def role_type_update(self, 
-    info: strawberry.types.Info, 
-    role_type: RoleTypeUpdateGQLModel
+@strawberry.interface(description="Role type related mutations")
+class RoleTypeMutations:
+    @strawberry.mutation(
+        description="""Updates existing roleType record""",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+            # UpdateRoleTypePermission
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[UpdateError, RoleTypeGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def role_type_update(self, 
+        info: strawberry.types.Info, 
+        role_type: RoleTypeUpdateGQLModel
 
-) -> Union[RoleTypeGQLModel, UpdateError[RoleTypeGQLModel]]:
-    result = await Update[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
-    return result
+    ) -> Union[RoleTypeGQLModel, UpdateError[RoleTypeGQLModel]]:
+        result = await Update[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
+        return result
 
-# class InsertRoleTypePermission(RBACPermission):
-#     message = "User is not allowed create new membership"
-#     async def has_permission(self, source, info: strawberry.types.Info, role_type: RoleTypeInsertGQLModel) -> bool:
-#         adminRoleNames = ["administrátor"]
-#         allowedRoleNames = []
-#         role = await self.resolveUserRole(info, 
-#             rbacobject=role_type.id, 
-#             adminRoleNames=adminRoleNames, 
-#             allowedRoleNames=allowedRoleNames)
-        
-#         if not role: return False
-#         return True
+    # class InsertRoleTypePermission(RBACPermission):
+    #     message = "User is not allowed create new membership"
+    #     async def has_permission(self, source, info: strawberry.types.Info, role_type: RoleTypeInsertGQLModel) -> bool:
+    #         adminRoleNames = ["administrátor"]
+    #         allowedRoleNames = []
+    #         role = await self.resolveUserRole(info, 
+    #             rbacobject=role_type.id, 
+    #             adminRoleNames=adminRoleNames, 
+    #             allowedRoleNames=allowedRoleNames)
+            
+    #         if not role: return False
+    #         return True
 
-@strawberry.mutation(
-    description="""Inserts a new roleType record""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-        # InsertRoleTypePermission
-    ])
-async def role_type_insert(self, 
-    info: strawberry.types.Info, 
-    role_type: RoleTypeInsertGQLModel
+    @strawberry.mutation(
+        description="""Inserts a new roleType record""",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+            # InsertRoleTypePermission
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[InsertError, RoleTypeGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def role_type_insert(self, 
+        info: strawberry.types.Info, 
+        role_type: RoleTypeInsertGQLModel
 
-) -> Union[RoleTypeGQLModel, InsertError[RoleTypeGQLModel]]:
-    result = await Insert[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
-    return result
+    ) -> Union[RoleTypeGQLModel, InsertError[RoleTypeGQLModel]]:
+        result = await Insert[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
+        return result
 
-@strawberry.mutation(
-    description="Deletes the roleType",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def role_type_delete(self, info: strawberry.types.Info, role_type: RoleTypeDeleteGQLModel) -> Optional[DeleteError[RoleTypeGQLModel]]:
-    result = await Delete[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
-    return result
+    @strawberry.mutation(
+        description="Deletes the roleType",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[DeleteError, RoleTypeGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def role_type_delete(self, info: strawberry.types.Info, role_type: RoleTypeDeleteGQLModel) -> Optional[DeleteError[RoleTypeGQLModel]]:
+        result = await Delete[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
+        return result
 
 
