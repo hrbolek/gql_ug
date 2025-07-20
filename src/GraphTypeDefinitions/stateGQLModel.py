@@ -30,11 +30,6 @@ from .BaseGQLModel import BaseGQLModel, IDType
 from .NamedGQLModel import NamedGQLModel
 
 # from ._GraphPermissions import RoleBasedPermission, OnlyForAuthentized
-from ._GraphResolvers import (
-    encapsulateInsert,
-    encapsulateUpdate,
-    encapsulateDelete
-)
 
 RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
 # StateMachineTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy('.roleTypeGQLModel')]
@@ -330,53 +325,59 @@ from src.DBResolvers import (
     StateTransitionResolvers
 )
 
-state_page: typing.List["StateGQLModel"] = strawberry.field(
-    description="all states",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.List[StateGQLModel],
-    resolver=PageResolver["StateGQLModel"](whereType=StateWhereFilter)
-)
+@strawberry.interface(description="State related queries")
+class StateQueries:
+    state_page: typing.List["StateGQLModel"] = strawberry.field(
+        description="all states",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List[StateGQLModel],
+        resolver=PageResolver["StateGQLModel"](whereType=StateWhereFilter)
+    )
 
-state_by_id = strawberry.field(
-    description="one state",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.Optional[StateGQLModel],
-    # resolver=StateResolvers.ById(GQLModel=StateGQLModel)
-    # resolver=default_by_id_resolver(),
-    resolver=StateGQLModel.load_with_loader
-)
+    state_by_id = strawberry.field(
+        description="one state",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.Optional[StateGQLModel],
+        # resolver=StateResolvers.ById(GQLModel=StateGQLModel)
+        # resolver=default_by_id_resolver(),
+        resolver=StateGQLModel.load_with_loader
+    )
 
-statemachine_page = strawberry.field(
-    description="all state machines",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.List[StateMachineGQLModel],
-    resolver=PageResolver[StateMachineGQLModel](whereType=StateMachineWhereFilter)
-)
+@strawberry.interface(description="State machine related queries")
+class StateMachineQueries
+    statemachine_page = strawberry.field(
+        description="all state machines",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List[StateMachineGQLModel],
+        resolver=PageResolver[StateMachineGQLModel](whereType=StateMachineWhereFilter)
+    )
 
-statemachine_by_id = strawberry.field(
-    description="one state machine",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.Optional[StateMachineGQLModel],
-    # resolver=StateMachineResolvers.ById(GQLModel=StateMachineGQLModel)
-    # resolver=default_by_id_resolver()
-    resolver=StateMachineGQLModel.load_with_loader
-)
+    statemachine_by_id = strawberry.field(
+        description="one state machine",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.Optional[StateMachineGQLModel],
+        # resolver=StateMachineResolvers.ById(GQLModel=StateMachineGQLModel)
+        # resolver=default_by_id_resolver()
+        resolver=StateMachineGQLModel.load_with_loader
+    )
 
-statetransition_page = strawberry.field(
-    description="all state transitions",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.List[StateTransitionGQLModel],
-    resolver=PageResolver[StateTransitionGQLModel](whereType=StateTransitionWhereFilter)
-)
+@strawberry.interface(description="State transition related queries")
+class StateTransitionsQueries
+    statetransition_page = strawberry.field(
+        description="all state transitions",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.List[StateTransitionGQLModel],
+        resolver=PageResolver[StateTransitionGQLModel](whereType=StateTransitionWhereFilter)
+    )
 
-statetransition_by_id = strawberry.field(
-    description="one state transition",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=typing.Optional[StateTransitionGQLModel],
-    # resolver=StateTransitionResolvers.ById(GQLModel=StateTransitionGQLModel)
-    # resolver=default_by_id_resolver()
-    resolver=StateTransitionGQLModel.load_with_loader
-)
+    statetransition_by_id = strawberry.field(
+        description="one state transition",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=typing.Optional[StateTransitionGQLModel],
+        # resolver=StateTransitionResolvers.ById(GQLModel=StateTransitionGQLModel)
+        # resolver=default_by_id_resolver()
+        resolver=StateTransitionGQLModel.load_with_loader
+    )
 
 #############################################################
 #
@@ -445,87 +446,42 @@ class StatemachineDeleteGQLModel:
     lastchange: datetime.datetime = strawberry.field(description="timestamp of last change = TOKEN")
     id: uuid.UUID = strawberry.field(description="primary key (UUID), identifies object of operation")
     
-
-@strawberry.mutation(
-    description="C operation",
-    permission_classes=[
-        OnlyForAuthentized,
-        SimpleInsertPermission[StateMachineGQLModel](roles=["administrátor"])
-    ])
-async def statemachine_insert(
-        self, 
-        info: strawberry.types.Info, 
-        statemachine: StatemachineInsertGQLModel,
-        # openSession: strawberry.Private[object] = None
-    ) -> typing.Union[StateMachineGQLModel, InsertError[StateMachineGQLModel]]:
-    # print("statemachine_insert", statemachine)
-    # states = statemachine.states
-    # statemachine.states = None
-    # machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
-    # if getattr(machineResult, "failed", False):
-    #     print("statemachine_insert.statemachine failed", machineResult.msg, state)
-    #     return InsertError[StateMachineGQLModel](msg=machineResult.msg, _input=statemachine)
-    
-    # if states is not None:
-    #     print("statemachine_insert", states)
-    #     transitions = []
-    #     for state in states:
-    #         if state.targets is not None:
-    #             transitions.extend(state.targets)
-    #         state.targets = None
-    #         result = await state_insert_internal(self=self, info=info, state=state)
-    #         if getattr(result, "failed", False):
-    #             print("statemachine_insert.state failed", result.msg, state)
-    #             return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
-    #     for transition in transitions:
-    #         result = await statetransition_insert_internal(self=self, info=info, statetransition=transition)
-    #         if getattr(result, "failed", False):
-    #             print("statemachine_insert.transition failed", result.msg, transition)
-    #             return InsertError[StateMachineGQLModel](msg=result.msg, _input=statemachine)
-    #     pass
-    # statemachine.states = None
-    machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
-    return machineResult
-
-# @strawberry.mutation(
-#     description="U operation",
-#     permission_classes=[OnlyForAuthentized])
-# async def statemachine_update(self, info: strawberry.types.Info, statemachine: StatemachineUpdateGQLModel) -> StatemachineResultGQLModel:
-#     return await encapsulateUpdate(
-#         info=info,
-#         loader=StateMachineGQLModel.getLoader(info),
-#         entity=statemachine,
-#         result=StatemachineResultGQLModel(id=statemachine.id, msg="ok")
-#     )
-@strawberry.mutation(
-    description="U operation",
-    permission_classes=[
-        OnlyForAuthentized,
-        SimpleUpdatePermission[StateMachineGQLModel](roles=["administrátor"])
-    ]
-    )
-async def statemachine_update(self, info: strawberry.types.Info, statemachine: StatemachineUpdateGQLModel) -> typing.Union[StateMachineGQLModel, UpdateError[StateMachineGQLModel]]:
-    return await Update[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
-
-# @strawberry.mutation(
-#     description="U operation",
-#     permission_classes=[OnlyForAuthentized])
-# async def statemachine_delete(self, info: strawberry.types.Info, id: uuid.UUID) -> StatemachineResultGQLModel:
-#     return await encapsulateDelete(
-#         info=info,
-#         loader=StateMachineGQLModel.getLoader(info),
-#         id=id,
-#         result=StatemachineResultGQLModel(id=id, msg="ok")
-#     )
-
-@strawberry.mutation(
-    description="U operation",
-    permission_classes=[
-        OnlyForAuthentized,
-        SimpleDeletePermission[StateMachineGQLModel](roles=["admistrátor"])
+@strawberry.interface(description="State machine related mutations")
+class StateMachineMutations:
+    @strawberry.mutation(
+        description="C operation",
+        permission_classes=[
+            OnlyForAuthentized,
+            SimpleInsertPermission[StateMachineGQLModel](roles=["administrátor"])
         ])
-async def statemachine_delete(self, info: strawberry.types.Info, statemachine: StatemachineDeleteGQLModel) -> typing.Optional[DeleteError[StateMachineGQLModel]]:
-    return await Delete[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+    async def statemachine_insert(
+            self, 
+            info: strawberry.types.Info, 
+            statemachine: StatemachineInsertGQLModel,
+            # openSession: strawberry.Private[object] = None
+        ) -> typing.Union[StateMachineGQLModel, InsertError[StateMachineGQLModel]]:
+        machineResult = await Insert[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+        return machineResult
+
+    @strawberry.mutation(
+        description="U operation",
+        permission_classes=[
+            OnlyForAuthentized,
+            SimpleUpdatePermission[StateMachineGQLModel](roles=["administrátor"])
+        ]
+        )
+    async def statemachine_update(self, info: strawberry.types.Info, statemachine: StatemachineUpdateGQLModel) -> typing.Union[StateMachineGQLModel, UpdateError[StateMachineGQLModel]]:
+        return await Update[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+
+    @strawberry.mutation(
+        description="U operation",
+        permission_classes=[
+            OnlyForAuthentized,
+            SimpleDeletePermission[StateMachineGQLModel](roles=["admistrátor"])
+            ])
+    async def statemachine_delete(self, info: strawberry.types.Info, statemachine: StatemachineDeleteGQLModel) -> typing.Optional[DeleteError[StateMachineGQLModel]]:
+        return await Delete[StateMachineGQLModel].DoItSafeWay(info=info, entity=statemachine)
+
 
 @strawberry.input(description="Input structure - C operation")
 class StateInsertGQLModel(InputModelMixin):
@@ -578,23 +534,25 @@ async def state_insert_internal(self, info: strawberry.types.Info, state: StateI
     state.writerslist_id = uuid.uuid4()
     return await Insert[StateGQLModel].DoItSafeWay(info=info, entity=state)
 
-@strawberry.mutation(
-    description="C operation",
-    permission_classes=[OnlyForAuthentized])
-async def state_insert(self, info: strawberry.types.Info, state: StateInsertGQLModel) -> typing.Union[StateGQLModel, InsertError[StateGQLModel]]:
-    return await state_insert_internal(self=self, info=info, state=state)
+@strawberry.interface(description="State related mutations")
+class StateMutations:
+    @strawberry.mutation(
+        description="C operation",
+        permission_classes=[OnlyForAuthentized])
+    async def state_insert(self, info: strawberry.types.Info, state: StateInsertGQLModel) -> typing.Union[StateGQLModel, InsertError[StateGQLModel]]:
+        return await state_insert_internal(self=self, info=info, state=state)
 
-@strawberry.mutation(
-    description="U operation",
-    permission_classes=[OnlyForAuthentized])
-async def state_update(self, info: strawberry.types.Info, state: StateUpdateGQLModel) -> typing.Union[StateGQLModel, UpdateError[StateGQLModel]]:
-    return await Update[StateGQLModel].DoItSafeWay(info=info, entity=state)
+    @strawberry.mutation(
+        description="U operation",
+        permission_classes=[OnlyForAuthentized])
+    async def state_update(self, info: strawberry.types.Info, state: StateUpdateGQLModel) -> typing.Union[StateGQLModel, UpdateError[StateGQLModel]]:
+        return await Update[StateGQLModel].DoItSafeWay(info=info, entity=state)
 
-@strawberry.mutation(
-    description="U operation",
-    permission_classes=[OnlyForAuthentized])
-async def state_delete(self, info: strawberry.types.Info, state: StateDeleteGQLModel) -> typing.Optional[DeleteError[StateGQLModel]]:
-    return await Delete[StateGQLModel].DoItSafeWay(info=info, entity=state)
+    @strawberry.mutation(
+        description="U operation",
+        permission_classes=[OnlyForAuthentized])
+    async def state_delete(self, info: strawberry.types.Info, state: StateDeleteGQLModel) -> typing.Optional[DeleteError[StateGQLModel]]:
+        return await Delete[StateGQLModel].DoItSafeWay(info=info, entity=state)
 
 
 
@@ -618,84 +576,23 @@ async def state_delete(self, info: strawberry.types.Info, state: StateDeleteGQLM
 async def statetransition_insert_internal(self, info: strawberry.types.Info, statetransition: StatetransitionInsertGQLModel) -> typing.Union[StateTransitionGQLModel, InsertError[StateTransitionGQLModel]]:
     return await Insert[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
 
-@strawberry.mutation(
-    description="C operation",
-    permission_classes=[OnlyForAuthentized])
-async def statetransition_insert(self, info: strawberry.types.Info, statetransition: StatetransitionInsertGQLModel) -> typing.Union[StateTransitionGQLModel, InsertError[StateTransitionGQLModel]]:
-    return await statetransition_insert_internal(self=self, info=info, statetransition=statetransition)
+@strawberry.interface(description="State transitions related mutations")
+class StateTransitionMutations:
+    @strawberry.mutation(
+        description="C operation",
+        permission_classes=[OnlyForAuthentized])
+    async def statetransition_insert(self, info: strawberry.types.Info, statetransition: StatetransitionInsertGQLModel) -> typing.Union[StateTransitionGQLModel, InsertError[StateTransitionGQLModel]]:
+        return await statetransition_insert_internal(self=self, info=info, statetransition=statetransition)
 
-@strawberry.mutation(
-    description="U operation",
-    permission_classes=[OnlyForAuthentized])
-async def statetransition_update(self, info: strawberry.types.Info, statetransition: StatetransitionUpdateGQLModel) -> typing.Union[StateTransitionGQLModel, UpdateError[StateTransitionGQLModel]]:
-    return await Update[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
+    @strawberry.mutation(
+        description="U operation",
+        permission_classes=[OnlyForAuthentized])
+    async def statetransition_update(self, info: strawberry.types.Info, statetransition: StatetransitionUpdateGQLModel) -> typing.Union[StateTransitionGQLModel, UpdateError[StateTransitionGQLModel]]:
+        return await Update[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
 
-@strawberry.mutation(
-    description="D operation",
-    permission_classes=[OnlyForAuthentized])
-async def statetransition_delete(self, info: strawberry.types.Info, statetransition: StatetransitionDeleteGQLModel) -> typing.Optional[DeleteError[StateTransitionGQLModel]]:
-    return await Delete[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
-
-# from enum import Enum
-# @strawberry.enum(description="")
-# class StateRoleTypeRight(Enum):
-#     WRITE = 1
-#     READ = 0
-
-# @strawberry.input(description="")
-# class StateRoleTypeInsertGQLModel:
-#     state_id: uuid.UUID = strawberry.field(description="", default=None)
-#     roletype_id: uuid.UUID = strawberry.field(description="", default=None)
-#     level: StateRoleTypeRight = strawberry.field(description="")
-#     createdby_id: strawberry.Private[uuid.UUID] = None 
-
-# @strawberry.mutation(
-#     description="Links roletype to state",
-#     permission_classes=[OnlyForAuthentized])
-# async def state_insert_role_type(self, info: strawberry.types.Info, staterole: StateRoleTypeInsertGQLModel) -> StateResultGQLModel:
-#     stateloader = StateGQLModel.getLoader(info)
-#     from .roleListGQLModel import RoleTypeListGQLModel
-#     listloader = RoleTypeListGQLModel.getLoader(info)
-#     staterow = await stateloader.load(staterole.state_id)
-#     if staterole.level == StateRoleTypeRight.READ:
-#         roletypelistitems = await listloader.filter_by(list_id=staterow.readerslist_id)
-#     elif staterole.level == StateRoleTypeRight.WRITE:
-#         roletypelistitems = await listloader.filter_by(list_id=staterow.writerslist_id)
-#     else:
-#         roletypelistitems = []
-#     g = (r.id for r in roletypelistitems if r.type_id==staterole.roletype_id)
-#     rowid = next(g, None)
-#     if rowid:
-#         return StateResultGQLModel(msg="fail", id=staterole.state_id)
-#     return await encapsulateInsert(
-#         info,
-#         loader = RoleTypeListGQLModel.getLoader(info),
-#         entity=staterole,
-#         result=StateResultGQLModel(msg="ok", id=staterole.state_id)
-#     )
-    
-# @strawberry.mutation(
-#     description="Unlinks roletype from state",
-#     permission_classes=[OnlyForAuthentized])
-# async def state_delete_role_type(self, info: strawberry.types.Info, staterole: StateRoleTypeInsertGQLModel) -> StateResultGQLModel:
-#     stateloader = StateGQLModel.getLoader(info)
-#     from .roleListGQLModel import RoleTypeListGQLModel
-#     listloader = RoleTypeListGQLModel.getLoader(info)
-#     staterow = await stateloader.load(staterole.state_id)
-#     if staterole.level == StateRoleTypeRight.READ:
-#         roletypelistitems = await listloader.filter_by(list_id=staterow.readerslist_id)
-#     elif staterole.level == StateRoleTypeRight.WRITE:
-#         roletypelistitems = await listloader.filter_by(list_id=staterow.writerslist_id)
-#     else:
-#         roletypelistitems = []
-#     g = (r.id for r in roletypelistitems if r.type_id==staterole.roletype_id)
-#     rowid = next(g, None)
-#     if rowid:
-#         return await encapsulateDelete(
-#             info,
-#             loader = RoleTypeListGQLModel.getLoader(info),
-#             id=rowid,
-#             result=StateResultGQLModel(msg="ok", id=staterole.state_id)
-#         )
-#     return StateResultGQLModel(msg="fail", id=staterole.state_id)
+    @strawberry.mutation(
+        description="D operation",
+        permission_classes=[OnlyForAuthentized])
+    async def statetransition_delete(self, info: strawberry.types.Info, statetransition: StatetransitionDeleteGQLModel) -> typing.Optional[DeleteError[StateTransitionGQLModel]]:
+        return await Delete[StateTransitionGQLModel].DoItSafeWay(info=info, entity=statetransition)
 

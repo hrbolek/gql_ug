@@ -5,13 +5,21 @@ from .userGQLModel import UserQueries
 from .roleGQLModel import RoleQueries
 from .groupTypeGQLModel import GroupTypeQueries
 from .roleTypeGQLModel import RoleTypeQueries
+from .stateGQLModel import (
+    StateMachineQueries,
+    StateQueries,
+    StateTransitionsQueries)
+
 @strawberry.type(description="""Type for query root""")
 class Query(
     GroupQueries, 
     GroupTypeQueries,
     UserQueries, 
     RoleQueries,
-    RoleTypeQueries):
+    RoleTypeQueries,    
+    StateMachineQueries,
+    StateQueries,
+    StateTransitionsQueries):
 
 
     from .roleCategoryGQLModel import role_category_by_id, role_category_page
@@ -38,24 +46,3 @@ class Query(
     from .roleListGQLModel import role_type_list_by_id
     # role_type_list_by_id = role_type_list_by_id
 
-    from .stateGQLModel import (
-        state_by_id,
-        state_page,
-
-
-        statemachine_by_id,
-        statemachine_page,
-
-        statetransition_page,
-        statetransition_by_id
-        # statec
-    )
-
-    # state_by_id = state_by_id
-    # state_page = state_page
-
-    # statemachine_by_id = statemachine_by_id
-    # statemachine_page = statemachine_page
-
-    # statetranstition_page = statetransition_page
-    # statetransition_by_id = statetransition_by_id
