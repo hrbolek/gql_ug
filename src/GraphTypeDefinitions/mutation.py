@@ -2,13 +2,17 @@ import strawberry
 import typing
 
 from .groupGQLModel import GroupMutations
+from .groupTypeGQLModel import GroupTypeMutations
 from .userGQLModel import UserMutations
 from .roleGQLModel import RoleMutations
+from .roleTypeGQLModel import RoleTypeMutations
 @strawberry.type
 class Mutation(
     GroupMutations, 
+    GroupTypeMutations,
     UserMutations,
-    RoleMutations):
+    RoleMutations,
+    RoleTypeMutations):
 
 
     from .membershipGQLModel import (
@@ -20,17 +24,6 @@ class Mutation(
     # membership_update = membership_update
     # membership_delete = membership_delete
     
-
-    from .roleTypeGQLModel import (
-        role_type_insert,
-        role_type_update,
-        role_type_delete
-    )
-
-    # role_type_insert = role_type_insert   
-    # role_type_update = role_type_update
-    # role_type_delete = role_type_delete
-
     from .roleCategoryGQLModel import (
         role_category_insert,
         role_category_update,
@@ -39,15 +32,6 @@ class Mutation(
     # role_category_insert = role_category_insert
     # role_category_update = role_category_update
     # role_category_delete = role_category_delete
-
-    from .groupTypeGQLModel import (
-        group_type_insert,
-        group_type_update,
-        group_type_delete
-    )
-    # group_type_insert = group_type_insert
-    # group_type_update = group_type_update
-    # group_type_delete = group_type_delete
 
     from .groupCategoryGQLModel import (
         group_category_insert,
