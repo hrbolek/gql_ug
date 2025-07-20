@@ -344,7 +344,7 @@ class StateQueries:
     )
 
 @strawberry.interface(description="State machine related queries")
-class StateMachineQueries
+class StateMachineQueries:
     statemachine_page = strawberry.field(
         description="all state machines",
         permission_classes=[OnlyForAuthentized],
@@ -362,7 +362,7 @@ class StateMachineQueries
     )
 
 @strawberry.interface(description="State transition related queries")
-class StateTransitionsQueries
+class StateTransitionsQueries:
     statetransition_page = strawberry.field(
         description="all state transitions",
         permission_classes=[OnlyForAuthentized],
