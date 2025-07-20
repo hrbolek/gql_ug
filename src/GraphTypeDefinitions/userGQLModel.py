@@ -417,6 +417,11 @@ class UpdateUserPermission(RBACPermission):
         
         if not role: return False
         return True
+    
+from uoishelpers.gqlpermissions.LoadDataExtension import LoadDataExtension
+from uoishelpers.gqlpermissions.RbacProviderExtension import RbacProviderExtension
+from uoishelpers.gqlpermissions.UserRoleProviderExtension import UserRoleProviderExtension
+from uoishelpers.gqlpermissions.UserAccessControlExtension import UserAccessControlExtension
 
 @strawberry.interface(description="User mutations interface")
 class UserMutations:
@@ -437,8 +442,16 @@ Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci
     """,
         permission_classes=[
             OnlyForAuthentized,
-            UpdateUserPermission
-        ])
+            # UpdateUserPermission
+        ],
+        extensions=[
+            # UpdatePermissionCheckRoleFieldExtension[GroupGQLModel](roles=["administrátor", "personalista"]),
+            UserAccessControlExtension[UpdateError, UserGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[UpdateError, UserGQLModel](),
+            RbacProviderExtension[UpdateError, UserGQLModel](),
+            LoadDataExtension[UpdateError, UserGQLModel]()
+        ]
+    )
     async def user_update(self, info: strawberry.types.Info, user: UserUpdateGQLModel) -> typing.Union[UserGQLModel, UpdateError[UserGQLModel]]:
         return await Update[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
@@ -471,8 +484,16 @@ Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci
     """,
         permission_classes=[
             OnlyForAuthentized,
-            InsertUserPermission                
-        ])
+            # InsertUserPermission                
+        ],
+        extensions=[
+            # UpdatePermissionCheckRoleFieldExtension[GroupGQLModel](roles=["administrátor", "personalista"]),
+            UserAccessControlExtension[InsertError, UserGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[InsertError, UserGQLModel](),
+            RbacProviderExtension[InsertError, UserGQLModel](),
+            LoadDataExtension[InsertError, UserGQLModel]()
+        ]
+    )
     async def user_insert(self, info: strawberry.types.Info, user: UserInsertGQLModel) -> typing.Union[UserGQLModel, InsertError[UserGQLModel]]:
         return await Insert[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
@@ -492,8 +513,16 @@ Pouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou t
     """,
         permission_classes=[
             OnlyForAuthentized,
-            OnlyForAdmins
-        ])
+            # OnlyForAdmins
+        ],
+        extensions=[
+            # UpdatePermissionCheckRoleFieldExtension[GroupGQLModel](roles=["administrátor", "personalista"]),
+            UserAccessControlExtension[DeleteError, UserGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[DeleteError, UserGQLModel](),
+            RbacProviderExtension[DeleteError, UserGQLModel](),
+            LoadDataExtension[DeleteError, UserGQLModel]()
+        ]
+    )
     async def user_delete(self, info: strawberry.types.Info, user: UserDeleteGQLModel) -> typing.Optional[DeleteError[UserGQLModel]]:
         return await Delete[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
