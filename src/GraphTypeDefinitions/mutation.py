@@ -3,8 +3,12 @@ import typing
 
 from .groupGQLModel import GroupMutations
 from .userGQLModel import UserMutations
+from .roleGQLModel import RoleMutations
 @strawberry.type
-class Mutation(GroupMutations, UserMutations):
+class Mutation(
+    GroupMutations, 
+    UserMutations,
+    RoleMutations):
 
 
     from .membershipGQLModel import (
@@ -16,14 +20,6 @@ class Mutation(GroupMutations, UserMutations):
     # membership_update = membership_update
     # membership_delete = membership_delete
     
-    from .roleGQLModel import (
-        role_insert,
-        role_update,
-        role_delete
-    )
-    # role_insert = role_insert
-    # role_update = role_update
-    # role_delete = role_delete
 
     from .roleTypeGQLModel import (
         role_type_insert,

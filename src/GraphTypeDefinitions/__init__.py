@@ -55,7 +55,7 @@ import aiohttp
 import os
 
 from uoishelpers.schema import WhoAmIExtension
-from uoishelpers.gqlpermissions.UpdatePermissionCheckRoleFieldExtension import PermissionCheckRoleDirective
+from uoishelpers.gqlpermissions.ApplyPermissionCheckRoleDirectiveMixin import PermissionCheckRoleDirective
 
 schema = strawberry.federation.Schema(
     query=Query, 
@@ -132,30 +132,38 @@ class UGWhoAmIExtension(WhoAmIExtension):
 
     async def on_execute(self):
         # print(f"UGWhoAmIExtension")
-        whoami = await self.ug_query(query=WhoAmIExtension.mequery)
-        # data = whoami.get("data", {"me": {"roles": []}})
-        data = whoami.get("data", None)
-        if data is None:        
-            raise graphql.GraphQLError(
-                "UGWhoAmIExtension: Unauthenticated",
-                extensions={
-                    "code": "dc7c8f84-c726-43dc-a99b-f373942326cd", 
-                    "details": "You are not logged in"
-                }
-            )        
-        user = data.get("me", None)
-        if user is None:
-            raise graphql.GraphQLError(
-                "UGWhoAmIExtension: Unauthenticated",
-                extensions={
-                    "code": "dc7c8f84-c726-43dc-a99b-f373942326cd", 
-                    "details": "You are not logged in"
-                }
-            )
+        from graphql import print_ast
+        query_sdl = "{\n  _service {\n    sdl\n  }\n}"        
+        # print(f"printed attrs: {dir(self.execution_context)}", flush=True)
+        graphql_document = self.execution_context.graphql_document
+        query_str = print_ast(graphql_document)
 
-        context = self.execution_context
-        context.context["user"] = user
-        context.context["ug_client"] = self.ug_query
+        print(f"printed query ast: {query_str} {query_str==query_sdl}", flush=True)
+        if not query_str == query_sdl:
+            whoami = await self.ug_query(query=WhoAmIExtension.mequery)
+            # data = whoami.get("data", {"me": {"roles": []}})
+            data = whoami.get("data", None)
+            if data is None:        
+                raise graphql.GraphQLError(
+                    "UGWhoAmIExtension: Unauthenticated",
+                    extensions={
+                        "code": "dc7c8f84-c726-43dc-a99b-f373942326cd", 
+                        "details": "You are not logged in"
+                    }
+                )        
+            user = data.get("me", None)
+            if user is None:
+                raise graphql.GraphQLError(
+                    "UGWhoAmIExtension: Unauthenticated",
+                    extensions={
+                        "code": "dc7c8f84-c726-43dc-a99b-f373942326cd", 
+                        "details": "You are not logged in"
+                    }
+                )
+
+            context = self.execution_context
+            context.context["user"] = user
+            context.context["ug_client"] = self.ug_query
         # print(f"UGWhoAmIExtension.on_execute {data}:{user}")
         # print(f"UGWhoAmIExtension.on_execute {user}")
         # print(f"""UGWhoAmIExtension.on_execute {self.execution_context.context["user"]}""")
@@ -172,7 +180,7 @@ if os.getenv("DEMO", None) in ["True", "true", True]:
 
 schema.extensions.extend([PrometheusExtension(prefix="prom"), UGWhoAmIExtension])
 
-from uoishelpers.gqlpermissions.RolePermissionSchemaExtension import RolePermissionSchemaExtension
+from uoishelpers.gqlpermissions.RolePermissionSchemaExtension import RolePermissionSchemaExtension, GraphQLBatchLoader
 schema.extensions.append(RolePermissionSchemaExtension)
 
 

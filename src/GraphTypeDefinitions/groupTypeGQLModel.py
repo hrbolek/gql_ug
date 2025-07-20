@@ -125,24 +125,25 @@ from dataclasses import dataclass
 
 # from ._GraphResolvers import asPage
 
+@strawberry.interface(description="group type related queries")
+class GroupTypeQueries:
+    group_type_page = strawberry.field(
+        description="""Returns a list of groups types (paged)""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=typing.List[GroupTypeGQLModel],
+        resolver=PageResolver[GroupTypeGQLModel](whereType=GroupTypeInputWhereFilter)
+    )
 
-group_type_page = strawberry.field(
-    description="""Returns a list of groups types (paged)""",
-    permission_classes=[
-        OnlyForAuthentized
-    ],
-    graphql_type=typing.List[GroupTypeGQLModel],
-    resolver=PageResolver[GroupTypeGQLModel](whereType=GroupTypeInputWhereFilter)
-)
-
-group_type_by_id = strawberry.field(
-    description="""Finds a group type by its id""",
-    permission_classes=[
-        OnlyForAuthentized
-    ],
-    graphql_type=typing.Optional[GroupTypeGQLModel],
-    resolver=default_by_id_resolver()
-)
+    group_type_by_id = strawberry.field(
+        description="""Finds a group type by its id""",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        graphql_type=typing.Optional[GroupTypeGQLModel],
+        resolver=default_by_id_resolver()
+    )
 
 #####################################################################
 #
@@ -178,43 +179,59 @@ class GroupTypeDeleteGQLModel:
     id: IDType
     lastchange: datetime.datetime
 
-@strawberry.type(description="")
-class GroupTypeResultGQLModel:
-    id: IDType = None
-    msg: str = None
+# @strawberry.type(description="")
+# class GroupTypeResultGQLModel:
+#     id: IDType = None
+#     msg: str = None
 
-    @strawberry.field(description="""Result of grouptype operation""")
-    async def group_type(self, info: strawberry.types.Info) -> Union[GroupTypeGQLModel, None]:
-        result = await GroupTypeGQLModel.resolve_reference(info, self.id)
-        return result
+#     @strawberry.field(description="""Result of grouptype operation""")
+#     async def group_type(self, info: strawberry.types.Info) -> Union[GroupTypeGQLModel, None]:
+#         result = await GroupTypeGQLModel.resolve_reference(info, self.id)
+#         return result
     
-@strawberry.mutation(
-    description="""Allows a update of group type""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def group_type_update(self, info: strawberry.types.Info, group_type: GroupTypeUpdateGQLModel) -> Union[GroupTypeGQLModel, UpdateError[GroupTypeGQLModel]]:
-    result = await Update[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
-    return result
+from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
 
-@strawberry.mutation(
-    description="""Inserts a group type""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def group_type_insert(self, info: strawberry.types.Info, group_type: GroupTypeInsertGQLModel) -> Union[GroupTypeGQLModel, InsertError[GroupTypeGQLModel]]:
-    result = await Insert[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
-    return result
+@strawberry.interface(description="Group type related mutations")
+class GroupTypeMutations:
+    @strawberry.mutation(
+        description="""Allows a update of group type""",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[UpdateError, GroupTypeUpdateGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def group_type_update(self, info: strawberry.types.Info, group_type: GroupTypeUpdateGQLModel) -> Union[GroupTypeGQLModel, UpdateError[GroupTypeGQLModel]]:
+        result = await Update[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+        return result
 
-@strawberry.mutation(
-    description="Deletes the group type",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ])
-async def group_type_delete(self, info: strawberry.types.Info, group_type: GroupTypeDeleteGQLModel) -> Optional[DeleteError[GroupTypeGQLModel]]:
-    result = await Delete[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
-    return result
+    @strawberry.mutation(
+        description="""Inserts a group type""",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[InsertError, GroupTypeUpdateGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def group_type_insert(self, info: strawberry.types.Info, group_type: GroupTypeInsertGQLModel) -> Union[GroupTypeGQLModel, InsertError[GroupTypeGQLModel]]:
+        result = await Insert[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+        return result
+
+    @strawberry.mutation(
+        description="Deletes the group type",
+        permission_classes=[
+            OnlyForAuthentized,
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[DeleteError, GroupTypeUpdateGQLModel](roles=["superadmin"])
+        ]
+    )
+    async def group_type_delete(self, info: strawberry.types.Info, group_type: GroupTypeDeleteGQLModel) -> Optional[DeleteError[GroupTypeGQLModel]]:
+        result = await Delete[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
+        return result
 

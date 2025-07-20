@@ -2,8 +2,14 @@ import strawberry
 
 from .groupGQLModel import GroupQueries
 from .userGQLModel import UserQueries
+from .roleGQLModel import RoleQueries
+from .groupTypeGQLModel import GroupTypeQueries
 @strawberry.type(description="""Type for query root""")
-class Query(GroupQueries, UserQueries):
+class Query(
+    GroupQueries, 
+    GroupTypeQueries,
+    UserQueries, 
+    RoleQueries):
 
 
     from .roleTypeGQLModel import role_type_by_id, role_type_page
@@ -18,32 +24,10 @@ class Query(GroupQueries, UserQueries):
     # from .roleCategoryGQLModel import role_category_page
     # role_category_page = role_category_page
 
-    from .groupTypeGQLModel import group_type_by_id, group_type_page
-    # group_type_by_id = group_type_by_id
-
-    # from .groupTypeGQLModel import group_type_page
-    # group_type_page = group_type_page
-
     from .groupCategoryGQLModel import (
         group_category_by_id, 
         group_category_page
     )
-    # group_category_by_id = group_category_by_id
-    # group_category_page = group_category_page
-
-    from .roleGQLModel import (
-        role_by_user,
-        roles_on_group,
-        roles_on_user,
-        role_page,
-        role_by_id,
-        resolveRBACs
-    )
-    # role_by_id = role_by_id
-    # role_page = role_page
-    # role_by_user = role_by_user
-    # roles_on_group = roles_on_group
-    # roles_on_user = roles_on_user
 
     from .RBACObjectGQLModel import rbac_by_id
     # rbac_by_id = rbac_by_id

@@ -133,13 +133,12 @@ Skupina, ve které je role přiřazena""",
 # Special fields for query
 #
 #####################################################################
-from uoishelpers.resolvers import createInputs
+from uoishelpers.resolvers import createInputs2
 from dataclasses import dataclass
 GroupInputWhereFilter = Annotated["GroupInputWhereFilter", strawberry.lazy(".groupGQLModel")]
 UserInputWhereFilter = Annotated["UserInputWhereFilter", strawberry.lazy(".userGQLModel")]
 RoleTypeInputWhereFilter = Annotated["RoleTypeInputWhereFilter", strawberry.lazy(".roleTypeGQLModel")]
-@createInputs
-@dataclass
+@createInputs2
 class RoleInputWhereFilter:
     name: str
     valid: bool
@@ -151,66 +150,14 @@ class RoleInputWhereFilter:
     group: GroupInputWhereFilter
     user: UserInputWhereFilter
     roletype: RoleTypeInputWhereFilter
-@strawberry.field(
-    description="""## Description
-Fetches roles assigned to a user by their identifier.
-Načte role přiřazené uživateli dle jeho identifikátoru.
 
-## Details
-Utilizes a data loader to filter and return a list of roles for the specified user.
-Využívá loader pro filtrování a vrácení seznamu rolí pro zadaného uživatele.
-
-## Permissions
-Accessible only to authenticated users.
-Přístup pouze pro autentizované uživatele.
-""",
-    permission_classes=[OnlyForAuthentized]
-)
-async def role_by_user(self, info: strawberry.types.Info, user_id: IDType) -> List["RoleGQLModel"]:
-    loader = RoleGQLModel.getLoader(info)
-    rows = await loader.filter_by(user_id=user_id)
-    return (RoleGQLModel.from_dataclass(row) for row in rows)
-
-role_by_id = strawberry.field(
-    description="""## Description
-Fetches a role by its unique identifier.
-Načte roli podle jejího unikátního identifikátoru.
-
-## Details
-Utilizes a data loader to efficiently retrieve role details.
-Využívá loader pro efektivní načtení detailů role.
-
-## Permissions
-Accessible only to authenticated users.
-Přístup pouze pro autentizované uživatele.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=Optional[RoleGQLModel],
-    resolver=RoleGQLModel.load_with_loader
-)
-
-role_page = strawberry.field(
-    description="""## Description
-Fetches a paginated list of roles.
-Načte stránkovaný seznam rolí.
-
-## Details
-Returns a list of roles based on filtering criteria defined in RoleInputWhereFilter. Supports pagination, sorting, and advanced filtering options.
-Vrací seznam rolí na základě filtračních kritérií definovaných ve třídě RoleInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.
-
-## Permissions
-Accessible only to authenticated users.
-Přístup pouze pro autentizované uživatele.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=List[RoleGQLModel],
-    resolver=PageResolver[RoleGQLModel](whereType=RoleInputWhereFilter)
-)
 
 from src.DBDefinitions import (
     UserModel, MembershipModel, GroupModel, RoleModel
 )
 from sqlalchemy import select
+
+
 
 async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: Optional[IDType] = None) -> List["RoleGQLModel"]:
     # ve vsech skupinach, kde je user clenem najdi vsechny role a ty vrat
@@ -319,15 +266,86 @@ Accessible only to authenticated users.
 Přístup pouze pro autentizované uživatele.
 """
 
-@strawberry.field(
-    description=roles_on_user_description,
-    permission_classes=[OnlyForAuthentized]
-)
-async def roles_on_user(self, info: strawberry.types.Info, user_id: IDType) -> List["RoleGQLModel"]:
-    rows = await resolve_roles_on_user(self, info, user_id=user_id)
-    return (RoleGQLModel.from_dataclass(row) for row in rows)
+@strawberry.type(description="")
+class RBACItem:
+    rbac_id: IDType
+    roles: List[RoleGQLModel]
 
-roles_on_group_description = """## Description
+async def resolve_rbac_with_user(self, info: strawberry.types.Info, rbac_id: IDType, user_id: IDType):
+    from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group
+    awaitableresult0 = resolve_roles_on_user(None, info, user_id=rbac_id, filter_user_id=user_id)
+    awaitableresult1 = resolve_roles_on_group(None, info, group_id=rbac_id, filter_user_id=user_id)
+    result0, result1 = await asyncio.gather(awaitableresult0, awaitableresult1)
+    roles = [*result0, *result1]
+    return roles
+
+@strawberry.interface(description="queries related to Role")
+class RoleQueries:
+    @strawberry.field(
+        description="""## Description
+Fetches roles assigned to a user by their identifier.
+Načte role přiřazené uživateli dle jeho identifikátoru.
+
+## Details
+Utilizes a data loader to filter and return a list of roles for the specified user.
+Využívá loader pro filtrování a vrácení seznamu rolí pro zadaného uživatele.
+
+## Permissions
+Accessible only to authenticated users.
+Přístup pouze pro autentizované uživatele.
+    """,
+        permission_classes=[OnlyForAuthentized]
+    )
+    async def role_by_user(self, info: strawberry.types.Info, user_id: IDType) -> List["RoleGQLModel"]:
+        loader = RoleGQLModel.getLoader(info)
+        rows = await loader.filter_by(user_id=user_id)
+        return (RoleGQLModel.from_dataclass(row) for row in rows)
+
+    role_by_id = strawberry.field(
+        description="""## Description
+Fetches a role by its unique identifier.
+Načte roli podle jejího unikátního identifikátoru.
+
+## Details
+Utilizes a data loader to efficiently retrieve role details.
+Využívá loader pro efektivní načtení detailů role.
+
+## Permissions
+Accessible only to authenticated users.
+Přístup pouze pro autentizované uživatele.
+    """,
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=Optional[RoleGQLModel],
+        resolver=RoleGQLModel.load_with_loader
+    )
+
+    role_page = strawberry.field(
+        description="""## Description
+Fetches a paginated list of roles.
+Načte stránkovaný seznam rolí.
+
+## Details
+Returns a list of roles based on filtering criteria defined in RoleInputWhereFilter. Supports pagination, sorting, and advanced filtering options.
+Vrací seznam rolí na základě filtračních kritérií definovaných ve třídě RoleInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.
+
+## Permissions
+Accessible only to authenticated users.
+Přístup pouze pro autentizované uživatele.
+    """,
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=List[RoleGQLModel],
+        resolver=PageResolver[RoleGQLModel](whereType=RoleInputWhereFilter)
+    )
+
+    @strawberry.field(
+        description=roles_on_user_description,
+        permission_classes=[OnlyForAuthentized]
+    )
+    async def roles_on_user(self, info: strawberry.types.Info, user_id: IDType) -> List["RoleGQLModel"]:
+        rows = await resolve_roles_on_user(self, info, user_id=user_id)
+        return (RoleGQLModel.from_dataclass(row) for row in rows)
+
+    roles_on_group_description = """## Description
 Returns all roles applicable on a group (defined by groupId).
 Vrací všechny role vztahující se ke skupině (definované pomocí groupId).
 
@@ -338,15 +356,41 @@ Pokud je skupina oddělením a podskupinou fakulty, role s typem "dean" bude zah
 ## Permissions
 Accessible only to authenticated users.
 Přístup pouze pro autentizované uživatele.
-"""
+    """
 
-@strawberry.field(
-    description=roles_on_group_description,
-    permission_classes=[OnlyForAuthentized]
-)
-async def roles_on_group(self, info: strawberry.types.Info, group_id: IDType) -> List["RoleGQLModel"]:
-    rows = await resolve_roles_on_group(self, info=info, group_id=group_id)
-    return (RoleGQLModel.from_dataclass(row) for row in rows)
+    @strawberry.field(
+        description=roles_on_group_description,
+        permission_classes=[OnlyForAuthentized]
+    )
+    async def roles_on_group(self, info: strawberry.types.Info, group_id: IDType) -> List["RoleGQLModel"]:
+        rows = await resolve_roles_on_group(self, info=info, group_id=group_id)
+        return (RoleGQLModel.from_dataclass(row) for row in rows)
+
+
+    @strawberry.field(description="")
+    async def resolveRBACs(self, info: strawberry.types.Info, rbac_ids: List[IDType], user_id: typing.Optional[IDType] = None) -> List[RBACItem]:
+        from .roleGQLModel import RoleGQLModel
+        # resolvedroles = await asyncio.gather(RBACObjectGQLModel.resolve_reference(info=info, id=id) for id in rbac_ids)
+        if user_id is None:
+            user = getUserFromInfo(info=info)
+            user_id = user["id"]
+            user_id = IDType(user_id) if isinstance(user_id, str) else user_id
+        # print("resolveRBACs", [type(id) for id in rbac_ids], flush=True)
+        _rbac_ids = [rbac_id if isinstance(rbac_id, IDType) else IDType(rbac_id) for rbac_id in rbac_ids]
+        # print("resolveRBACs", [type(id) for id in _rbac_ids])
+        futures = (resolve_rbac_with_user(self, info=info, rbac_id=rbac_id, user_id=user_id) for rbac_id in _rbac_ids)
+        resolvedroles = await asyncio.gather(*futures)
+        index = {
+            role.id: role
+            for rolelist in resolvedroles
+            for role in rolelist
+        }
+        # print("resolveRBACs", resolvedroles, flush=True)
+        result = [
+            RBACItem(rbac_id=rbac_id, roles=[RoleGQLModel.from_dataclass(role) for role in index.values()]) 
+            for rbac_id, roles in zip(rbac_ids, resolvedroles)]
+
+        return result
 
 
 #####################################################################
@@ -403,6 +447,12 @@ class RoleDeleteGQLModel:
     id: IDType = strawberry.field(description="Unique identifier\nUnikátní identifikátor")
     lastchange: datetime.datetime = strawberry.field(description="Timestamp of last change\nČasové razítko poslední změny")
 
+@strawberry.input(description="Sets the deputy for the role")
+class RoleDeputyGQLModel:
+    id: IDType = strawberry.field(description="Primary key of the role for which the deputy will be assigned")
+    user_id: IDType = strawberry.field(description="ID of the user who will act as deputy")
+    enddate: datetime.datetime = strawberry.field(description="Date when the deputyship ends")
+
    
 class UpdateRolePermission(RBACPermission):
     message = "User is not allowed to update the role"
@@ -419,24 +469,6 @@ class UpdateRolePermission(RBACPermission):
         if not _role: return False
         return True
 
-@strawberry.mutation(
-    description="""## Description
-Updates a role.
-Aktualizuje roli.
-
-## Details
-Executes a safe update operation for a role based on the provided input, verifying that the user has the necessary permissions to update the role.
-Provádí bezpečnou aktualizaci role na základě poskytnutého vstupu, přičemž ověřuje, zda má uživatel potřebná oprávnění pro aktualizaci role.
-
-## Permissions
-Accessible only to authenticated users with update permissions.
-Přístup mají pouze autentizovaní uživatelé s oprávněními pro aktualizaci.
-""",
-    permission_classes=[OnlyForAuthentized, UpdateRolePermission]
-)
-async def role_update(self, info: strawberry.types.Info, role: RoleUpdateGQLModel) -> typing.Union[RoleGQLModel, UpdateError[RoleGQLModel]]:
-    return await Update[RoleGQLModel].DoItSafeWay(info=info, entity=role)
-
 class InsertRolePermission(RBACPermission):
     message = "User is not allowed create new role"
     async def has_permission(self, source, info: strawberry.types.Info, role: RoleInsertGQLModel) -> bool:
@@ -450,8 +482,37 @@ class InsertRolePermission(RBACPermission):
         if not _role: return False
         return True
 
-@strawberry.mutation(
-    description="""## Description
+@strawberry.interface(description="Mutations for roles")
+class RoleMutations:
+    @strawberry.mutation(
+        description="""## Description
+Updates a role.
+Aktualizuje roli.
+
+## Details
+Executes a safe update operation for a role based on the provided input, verifying that the user has the necessary permissions to update the role.
+Provádí bezpečnou aktualizaci role na základě poskytnutého vstupu, přičemž ověřuje, zda má uživatel potřebná oprávnění pro aktualizaci role.
+
+## Permissions
+Accessible only to authenticated users with update permissions.
+Přístup mají pouze autentizovaní uživatelé s oprávněními pro aktualizaci.
+    """,
+        permission_classes=[
+            OnlyForAuthentized, 
+            UpdateRolePermission
+        ],
+        extensions=[]
+    )
+    async def role_update(
+        self, 
+        info: strawberry.types.Info, 
+        role: RoleUpdateGQLModel
+    ) -> typing.Union[RoleGQLModel, UpdateError[RoleGQLModel]]:
+        return await Update[RoleGQLModel].DoItSafeWay(info=info, entity=role)
+
+
+    @strawberry.mutation(
+        description="""## Description
 Inserts a new role.
 Vloží novou roli.
 
@@ -462,15 +523,19 @@ Nastaví rbacobject_id na group_id pro zajištění konzistence přiřazení rol
 ## Permissions
 Accessible only to authenticated users with the necessary permissions to insert roles.
 Přístup mají pouze autentizovaní uživatelé s potřebnými oprávněními pro vkládání rolí.
-""",
-    permission_classes=[OnlyForAuthentized, InsertRolePermission]
-)
-async def role_insert(self, info: strawberry.types.Info, role: RoleInsertGQLModel) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
-    role.rbacobject_id = role.group_id
-    return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
+    """,
+        permission_classes=[OnlyForAuthentized, InsertRolePermission]
+    )
+    async def role_insert(
+        self, 
+        info: strawberry.types.Info, 
+        role: RoleInsertGQLModel
+    ) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
+        role.rbacobject_id = role.group_id
+        return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
-@strawberry.mutation(
-    description="""## Description
+    @strawberry.mutation(
+        description="""## Description
 Deletes a role.
 Odstraní roli.
 
@@ -481,48 +546,23 @@ Provádí bezpečné odstranění pomocí unikátního identifikátoru a časov�
 ## Permissions
 Accessible only to authenticated users with administrative privileges.
 Přístup mají pouze autentizovaní uživatelé s administrátorskými právy.
-""",
-    permission_classes=[OnlyForAuthentized, OnlyForAdmins]
-)
-async def role_delete(self, info: strawberry.types.Info, role: RoleDeleteGQLModel) -> typing.Optional[DeleteError[RoleGQLModel]]:
-    return await Delete[RoleGQLModel].DoItSafeWay(info=info, entity=role)
-
-@strawberry.type(description="")
-class RBACItem:
-    rbac_id: IDType
-    roles: List[RoleGQLModel]
-
-async def resolve_rbac_with_user(self, info: strawberry.types.Info, rbac_id: IDType, user_id: IDType):
-    from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group
-    awaitableresult0 = resolve_roles_on_user(None, info, user_id=rbac_id, filter_user_id=user_id)
-    awaitableresult1 = resolve_roles_on_group(None, info, group_id=rbac_id, filter_user_id=user_id)
-    result0, result1 = await asyncio.gather(awaitableresult0, awaitableresult1)
-    roles = [*result0, *result1]
-    return roles
-
-@strawberry.field(description="")
-async def resolveRBACs(self, info: strawberry.types.Info, rbac_ids: List[IDType], user_id: typing.Optional[IDType] = None) -> List[RBACItem]:
-    from .roleGQLModel import RoleGQLModel
-    # resolvedroles = await asyncio.gather(RBACObjectGQLModel.resolve_reference(info=info, id=id) for id in rbac_ids)
-    if user_id is None:
-        user = getUserFromInfo(info=info)
-        user_id = user["id"]
-        user_id = IDType(user_id) if isinstance(user_id, str) else user_id
-    # print("resolveRBACs", [type(id) for id in rbac_ids], flush=True)
-    _rbac_ids = [rbac_id if isinstance(rbac_id, IDType) else IDType(rbac_id) for rbac_id in rbac_ids]
-    # print("resolveRBACs", [type(id) for id in _rbac_ids])
-    futures = (resolve_rbac_with_user(self, info=info, rbac_id=rbac_id, user_id=user_id) for rbac_id in _rbac_ids)
-    resolvedroles = await asyncio.gather(*futures)
-    index = {
-        role.id: role
-        for rolelist in resolvedroles
-        for role in rolelist
-    }
-    # print("resolveRBACs", resolvedroles, flush=True)
-    result = [
-        RBACItem(rbac_id=rbac_id, roles=[RoleGQLModel.from_dataclass(role) for role in index.values()]) 
-        for rbac_id, roles in zip(rbac_ids, resolvedroles)]
-
-    return result
+    """,
+        permission_classes=[
+            OnlyForAuthentized, 
+            OnlyForAdmins
+        ]
+    )
+    async def role_delete(
+        self, 
+        info: strawberry.types.Info, 
+        role: RoleDeleteGQLModel
+    ) -> typing.Optional[DeleteError[RoleGQLModel]]:
+        return await Delete[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
 
+
+    @strawberry.mutation(
+        description="Nastavit si zastupce"
+    )
+    async def role_set_deputy(self, info: strawberry.types.Info, role: RoleDeputyGQLModel) -> typing.Union[InsertError[RoleGQLModel], RoleGQLModel]:
+        pass

@@ -1,0 +1,3911 @@
+"""
+Označuje, že pole je chráněné a kontroluje oprávnění pomocí PermissionCheckRoleExtension
+"""
+directive @permissionCheckRoleDirective(roles: [String!]!) repeatable on FIELD_DEFINITION | FIELD
+
+"""Description for foreign keys"""
+directive @relation(to: String!, field: String! = "id") repeatable on INPUT_FIELD_DEFINITION | FIELD_DEFINITION | FIELD
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"""
+Technical base interface for all GraphQL objects.
+Technický základní interface pro všechny GraphQL objekty.
+"""
+interface BaseGQLModel {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+}
+
+"Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+input BoolFilter {
+  """operation for select.filter() method"""
+  _eq: Boolean = null
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+"Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+input DatetimeFilter {
+  """operation for select.filter() method"""
+  _eq: DateTime = null
+
+  """operation for select.filter() method"""
+  _le: DateTime = null
+
+  """operation for select.filter() method"""
+  _lt: DateTime = null
+
+  """operation for select.filter() method"""
+  _ge: DateTime = null
+
+  """operation for select.filter() method"""
+  _gt: DateTime = null
+}
+
+""""""
+input GroupCategoryDeleteGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+}
+
+"""Entity representing a group category (like Academic structures)"""
+type GroupCategoryGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """"""
+  types(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupTypeInputWhereFilter = null
+  ): [GroupTypeGQLModel!]!
+}
+
+"""Error object returned as an result of Delete operation"""
+type GroupCategoryGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: GroupCategoryGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union GroupCategoryGQLModelGroupCategoryGQLModelUpdateError = GroupCategoryGQLModel | GroupCategoryGQLModelUpdateError
+
+union GroupCategoryGQLModelInsertError = GroupCategoryGQLModel | InsertError
+
+"""Error object returned as an result of Update operation"""
+type GroupCategoryGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: GroupCategoryGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"""Operators definition on GroupCategoryInputWhereFilter"""
+input GroupCategoryInputWhereFilter {
+  """Filter method"""
+  _or: [GroupCategoryInputWhereFilterOr!] = null
+
+  """Filter method"""
+  _and: [GroupCategoryInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+}
+
+"""And operator definition on GroupCategoryInputWhereFilter"""
+input GroupCategoryInputWhereFilterAnd {
+  """Filter method"""
+  _or: [GroupCategoryInputWhereFilterOr!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+}
+
+"""Or operator definition on GroupCategoryInputWhereFilter"""
+input GroupCategoryInputWhereFilterOr {
+  """Filter method"""
+  _and: [GroupCategoryInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+}
+
+""""""
+input GroupCategoryInsertGQLModel {
+  id: UUID = null
+  name: String = null
+  nameEn: String = null
+}
+
+""""""
+input GroupCategoryUpdateGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+  name: String = null
+  nameEn: String = null
+}
+
+"## Description\nInput model for deleting a group.\nVstupní model pro smazání skupiny.\n\n## Fields\n- **id**: Unique identifier of the group.\n  Unikátní identifikátor skupiny.\n- **lastchange**: Timestamp of the last change, used for concurrency control.\n  Časové razítko poslední změny, používané pro kontrolu konzistence.\n"
+input GroupDeleteGQLModel {
+  """
+  Unique identifier of the group.
+  Unikátní identifikátor skupiny.
+  """
+  id: UUID!
+
+  """
+  Timestamp of the last change, used for concurrency control.
+  Časové razítko poslední změny, používané pro kontrolu konzistence.
+  """
+  lastchange: DateTime!
+}
+
+"\n## Description\nGroup is an entity with members.  \nSkupina je entita se členy.\n\n## Details\n- It can have a master group; only one master group is allowed.  \n  Může mít nadřazenou skupinu; je povolena pouze jedna nadřazená skupina.\n- Groups are organized in a hierarchical tree structure.  \n  Skupiny jsou organizovány ve stromové hierarchii.\n- Roles can be defined on the group to control permissions and access.  \n  Na skupině lze definovat role, které ovlivňují oprávnění a přístup.\n\n## Business Rules\n- A group may have only one master group.  \n  Skupina může mít pouze jednu nadřazenou skupinu.\n- The hierarchy must be consistent.  \n  Hierarchie musí být udržována konzistentně.\n"
+type GroupGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """
+  Group's email address.  
+  Emailová adresa skupiny.
+  """
+  email: String
+
+  """
+  Abbreviation or short name for the group.  
+  Zkratka nebo krátký název skupiny.
+  """
+  abbreviation: String
+
+  """
+  Start date of the group's activity.  
+  Datum zahájení aktivity skupiny.
+  """
+  startdate: DateTime
+
+  """
+  End date of the group's activity (if applicable).  
+  Datum ukončení aktivity skupiny (je-li relevantní).
+  """
+  enddate: DateTime
+
+  """
+  Identifier for the group's type.  
+  Identifikátor typu skupiny.
+  """
+  grouptypeId: UUID
+
+  """
+  The type of the group represented as an object (e.g., Department).  
+  Typ skupiny reprezentovaný jako objekt (např. oddělení).
+  """
+  grouptype: GroupTypeGQLModel
+
+  """
+  List of directly subordinate groups.  
+  Seznam přímo podřízených skupin.
+  """
+  subgroups(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupInputWhereFilter = null
+  ): [GroupGQLModel!]!
+
+  """
+  Identifier of the master (commanding) group.  
+  Identifikátor nadřazené (řídící) skupiny.
+  """
+  mastergroupId: UUID
+
+  """
+  The master group that commands this group.  
+  Nadřazená skupina, která řídí tuto skupinu.
+  """
+  mastergroup: GroupGQLModel
+
+  """
+  Materialized path representing the group's hierarchical location.  
+  Materializovaná cesta reprezentující umístění skupiny v hierarchii.
+  """
+  path: String
+
+  """
+  List of membership records for users in this group.  
+  Seznam záznamů členství uživatelů v této skupině.
+  """
+  memberships(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: MembershipInputWhereFilter = null
+  ): [MembershipGQLModel!]!
+
+  """
+  List of roles defined for the group.  
+  Seznam rolí definovaných pro tuto skupinu.
+  """
+  roles(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleInputWhereFilter = null
+  ): [RoleGQLModel!]!
+
+  """
+  Indicates whether the group is currently active.  
+  Indikuje, zda je skupina aktuálně aktivní.
+  """
+  valid: Boolean
+
+  """
+  Returns the hierarchy of master groups from the topmost to the immediate master.  
+  Vrací hierarchii nadřazených skupin od nejvyšší po bezprostředního nadřízeného.
+  """
+  mastergroups: [GroupGQLModel!]!
+
+  """
+  Aggregates roles along the group's hierarchical path.  
+  Agreguje role podél hierarchie skupiny.
+  """
+  rolesOn: [RoleGQLModel!]!
+}
+
+"""Error object returned as an result of Delete operation"""
+type GroupGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: GroupGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union GroupGQLModelGroupGQLModelUpdateError = GroupGQLModel | GroupGQLModelUpdateError
+
+union GroupGQLModelInsertError = GroupGQLModel | InsertError
+
+"""Error object returned as an result of Update operation"""
+type GroupGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: GroupGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **grouptype** compound sub filter\n- **roles** compound sub filter\n- **mastergroup_id** filter, examples:\n\n\t {'mastergroup_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'mastergroup_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **grouptype_id** filter, examples:\n\n\t {'grouptype_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'grouptype_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupInputWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [GroupInputWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [GroupInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  grouptype: GroupInputWhereFilterGrouptype!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  mastergroup_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  grouptype_id: UuidFilter!
+}
+
+"""Filter for type 'GroupInputWhereFilter'."""
+input GroupInputWhereFilterGrouptype {
+  """- grouptype: Compound filter """
+  grouptype: GroupTypeInputWhereFilter = null
+}
+
+"""Filter for type 'GroupInputWhereFilter'."""
+input GroupInputWhereFilterRoles {
+  """- roles: Compound filter """
+  roles: RoleInputWhereFilter = null
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **grouptype** compound sub filter\n- **roles** compound sub filter\n- **mastergroup_id** filter, examples:\n\n\t {'mastergroup_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'mastergroup_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **grouptype_id** filter, examples:\n\n\t {'grouptype_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'grouptype_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupInputWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [GroupInputWhereFilter_or!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  grouptype: GroupInputWhereFilterGrouptype!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  mastergroup_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  grouptype_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **grouptype** compound sub filter\n- **roles** compound sub filter\n- **mastergroup_id** filter, examples:\n\n\t {'mastergroup_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'mastergroup_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **grouptype_id** filter, examples:\n\n\t {'grouptype_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'grouptype_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupInputWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [GroupInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  grouptype: GroupInputWhereFilterGrouptype!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  mastergroup_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  grouptype_id: UuidFilter!
+}
+
+"""Input model for inserting a new group."""
+input GroupInsertGQLModel {
+  """
+  Name of the new group.
+  Název nové skupiny.
+  """
+  name: String!
+
+  """
+  Identifier for the group's type.
+  Identifikátor typu skupiny.
+  """
+  grouptypeId: UUID!
+
+  """
+  Primary key of the group.
+  Primární klíč skupiny. If not provided, a new unique identifier will be generated.
+  Pokud není zadán, bude vygenerován nový unikátní identifikátor.
+  """
+  id: UUID = null
+
+  """
+  (Optional) English name of the group.
+  (Volitelné) Anglický název skupiny.
+  """
+  nameEn: String = null
+
+  """
+  (Optional) Identifier for the master group.
+  (Volitelné) Identifikátor nadřazené skupiny.
+  """
+  mastergroupId: UUID = null
+
+  """
+  (Optional) Abbreviation of the group.
+  (Volitelné) Zkratka skupiny.
+  """
+  abbreviation: String = null
+
+  """
+  (Optional) Email address of the group.
+  (Volitelné) Emailová adresa skupiny.
+  """
+  email: String = null
+
+  """podskupiny, které budou vytvořeny jako podřízené této skupině."""
+  subgroups: [GroupInsertGQLModel!] = []
+
+  """členství, která budou vytvořena pro tuto skupinu"""
+  memberships: [MembershipInsertGQLModel!] = []
+
+  """
+  List of roles assigned to the user
+  Seznam rolí přiřazených uživateli
+  """
+  roles: [RoleInsertGQLModel!] = []
+}
+
+"""Base interface for group mutations"""
+interface GroupMutations {
+  """Upravi rbacobject_ids"""
+  groupUpdateRbacobjectIds(group: GroupUpdateGQLModel!): GroupGQLModelGroupGQLModelUpdateError! @permissionCheckRoleDirective(roles: ["administrátor"])
+
+  """Upravi rbacobject_ids"""
+  groupInsertSubgroups(group: GroupSplitGQLModel!): GroupGQLModelGroupGQLModelUpdateError! @permissionCheckRoleDirective(roles: ["administrátor", "personalista"])
+
+  """
+  Splits a group into subgroups. All memberships of the original group must be converted into new subgroups.
+  """
+  groupSplit(group: GroupSplitGQLModel!): GroupGQLModelInsertError! @permissionCheckRoleDirective(roles: ["administrátor", "garant", "garant předmětu"])
+
+  "## Description\n    Allows updating a group, including changing its master group.\n    Umožňuje aktualizaci skupiny, včetně změny nadřazené skupiny.\n\n    ## Details\n    Performs safe update operations ensuring data consistency.\n    Provádí bezpečné aktualizační operace zajišťující konzistenci dat.\n\n    ## Permissions\n    - Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.\n    - The user must satisfy the conditions defined by UpdateGroupPermission.\n    "
+  groupUpdate(group: GroupUpdateGQLModel!): GroupGQLModelGroupGQLModelUpdateError!
+
+  "## Description\n    Allows inserting a new group.\n    Umožňuje vložení nové skupiny.\n\n    ## Details\n    Handles the creation logic, including setting up the hierarchical path for the group.\n    Řeší logiku vytvoření, včetně nastavení hierarchické cesty pro skupinu.\n\n    ## Permissions\n    - Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.\n    - The user must satisfy the conditions defined by InsertGroupPermission.\n    "
+  groupInsert(group: GroupInsertGQLModel!): GroupGQLModelInsertError!
+
+  "## Description\n    Deletes a group.\n    Maže skupinu.\n\n    ## Details\n    This operation removes the group entity from the system.\n    Tato operace odstraní entitu skupiny ze systému.\n\n    ## Permissions\n    - Only authenticated users with administrative rights (e.g. OnlyForAdmins) can perform this mutation.\n    - The operation is restricted to administrators.\n    "
+  groupDelete(group: GroupDeleteGQLModel!): GroupGQLModelDeleteError
+}
+
+"""Base interface for group queries"""
+interface GroupQueries {
+  "## Description\nReturns a list of groups in a paged format.\nVrací seznam skupin s stránkováním.\n\n## Details\nThis query supports pagination parameters to efficiently handle large datasets.\nTento dotaz podporuje stránkovací parametry pro efektivní zpracování rozsáhlých dat.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can access this query.\n- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.\n    "
+  groupPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupInputWhereFilter = null
+  ): [GroupGQLModel!]!
+
+  "## Description\nFinds a group by its unique identifier.\nVyhledá skupinu podle jejího unikátního identifikátoru.\n\n## Details\nIf the group is found, the corresponding group object is returned; otherwise, null is returned.\nPokud je skupina nalezena, vrátí se odpovídající objekt skupiny; v opačném případě null.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can perform this query.\n- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.\n    "
+  groupById(id: UUID!): GroupGQLModel
+}
+
+"""Input model for splitting the group."""
+input GroupSplitGQLModel {
+  """Primary key of the group."""
+  id: UUID!
+
+  """"""
+  subgroups: [GroupInsertGQLModel!]! = []
+}
+
+""""""
+input GroupTypeDeleteGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+}
+
+"""Entity representing a group type (like Faculty)"""
+type GroupTypeGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """Materialized path technique, not implemented"""
+  path: String
+
+  """Unique identifier for the master type of this group type"""
+  mastertypeId: UUID
+
+  """
+  Detailed information about the master type that this group type is associated with
+  """
+  mastertype: GroupTypeGQLModel
+
+  """List of subtypes associated with this group type"""
+  subtypes(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupTypeInputWhereFilter = null
+  ): [GroupTypeGQLModel!]
+}
+
+"""Error object returned as an result of Delete operation"""
+type GroupTypeGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: GroupTypeGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union GroupTypeGQLModelGroupTypeGQLModelUpdateError = GroupTypeGQLModel | GroupTypeGQLModelUpdateError
+
+union GroupTypeGQLModelInsertError = GroupTypeGQLModel | InsertError
+
+"""Error object returned as an result of Update operation"""
+type GroupTypeGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: GroupTypeGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupTypeInputWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [GroupTypeInputWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [GroupTypeInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupTypeInputWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [GroupTypeInputWhereFilter_or!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input GroupTypeInputWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [GroupTypeInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+}
+
+""""""
+input GroupTypeInsertGQLModel {
+  id: UUID = null
+  name: String = null
+  nameEn: String = null
+
+  """List of subtypes associated with this group type"""
+  subtypes: [GroupTypeInsertGQLModel!] = []
+}
+
+""""""
+input GroupTypeUpdateGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+  name: String = null
+  nameEn: String = null
+}
+
+"## Description\nInput model for updating a group.\nVstupní model pro aktualizaci skupiny.\n\n## Fields\n- **id**: Unique identifier of the group.\n  Unikátní identifikátor skupiny.\n- **lastchange**: Timestamp of the last modification.\n  Časové razítko poslední změny.\n- **name**: (Optional) Updated name of the group.\n  (Volitelné) Aktualizovaný název skupiny.\n- **name_en**: (Optional) Updated English name.\n  (Volitelné) Aktualizovaný anglický název skupiny.\n- **grouptype_id**: (Optional) Identifier for the new group type.\n  (Volitelné) Identifikátor nového typu skupiny.\n- **mastergroup_id**: (Optional) Identifier of the new master group.\n  (Volitelné) Identifikátor nové nadřazené skupiny.\n- **valid**: (Optional) Flag indicating if the group is active.\n  (Volitelné) Příznak indikující, zda je skupina aktivní.\n- **abbreviation**: (Optional) Abbreviation or short name.\n  (Volitelné) Zkratka nebo krátký název.\n- **email**: (Optional) Email address associated with the group.\n  (Volitelné) Emailová adresa spojená se skupinou.\n- **changedby_id**: (Private) Identifier of the user who made the change.\n  (Interní) Identifikátor uživatele, který provedl změnu.\n"
+input GroupUpdateGQLModel {
+  """
+  Unique identifier of the group.
+  Unikátní identifikátor skupiny.
+  """
+  id: UUID!
+
+  """
+  Timestamp of the last modification.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime!
+
+  """
+  (Optional) Updated name of the group.
+  (Volitelné) Aktualizovaný název skupiny.
+  """
+  name: String = null
+
+  """
+  (Optional) Updated English name of the group.
+  (Volitelné) Aktualizovaný anglický název skupiny.
+  """
+  nameEn: String = null
+
+  """
+  (Optional) Identifier for the new group type.
+  (Volitelné) Identifikátor nového typu skupiny.
+  """
+  grouptypeId: UUID = null
+
+  """
+  (Optional) Identifier for the new master group.
+  (Volitelné) Identifikátor nové nadřazené skupiny.
+  """
+  mastergroupId: UUID = null
+
+  """
+  (Optional) Flag indicating if the group is active.
+  (Volitelné) Příznak indikující, zda je skupina aktivní.
+  """
+  valid: Boolean = null
+
+  """
+  (Optional) Abbreviation or short name.
+  (Volitelné) Zkratka nebo krátký název.
+  """
+  abbreviation: String = null
+
+  """
+  (Optional) Email address associated with the group.
+  (Volitelné) Emailová adresa spojená se skupinou.
+  """
+  email: String = null
+}
+
+"""Error object returned as an result of Insert operation"""
+type InsertError {
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+"## Description\nInput model for deleting a membership.\nVstupní model pro smazání členství.\n\n## Fields\n- **id**: Unique identifier of the membership.\n  Unikátní identifikátor členství.\n- **lastchange**: Timestamp of the last modification for concurrency control.\n  Časové razítko poslední změny, sloužící k řízení konzistence.\n"
+input MembershipDeleteGQLModel {
+  """
+  Unique identifier of the membership.
+  Unikátní identifikátor členství.
+  """
+  id: UUID!
+
+  """
+  Timestamp of the last modification for concurrency control.
+  Časové razítko poslední změny, sloužící k řízení konzistence.
+  """
+  lastchange: DateTime!
+}
+
+"## Description\nEntity representing a relation between a user and a group.\nEntita reprezentující vztah mezi uživatelem a skupinou.\n\n## Details\nThis type defines the membership of a user in a group, including references to both the user and the group, as well as details on membership validity and effective dates.\nTento typ definuje členství uživatele ve skupině, včetně odkazů na uživatele a skupinu, platnosti členství a časových údajů.\n"
+type MembershipGQLModel implements BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  Returns the RBAC object associated with this membership.
+  Vrací RBAC objekt spojený s tímto členstvím.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """
+  ID of associated user.
+  ID spojeného uživatele.
+  """
+  userId: UUID @relation(to: "UserGQLModel", field: "id")
+
+  """
+  ID of associated group.
+  ID spojené skupiny.
+  """
+  groupId: UUID @relation(to: "GroupGQLModel", field: "id")
+
+  """
+  Indicates whether the membership is valid.
+  Indikuje, zda je členství platné.
+  """
+  valid: Boolean
+
+  """
+  Date when the membership begins.
+  Datum začátku členství.
+  """
+  startdate: DateTime
+
+  """
+  Date when the membership ends.
+  Datum ukončení členství.
+  """
+  enddate: DateTime
+
+  """
+  User object associated with the membership.
+  Objekt uživatele spojený s členstvím.
+  """
+  user: UserGQLModel
+
+  """
+  Group object associated with the membership.
+  Objekt skupiny spojený s členstvím.
+  """
+  group: GroupGQLModel
+}
+
+"""Error object returned as an result of Delete operation"""
+type MembershipGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: MembershipGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union MembershipGQLModelInsertError = MembershipGQLModel | InsertError
+
+union MembershipGQLModelMembershipGQLModelUpdateError = MembershipGQLModel | MembershipGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type MembershipGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: MembershipGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"""Operators definition on MembershipInputWhereFilter"""
+input MembershipInputWhereFilter {
+  """Filter method"""
+  _or: [MembershipInputWhereFilterOr!] = null
+
+  """Filter method"""
+  _and: [MembershipInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  valid: BoolFilter = null
+
+  """Filter method"""
+  group: RoleInputWhereFilterGroup = null
+
+  """Filter method"""
+  user: RoleInputWhereFilterUser = null
+}
+
+"""And operator definition on MembershipInputWhereFilter"""
+input MembershipInputWhereFilterAnd {
+  """Filter method"""
+  _or: [MembershipInputWhereFilterOr!] = null
+
+  """Filter method"""
+  valid: BoolFilter = null
+
+  """Filter method"""
+  group: RoleInputWhereFilterGroup = null
+
+  """Filter method"""
+  user: RoleInputWhereFilterUser = null
+}
+
+"""Or operator definition on MembershipInputWhereFilter"""
+input MembershipInputWhereFilterOr {
+  """Filter method"""
+  _and: [MembershipInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  valid: BoolFilter = null
+
+  """Filter method"""
+  group: RoleInputWhereFilterGroup = null
+
+  """Filter method"""
+  user: RoleInputWhereFilterUser = null
+}
+
+"## Description\nInput model for inserting a new membership.\nVstupní model pro vložení nového členství.\n\n## Fields\n- **user_id**: Unique identifier of the user.\n  Unikátní identifikátor uživatele.\n- **group_id**: Unique identifier of the group.\n  Unikátní identifikátor skupiny.\n- **id**: (Optional) Primary key of the membership entity. If not provided, a new unique identifier will be generated.\n  (Volitelné) Primární klíč entity členství. Pokud není zadán, bude vygenerován nový unikátní identifikátor.\n- **valid**: (Optional) Flag indicating if the membership is valid.\n  (Volitelné) Příznak platnosti členství.\n- **startdate**: (Optional) Date when the membership starts.\n  (Volitelné) Datum začátku členství.\n- **enddate**: (Optional) Date when the membership ends.\n  (Volitelné) Datum ukončení členství.\n- **createdby_id**: (Private) Identifier of the user who created the membership.\n  (Interní) Identifikátor uživatele, který vytvořil členství.\n"
+input MembershipInsertGQLModel {
+  """
+  Unique identifier of the user.
+  Unikátní identifikátor uživatele.
+  """
+  userId: UUID!
+
+  """
+  Unique identifier of the group.
+  Unikátní identifikátor skupiny.
+  """
+  groupId: UUID!
+
+  """
+  Primary key of the membership entity.
+  Primární klíč entity členství. If not provided, a new unique identifier will be generated.
+  Pokud není zadán, bude vygenerován nový unikátní identifikátor.
+  """
+  id: UUID = null
+
+  """
+  (Optional) Date when the membership starts.
+  (Volitelné) Datum začátku členství.
+  """
+  startdate: DateTime = null
+
+  """
+  (Optional) Date when the membership ends.
+  (Volitelné) Datum ukončení členství.
+  """
+  enddate: DateTime = null
+}
+
+"## Description\nInput model for updating an existing membership.\nVstupní model pro aktualizaci existujícího členství.\n\n## Fields\n- **id**: Unique identifier of the membership.\n  Unikátní identifikátor členství.\n- **lastchange**: Timestamp of the last modification for concurrency control.\n  Časové razítko poslední změny, sloužící k řízení konzistence.\n- **valid**: (Optional) Flag indicating if the membership is valid.\n  (Volitelné) Příznak platnosti členství.\n- **startdate**: (Optional) Updated date when the membership starts.\n  (Volitelné) Aktualizované datum začátku členství.\n- **enddate**: (Optional) Updated date when the membership ends.\n  (Volitelné) Aktualizované datum ukončení členství.\n- **changedby_id**: (Private) Identifier of the user who made the change.\n  (Interní) Identifikátor uživatele, který provedl změnu.\n- **group_id**: (Private) Identifier for the group, if changed.\n  (Interní) Identifikátor skupiny, pokud došlo ke změně.\n"
+input MembershipUpdateGQLModel {
+  """
+  Unique identifier of the membership.
+  Unikátní identifikátor členství.
+  """
+  id: UUID!
+
+  """
+  Timestamp of the last modification for concurrency control.
+  Časové razítko poslední změny, sloužící k řízení konzistence.
+  """
+  lastchange: DateTime!
+
+  """
+  (Optional) Flag indicating if the membership is valid.
+  (Volitelné) Příznak platnosti členství.
+  """
+  valid: Boolean = null
+
+  """
+  (Optional) Updated date when the membership starts.
+  (Volitelné) Aktualizované datum začátku členství.
+  """
+  startdate: DateTime = null
+
+  """
+  (Optional) Updated date when the membership ends.
+  (Volitelné) Aktualizované datum ukončení členství.
+  """
+  enddate: DateTime = null
+}
+
+type Mutation implements GroupMutations & UserMutations {
+  """Upravi rbacobject_ids"""
+  groupUpdateRbacobjectIds(group: GroupUpdateGQLModel!): GroupGQLModelGroupGQLModelUpdateError! @permissionCheckRoleDirective(roles: ["administrátor"])
+
+  """Upravi rbacobject_ids"""
+  groupInsertSubgroups(group: GroupSplitGQLModel!): GroupGQLModelGroupGQLModelUpdateError! @permissionCheckRoleDirective(roles: ["administrátor", "personalista"])
+
+  """
+  Splits a group into subgroups. All memberships of the original group must be converted into new subgroups.
+  """
+  groupSplit(group: GroupSplitGQLModel!): GroupGQLModelInsertError! @permissionCheckRoleDirective(roles: ["administrátor", "garant", "garant předmětu"])
+
+  "## Description\n    Allows updating a group, including changing its master group.\n    Umožňuje aktualizaci skupiny, včetně změny nadřazené skupiny.\n\n    ## Details\n    Performs safe update operations ensuring data consistency.\n    Provádí bezpečné aktualizační operace zajišťující konzistenci dat.\n\n    ## Permissions\n    - Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.\n    - The user must satisfy the conditions defined by UpdateGroupPermission.\n    "
+  groupUpdate(group: GroupUpdateGQLModel!): GroupGQLModelGroupGQLModelUpdateError!
+
+  "## Description\n    Allows inserting a new group.\n    Umožňuje vložení nové skupiny.\n\n    ## Details\n    Handles the creation logic, including setting up the hierarchical path for the group.\n    Řeší logiku vytvoření, včetně nastavení hierarchické cesty pro skupinu.\n\n    ## Permissions\n    - Only authenticated users (e.g. OnlyForAuthentized) with proper RBAC permissions can perform this mutation.\n    - The user must satisfy the conditions defined by InsertGroupPermission.\n    "
+  groupInsert(group: GroupInsertGQLModel!): GroupGQLModelInsertError!
+
+  "## Description\n    Deletes a group.\n    Maže skupinu.\n\n    ## Details\n    This operation removes the group entity from the system.\n    Tato operace odstraní entitu skupiny ze systému.\n\n    ## Permissions\n    - Only authenticated users with administrative rights (e.g. OnlyForAdmins) can perform this mutation.\n    - The operation is restricted to administrators.\n    "
+  groupDelete(group: GroupDeleteGQLModel!): GroupGQLModelDeleteError
+
+  "\nDescription:\nMutation for updating a UserGQLModel entity.\nMutace pro aktualizaci entity UserGQLModel.\n\nDetails:\nExecutes a safe update operation with concurrency control using provided update input.\nProvádí bezpečnou aktualizaci s využitím kontroly souběžnosti na základě zadaného vstupu.\n\nPermissions:\nOnly authenticated users with the necessary update permissions can execute this mutation.\nPouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provést.\n    "
+  userUpdate(user: UserUpdateGQLModel!): UserGQLModelUserGQLModelUpdateError!
+
+  "\nDescription:\nMutation for inserting a new UserGQLModel entity.\nMutace pro vytvoření nové entity UserGQLModel.\nDetails:\nExecutes a safe insertion operation with role-based access control and data validation.\nProvádí bezpečné vytvoření s kontrolou přístupových práv a validací vstupních dat.\nPermissions:\nOnly authenticated users with the necessary insert permissions can perform this mutation.\nPouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provádět.\n    "
+  userInsert(user: UserInsertGQLModel!): UserGQLModelInsertError!
+
+  "\nDescription:\nMutation for deleting a UserGQLModel entity.\nMutace pro odstranění entity UserGQLModel.\n\nDetails:\nRequires the id and lastchange timestamp to ensure safe deletion and data consistency.\nVyžaduje id a časové razítko poslední změny pro zajištění bezpečného odstranění a zachování konzistence dat.\n\nPermissions:\nOnly authenticated users with appropriate RBAC permissions can perform delete operations.\nPouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto mutaci provádět.\n    "
+  userDelete(user: UserDeleteGQLModel!): UserGQLModelDeleteError
+
+  "## Description\nInserts new membership.\nVloží nové členství.\n\n## Details\nThis mutation creates a new membership record using the provided details.\nAll required fields must be specified and valid.\nTato mutace vytvoří nový záznam členství se zadanými detaily.\nVšechna povinná pole musí být správně vyplněna.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) with the permissions defined by InsertMembershipPermission can perform this mutation.\n- Pouze autentizovaní uživatelé s oprávněními definovanými pomocí InsertMembershipPermission mohou tuto mutaci provést.\n"
+  membershipInsert(membership: MembershipInsertGQLModel!): MembershipGQLModelInsertError!
+
+  "## Description\nUpdates the membership record, except for the associated group and user.\nAktualizuje záznam členství, s výjimkou změny asociované skupiny a uživatele.\n\n## Details\nThis mutation updates membership details such as validity and effective dates.\nChanging the associated group or user is not permitted.\nTato mutace aktualizuje detaily členství, jako je platnost a datum začátku/ukončení.\nZměna asociované skupiny nebo uživatele není povolena.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) with appropriate membership update permissions (UpdateMembershipPermission) can perform this mutation.\n- Pouze autentizovaní uživatelé s odpovídajícími právy pro aktualizaci členství (UpdateMembershipPermission) mohou tuto mutaci provést.\n"
+  membershipUpdate(membership: MembershipUpdateGQLModel!): MembershipGQLModelMembershipGQLModelUpdateError!
+
+  "## Description\nDeletes the membership.\nMaže členství.\n\n## Details\nThis mutation removes an existing membership record identified by its unique identifier.\nIt uses the last change timestamp for concurrency control to ensure data consistency.\nTato mutace odstraní existující záznam členství, který je identifikován jeho unikátním identifikátorem.\nPro kontrolu konzistence se využívá časové razítko poslední změny.\n\n## Permissions\n- Only authenticated users with administrative rights (OnlyForAdmins) are allowed to perform this mutation.\n- Pouze autentizovaní uživatelé s administrátorskými právy (OnlyForAdmins) mohou tuto mutaci provést.\n"
+  membershipDelete(membership: MembershipDeleteGQLModel!): MembershipGQLModelDeleteError
+
+  "## Description\nInserts a new role.\nVloží novou roli.\n\n## Details\nSets rbacobject_id to group_id to ensure role association consistency before insertion.\nNastaví rbacobject_id na group_id pro zajištění konzistence přiřazení role před vložením.\n\n## Permissions\nAccessible only to authenticated users with the necessary permissions to insert roles.\nPřístup mají pouze autentizovaní uživatelé s potřebnými oprávněními pro vkládání rolí.\n"
+  roleInsert(role: RoleInsertGQLModel!): RoleGQLModelInsertError!
+
+  "## Description\nUpdates a role.\nAktualizuje roli.\n\n## Details\nExecutes a safe update operation for a role based on the provided input, verifying that the user has the necessary permissions to update the role.\nProvádí bezpečnou aktualizaci role na základě poskytnutého vstupu, přičemž ověřuje, zda má uživatel potřebná oprávnění pro aktualizaci role.\n\n## Permissions\nAccessible only to authenticated users with update permissions.\nPřístup mají pouze autentizovaní uživatelé s oprávněními pro aktualizaci.\n"
+  roleUpdate(role: RoleUpdateGQLModel!): RoleGQLModelRoleGQLModelUpdateError!
+
+  "## Description\nDeletes a role.\nOdstraní roli.\n\n## Details\nPerforms safe deletion using the unique identifier and last change timestamp.\nProvádí bezpečné odstranění pomocí unikátního identifikátoru a časového razítka poslední změny.\n\n## Permissions\nAccessible only to authenticated users with administrative privileges.\nPřístup mají pouze autentizovaní uživatelé s administrátorskými právy.\n"
+  roleDelete(role: RoleDeleteGQLModel!): RoleGQLModelDeleteError
+
+  """Inserts a new roleType record"""
+  roleTypeInsert(roleType: RoleTypeInsertGQLModel!): RoleTypeGQLModelInsertError!
+
+  """Updates existing roleType record"""
+  roleTypeUpdate(roleType: RoleTypeUpdateGQLModel!): RoleTypeGQLModelRoleTypeGQLModelUpdateError!
+
+  """Deletes the roleType"""
+  roleTypeDelete(roleType: RoleTypeDeleteGQLModel!): RoleTypeGQLModelDeleteError
+
+  """Inserts a role category"""
+  roleCategoryInsert(roleCategory: RoleCategoryInsertGQLModel!): RoleCategoryGQLModelInsertError!
+
+  """Updates a role category"""
+  roleCategoryUpdate(roleCategory: RoleCategoryUpdateGQLModel!): RoleCategoryGQLModelRoleCategoryGQLModelUpdateError!
+
+  """Deletes the role category"""
+  roleCategoryDelete(roleCategory: RoleCategoryDeleteGQLModel!): RoleCategoryGQLModelDeleteError
+
+  """Inserts a group type"""
+  groupTypeInsert(groupType: GroupTypeInsertGQLModel!): GroupTypeGQLModelInsertError!
+
+  """Allows a update of group type"""
+  groupTypeUpdate(groupType: GroupTypeUpdateGQLModel!): GroupTypeGQLModelGroupTypeGQLModelUpdateError!
+
+  """Deletes the group type"""
+  groupTypeDelete(groupType: GroupTypeDeleteGQLModel!): GroupTypeGQLModelDeleteError
+
+  """Inserts a group category"""
+  groupCategoryInsert(groupCategory: GroupCategoryInsertGQLModel!): GroupCategoryGQLModelInsertError!
+
+  """Allows an update of group category"""
+  groupCategoryUpdate(groupCategory: GroupCategoryUpdateGQLModel!): GroupCategoryGQLModelGroupCategoryGQLModelUpdateError!
+
+  """Deletes the group category"""
+  groupCategoryDelete(groupCategory: GroupCategoryDeleteGQLModel!): GroupCategoryGQLModelDeleteError
+
+  """adds to a list of role types new item"""
+  roleTypeListAddRole(entity: RoleTypeInsertIntoList!): RoleTypeListGQLModelInsertError!
+
+  """Finds an user by their id"""
+  roleTypeListRemoveRole(entity: RoleTypeDeleteFromList!): RoleTypeListGQLModelUpdateErrorRoleTypeListGQLModel!
+
+  """C operation"""
+  stateInsert(state: StateInsertGQLModel!): StateGQLModelInsertError!
+
+  """U operation"""
+  stateUpdate(state: StateUpdateGQLModel!): StateGQLModelStateGQLModelUpdateError!
+
+  """U operation"""
+  stateDelete(state: StateDeleteGQLModel!): StateGQLModelDeleteError
+
+  """C operation"""
+  statemachineInsert(statemachine: StatemachineInsertGQLModel!): StateMachineGQLModelInsertError!
+
+  """U operation"""
+  statemachineUpdate(statemachine: StatemachineUpdateGQLModel!): StateMachineGQLModelStateMachineGQLModelUpdateError!
+
+  """U operation"""
+  statemachineDelete(statemachine: StatemachineDeleteGQLModel!): StateMachineGQLModelDeleteError
+
+  """C operation"""
+  statetransitionInsert(statetransition: StatetransitionInsertGQLModel!): StateTransitionGQLModelInsertError!
+
+  """U operation"""
+  statetransitionUpdate(statetransition: StatetransitionUpdateGQLModel!): StateTransitionGQLModelStateTransitionGQLModelUpdateError!
+
+  """D operation"""
+  statetransitionDelete(statetransition: StatetransitionDeleteGQLModel!): StateTransitionGQLModelDeleteError
+}
+
+"""base for types and categories"""
+interface NamedGQLModel implements BaseGQLModel {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+}
+
+type Query implements GroupQueries & UserQueries & RoleQueries {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+
+  "## Description\nReturns a list of groups in a paged format.\nVrací seznam skupin s stránkováním.\n\n## Details\nThis query supports pagination parameters to efficiently handle large datasets.\nTento dotaz podporuje stránkovací parametry pro efektivní zpracování rozsáhlých dat.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can access this query.\n- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.\n    "
+  groupPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupInputWhereFilter = null
+  ): [GroupGQLModel!]!
+
+  "## Description\nFinds a group by its unique identifier.\nVyhledá skupinu podle jejího unikátního identifikátoru.\n\n## Details\nIf the group is found, the corresponding group object is returned; otherwise, null is returned.\nPokud je skupina nalezena, vrátí se odpovídající objekt skupiny; v opačném případě null.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can perform this query.\n- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.\n    "
+  groupById(id: UUID!): GroupGQLModel
+
+  "## Description\nFetches a user by its unique identifier.\nNačte uživatele podle jeho unikátního identifikátoru.\n\n## Details\nUtilizes a data loader to efficiently retrieve user details from the underlying data source.\nVyužívá loader pro efektivní načítání detailů uživatele z databáze.\n\n## Permissions\nOnly authenticated users can access this field.\nPouze autentizovaní uživatelé mají přístup k tomuto poli.\n    "
+  userById(id: UUID!): UserGQLModel
+
+  "## Description\nFetches a paginated list of users.\nNačte stránkovaný seznam uživatelů.\n\n## Details\nReturns a list of users based on filtering criteria defined in UserInputWhereFilter. Supports pagination, sorting, and advanced filtering options.\nVrací seznam uživatelů na základě filtračních kritérií definovaných ve třídě UserInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  userPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: UserInputWhereFilter = null
+  ): [UserGQLModel!]!
+
+  "## Description\nReturns the logged in user.\nVrací přihlášeného uživatele.\n\n## Details\nRetrieves the currently authenticated user based on context information.\nNačítá aktuálně autentizovaného uživatele na základě informací v kontextu.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  me: UserGQLModel
+
+  "## Description\nFetches roles assigned to a user by their identifier.\nNačte role přiřazené uživateli dle jeho identifikátoru.\n\n## Details\nUtilizes a data loader to filter and return a list of roles for the specified user.\nVyužívá loader pro filtrování a vrácení seznamu rolí pro zadaného uživatele.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  roleByUser(userId: UUID!): [RoleGQLModel!]!
+
+  "## Description\nFetches a role by its unique identifier.\nNačte roli podle jejího unikátního identifikátoru.\n\n## Details\nUtilizes a data loader to efficiently retrieve role details.\nVyužívá loader pro efektivní načtení detailů role.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  roleById(id: UUID!): RoleGQLModel
+
+  "## Description\nFetches a paginated list of roles.\nNačte stránkovaný seznam rolí.\n\n## Details\nReturns a list of roles based on filtering criteria defined in RoleInputWhereFilter. Supports pagination, sorting, and advanced filtering options.\nVrací seznam rolí na základě filtračních kritérií definovaných ve třídě RoleInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  rolePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleInputWhereFilter = null
+  ): [RoleGQLModel!]!
+
+  "## Description\nReturns all roles applicable on a user (defined by userId).\nVrací všechny role vztahující se k uživateli (definovanému pomocí userId).\n\n## Details\nIf there is a dean role, the role with type \"dean\" will be included.\nPokud existuje role děkana, role s typem \"dean\" bude zahrnuta.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n"
+  rolesOnUser(userId: UUID!): [RoleGQLModel!]!
+
+  "## Description\nReturns all roles applicable on a group (defined by groupId).\nVrací všechny role vztahující se ke skupině (definované pomocí groupId).\n\n## Details\nIf the group is a department and a subgroup of a faculty, the role with type \"dean\" will be included.\nPokud je skupina oddělením a podskupinou fakulty, role s typem \"dean\" bude zahrnuta.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  rolesOnGroup(groupId: UUID!): [RoleGQLModel!]!
+
+  """"""
+  resolveRBACs(rbacIds: [UUID!]!, userId: UUID = null): [RBACItem!]!
+
+  """Finds a role type by its id"""
+  roleTypeById(id: UUID!): RoleTypeGQLModel
+
+  """Finds all role types paged"""
+  roleTypePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleTypeInputWhereFilter = null
+  ): [RoleTypeGQLModel!]!
+
+  """Finds a role category by its id"""
+  roleCategoryById(id: UUID!): RoleCategoryGQLModel
+
+  """gets role category page"""
+  roleCategoryPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleCategoryInputWhereFilter = null
+  ): [RoleCategoryGQLModel!]!
+
+  """Finds a group type by its id"""
+  groupTypeById(id: UUID!): GroupTypeGQLModel
+
+  """Returns a list of groups types (paged)"""
+  groupTypePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupTypeInputWhereFilter = null
+  ): [GroupTypeGQLModel!]!
+
+  """Finds a group category by its id"""
+  groupCategoryById(id: UUID!): GroupCategoryGQLModel
+
+  """Returns a list of groups categories (paged)"""
+  groupCategoryPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: GroupCategoryInputWhereFilter = null
+  ): [GroupCategoryGQLModel!]!
+
+  """Finds a rbacobject by its id"""
+  rbacById(id: UUID!): RBACObjectGQLModel
+
+  "## Description\nRetrieves memberships in a paged format.\nVrací členství ve stránkovaném formátu.\n\n## Details\nThis query returns a list of membership records. Pagination parameters can be applied to efficiently navigate large datasets.\nTento dotaz vrací seznam záznamů členství. Pro efektivní práci s rozsáhlými datovými sadami je podporováno stránkování.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can execute this query.\n- Pouze autentizovaní uživatelé mají oprávnění tento dotaz spustit.\n"
+  membershipPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: MembershipInputWhereFilter = null
+  ): [MembershipGQLModel!]!
+
+  "## Description\nRetrieves a specific membership by its unique identifier.\nVyhledá konkrétní členství podle jeho unikátního identifikátoru.\n\n## Details\nIf the membership is found, the corresponding membership record is returned; otherwise, null is returned.\nPokud je členství nalezeno, vrací se odpovídající záznam; v opačném případě se vrací null.\n\n## Permissions\n- Only authenticated users (OnlyForAuthentized) can perform this query.\n- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.\n"
+  membershipById(id: UUID!): MembershipGQLModel
+
+  """returns the list of roles types associated to id"""
+  roleTypeListById(id: UUID!): RoleTypeListGQLModel
+
+  """one state"""
+  stateById(id: UUID!): StateGQLModel
+
+  """all states"""
+  statePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateWhereFilter = null
+  ): [StateGQLModel!]!
+
+  """one state machine"""
+  statemachineById(id: UUID!): StateMachineGQLModel
+
+  """all state machines"""
+  statemachinePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateMachineWhereFilter = null
+  ): [StateMachineGQLModel!]!
+
+  """all state transitions"""
+  statetransitionPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateTransitionWhereFilter = null
+  ): [StateTransitionGQLModel!]!
+
+  """one state transition"""
+  statetransitionById(id: UUID!): StateTransitionGQLModel
+}
+
+""""""
+type RBACItem {
+  rbacId: UUID!
+  roles: [RoleGQLModel!]!
+}
+
+type RBACObjectGQLModel @key(fields: "id") {
+  """id"""
+  id: UUID!
+
+  """Roles associated with this RBAC"""
+  roles(
+    """if defined, only roles with this user will be returned"""
+    userId: UUID = null
+  ): [RoleGQLModel!]!
+
+  """If logged user is authorized to operation on rbacobject_id"""
+  userCanWithState(access: StateDataAccessType!, stateId: UUID!, userId: UUID = null): Boolean
+
+  """If logged user is authorized to operation on rbacobject_id"""
+  userCanWithoutState(rolesNeeded: [String!]!, userId: UUID = null): Boolean
+}
+
+"""Data structure for D operation"""
+input RoleCategoryDeleteGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+}
+
+"""Entity representing a role type (like Dean)"""
+type RoleCategoryGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """List of roles with this type"""
+  roleTypes(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleTypeInputWhereFilter = null
+  ): [RoleTypeGQLModel!]!
+}
+
+"""Error object returned as an result of Delete operation"""
+type RoleCategoryGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: RoleCategoryGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union RoleCategoryGQLModelInsertError = RoleCategoryGQLModel | InsertError
+
+union RoleCategoryGQLModelRoleCategoryGQLModelUpdateError = RoleCategoryGQLModel | RoleCategoryGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type RoleCategoryGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: RoleCategoryGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"""Operators definition on RoleCategoryInputWhereFilter"""
+input RoleCategoryInputWhereFilter {
+  """Filter method"""
+  _or: [RoleCategoryInputWhereFilterOr!] = null
+
+  """Filter method"""
+  _and: [RoleCategoryInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+
+  """Filter method"""
+  name_en: StrFilter = null
+
+  """Filter method"""
+  roletypes: RoleInputWhereFilterRoletype = null
+}
+
+"""And operator definition on RoleCategoryInputWhereFilter"""
+input RoleCategoryInputWhereFilterAnd {
+  """Filter method"""
+  _or: [RoleCategoryInputWhereFilterOr!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+
+  """Filter method"""
+  name_en: StrFilter = null
+
+  """Filter method"""
+  roletypes: RoleInputWhereFilterRoletype = null
+}
+
+"""Or operator definition on RoleCategoryInputWhereFilter"""
+input RoleCategoryInputWhereFilterOr {
+  """Filter method"""
+  _and: [RoleCategoryInputWhereFilterAnd!] = null
+
+  """Filter method"""
+  id: UuidFilter = null
+
+  """Filter method"""
+  name: StrFilter = null
+
+  """Filter method"""
+  name_en: StrFilter = null
+
+  """Filter method"""
+  roletypes: RoleInputWhereFilterRoletype = null
+}
+
+"""Initial data structure for C operation"""
+input RoleCategoryInsertGQLModel {
+  """primary key"""
+  id: UUID = null
+  name: String = null
+  nameEn: String = null
+}
+
+"""Data structure for U operation"""
+input RoleCategoryUpdateGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+  name: String = null
+  nameEn: String = null
+}
+
+"## Description\nDelete input for Role entity.\nVstup pro odstranění entity Role.\n\n## Details\nProvides input for deleting a Role using its unique identifier and last change timestamp.\nPoskytuje vstup pro odstranění role pomocí unikátního identifikátoru a časového razítka poslední změny.\n"
+input RoleDeleteGQLModel {
+  """
+  Unique identifier
+  Unikátní identifikátor
+  """
+  id: UUID!
+
+  """
+  Timestamp of last change
+  Časové razítko poslední změny
+  """
+  lastchange: DateTime!
+}
+
+"## Description\nEntity representing a role of a user in a group (e.g. user A in group B is Dean)\nEntita reprezentující roli uživatele ve skupině (např. uživatel A ve skupině B je Dekan)\n\n## Details\nIncludes role validity, deputy status, start and end dates, and identifiers linking to role type, user, and group. Provides resolvers to fetch detailed information for role type, user, and group.\nObsahuje informace o platnosti role, statusu zástupce, datu nástupu a ukončení, a identifikátory pro typ role, uživatele a skupinu. Obsahuje resolvery pro načítání podrobných informací.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup je omezen pouze na autentizované uživatele.\n"
+type RoleGQLModel implements BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """
+  If the user still holds this role
+  Jestli uživatel tuto roli stále zastává
+  """
+  valid: Boolean
+
+  """
+  Indicates if this role is assigned as deputy
+  Ukazuje, zda je tato role přiřazena jako zástupce
+  """
+  deputy: Boolean
+
+  """
+  The date when the user assumed this role
+  Datum, kdy uživatel tuto roli převzal
+  """
+  startdate: DateTime
+
+  """
+  The date when the user was removed from this role
+  Datum, kdy byl uživatel odebrán z této role
+  """
+  enddate: DateTime
+
+  """
+  Identifier of the role type
+  Identifikátor typu role
+  """
+  roletypeId: UUID
+
+  """
+  Identifier of the user who holds this role
+  Identifikátor uživatele, který tuto roli zastává
+  """
+  userId: UUID
+
+  """
+  Identifier of the group to which this role belongs
+  Identifikátor skupiny, ke které tato role patří
+  """
+  groupId: UUID
+
+  """
+  Role type detail (e.g. Dean)
+  Detail typu role (např. Dekan)
+  """
+  roletype: RoleTypeGQLModel
+
+  """
+  User associated with this role
+  Uživatel spojený s touto rolí
+  """
+  user: UserGQLModel
+
+  """
+  Group in which the role is assigned
+  Skupina, ve které je role přiřazena
+  """
+  group: GroupGQLModel
+}
+
+"""Error object returned as an result of Delete operation"""
+type RoleGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: RoleGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union RoleGQLModelInsertError = RoleGQLModel | InsertError
+
+union RoleGQLModelRoleGQLModelUpdateError = RoleGQLModel | RoleGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type RoleGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: RoleGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **group** compound sub filter\n- **user** compound sub filter\n- **roletype** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleInputWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [RoleInputWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [RoleInputWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  group: RoleInputWhereFilterGroup!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  user: RoleInputWhereFilterUser!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  roletype: RoleInputWhereFilterRoletype!
+}
+
+"""Filter for type 'RoleInputWhereFilter'."""
+input RoleInputWhereFilterGroup {
+  """- group: Compound filter """
+  group: GroupInputWhereFilter = null
+}
+
+"""Filter for type 'RoleInputWhereFilter'."""
+input RoleInputWhereFilterRoletype {
+  """- roletype: Compound filter """
+  roletype: RoleTypeInputWhereFilter = null
+}
+
+"""Filter for type 'RoleInputWhereFilter'."""
+input RoleInputWhereFilterUser {
+  """- user: Compound filter """
+  user: UserInputWhereFilter = null
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **group** compound sub filter\n- **user** compound sub filter\n- **roletype** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleInputWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [RoleInputWhereFilter_or!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  group: RoleInputWhereFilterGroup!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  user: RoleInputWhereFilterUser!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  roletype: RoleInputWhereFilterRoletype!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **startdate** filter, examples:\n\n\t {'startdate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_le': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'startdate': {'_gt': '2025-06-30T18:01:59'}}\n- **enddate** filter, examples:\n\n\t {'enddate': {'_eq': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_le': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_lt': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_ge': '2025-06-30T18:01:59'}}\n\t {'enddate': {'_gt': '2025-06-30T18:01:59'}}\n- **group** compound sub filter\n- **user** compound sub filter\n- **roletype** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleInputWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [RoleInputWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  startdate: DatetimeFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  enddate: DatetimeFilter!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  group: RoleInputWhereFilterGroup!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  user: RoleInputWhereFilterUser!
+
+  """Filter for type 'RoleInputWhereFilter'."""
+  roletype: RoleInputWhereFilterRoletype!
+}
+
+"## Description\nInsert input for Role entity.\nVstup pro vytvoření entity Role.\n\n## Details\nProvides input for creating a new Role, including user, group, and role type identifiers. Optional fields include deputy status and role duration.\nPoskytuje vstup pro vytvoření nové role, včetně identifikátorů uživatele, skupiny a typu role. Volitelná pole zahrnují status zástupce a dobu trvání role.\n"
+input RoleInsertGQLModel {
+  """
+  User identifier
+  Identifikátor uživatele
+  """
+  userId: UUID!
+
+  """
+  Group identifier
+  Identifikátor skupiny
+  """
+  groupId: UUID!
+
+  """
+  Role type identifier
+  Identifikátor typu role
+  """
+  roletypeId: UUID!
+
+  """
+  Primary key
+  Primární klíč
+  """
+  id: UUID = null
+
+  """
+  Deputy role status
+  Status zástupce
+  """
+  deputy: Boolean = false
+
+  """
+  Start datetime of role
+  Datum začátku role
+  """
+  startdate: DateTime = "2025-07-19T22:06:09.829530"
+
+  """
+  End datetime of role
+  Datum ukončení role
+  """
+  enddate: DateTime = null
+}
+
+"""queries related to Role"""
+interface RoleQueries {
+  "## Description\nFetches roles assigned to a user by their identifier.\nNačte role přiřazené uživateli dle jeho identifikátoru.\n\n## Details\nUtilizes a data loader to filter and return a list of roles for the specified user.\nVyužívá loader pro filtrování a vrácení seznamu rolí pro zadaného uživatele.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  roleByUser(userId: UUID!): [RoleGQLModel!]!
+
+  "## Description\nFetches a role by its unique identifier.\nNačte roli podle jejího unikátního identifikátoru.\n\n## Details\nUtilizes a data loader to efficiently retrieve role details.\nVyužívá loader pro efektivní načtení detailů role.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  roleById(id: UUID!): RoleGQLModel
+
+  "## Description\nFetches a paginated list of roles.\nNačte stránkovaný seznam rolí.\n\n## Details\nReturns a list of roles based on filtering criteria defined in RoleInputWhereFilter. Supports pagination, sorting, and advanced filtering options.\nVrací seznam rolí na základě filtračních kritérií definovaných ve třídě RoleInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  rolePage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleInputWhereFilter = null
+  ): [RoleGQLModel!]!
+
+  "## Description\nReturns all roles applicable on a user (defined by userId).\nVrací všechny role vztahující se k uživateli (definovanému pomocí userId).\n\n## Details\nIf there is a dean role, the role with type \"dean\" will be included.\nPokud existuje role děkana, role s typem \"dean\" bude zahrnuta.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n"
+  rolesOnUser(userId: UUID!): [RoleGQLModel!]!
+
+  "## Description\nReturns all roles applicable on a group (defined by groupId).\nVrací všechny role vztahující se ke skupině (definované pomocí groupId).\n\n## Details\nIf the group is a department and a subgroup of a faculty, the role with type \"dean\" will be included.\nPokud je skupina oddělením a podskupinou fakulty, role s typem \"dean\" bude zahrnuta.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  rolesOnGroup(groupId: UUID!): [RoleGQLModel!]!
+
+  """"""
+  resolveRBACs(rbacIds: [UUID!]!, userId: UUID = null): [RBACItem!]!
+}
+
+""""""
+input RoleTypeDeleteFromList {
+  typeId: UUID!
+  id: UUID!
+}
+
+""""""
+input RoleTypeDeleteGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+}
+
+"""Entity representing a role type (like Dean)"""
+type RoleTypeGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """Materialized path technique, not implemented"""
+  path: String
+
+  """Unique identifier for the master type of this group type"""
+  mastertypeId: UUID
+
+  """
+  Detailed information about the master type that this group type is associated with
+  """
+  mastertype: RoleTypeGQLModel
+
+  """List of subtypes associated with this group type"""
+  subtypes(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleTypeInputWhereFilter = null
+  ): [RoleTypeGQLModel!]
+}
+
+"""Error object returned as an result of Delete operation"""
+type RoleTypeGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: RoleTypeGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union RoleTypeGQLModelInsertError = RoleTypeGQLModel | InsertError
+
+union RoleTypeGQLModelRoleTypeGQLModelUpdateError = RoleTypeGQLModel | RoleTypeGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type RoleTypeGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: RoleTypeGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **category** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleTypeInputWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [RoleTypeInputWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [RoleTypeInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  """Operators definition on RoleCategoryInputWhereFilter"""
+  category: RoleCategoryInputWhereFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **category** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleTypeInputWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [RoleTypeInputWhereFilter_or!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  """Operators definition on RoleCategoryInputWhereFilter"""
+  category: RoleCategoryInputWhereFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **category** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input RoleTypeInputWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [RoleTypeInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  """Operators definition on RoleCategoryInputWhereFilter"""
+  category: RoleCategoryInputWhereFilter!
+}
+
+""""""
+input RoleTypeInsertGQLModel {
+  mastertypeId: UUID = null
+  id: UUID = null
+  name: String = null
+  nameEn: String = null
+
+  """List of subtypes associated with this role type"""
+  subtypes: [RoleTypeInsertGQLModel!] = []
+}
+
+""""""
+input RoleTypeInsertIntoList {
+  typeId: UUID!
+  id: UUID!
+}
+
+""""""
+type RoleTypeListGQLModel implements BaseGQLModel {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """All roletypes associated with role type list"""
+  roletypes: [RoleTypeGQLModel!]!
+}
+
+union RoleTypeListGQLModelInsertError = RoleTypeListGQLModel | InsertError
+
+"""Error object returned as an result of Update operation"""
+type RoleTypeListGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: RoleTypeListGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union RoleTypeListGQLModelUpdateErrorRoleTypeListGQLModel = RoleTypeListGQLModelUpdateError | RoleTypeListGQLModel
+
+""""""
+input RoleTypeUpdateGQLModel {
+  id: UUID!
+  lastchange: DateTime!
+  name: String = null
+  nameEn: String = null
+}
+
+"## Description\nUpdate input for Role entity.\nVstup pro aktualizaci entity Role.\n\n## Details\nProvides input for updating a Role with necessary identifiers and timestamps. Optional fields allow modification of role validity and duration.\nPoskytuje vstup pro aktualizaci role s potřebnými identifikátory a časovým razítkem. Volitelná pole umožňují změnu platnosti role a její doby trvání.\n"
+input RoleUpdateGQLModel {
+  """
+  Unique identifier
+  Unikátní identifikátor
+  """
+  id: UUID!
+
+  """
+  Timestamp of last change
+  Časové razítko poslední změny
+  """
+  lastchange: DateTime!
+
+  """
+  Role validity status
+  Stav platnosti role
+  """
+  valid: Boolean = null
+
+  """
+  Start date of role
+  Datum začátku role
+  """
+  startdate: DateTime = null
+
+  """
+  End date of role
+  Datum ukončení role
+  """
+  enddate: DateTime = null
+}
+
+""""""
+enum StateDataAccessType {
+  READ
+  WRITE
+}
+
+"""Delete state"""
+input StateDeleteGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+}
+
+"""Entity representing a state of state machine"""
+type StateGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """Id of state machine"""
+  statemachineId: UUID
+
+  """Id of roletype list"""
+  writerslistId: UUID
+
+  """list of roles which can read at this state"""
+  readerslistId: UUID
+
+  """Owing state machine"""
+  statemachine: StateMachineGQLModel
+
+  """position in list of states"""
+  order: Int
+
+  """Transitions linked into thist state"""
+  sources(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateTransitionWhereFilter = null
+  ): [StateTransitionGQLModel!]!
+
+  """Transitions going out of this state"""
+  targets(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateTransitionWhereFilter = null
+  ): [StateTransitionGQLModel!]!
+
+  """
+  All roletypes associated with this state, all roles will be enabled for update
+  """
+  roletypes(access: StateDataAccessType = READ): [RoleTypeGQLModel!]!
+
+  """If logged user is authorized to operation on rbacobject_id"""
+  userCan(access: StateDataAccessType!, rbacobjectId: UUID!, userId: UUID = null): Boolean
+}
+
+"""Error object returned as an result of Delete operation"""
+type StateGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: StateGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union StateGQLModelInsertError = StateGQLModel | InsertError
+
+union StateGQLModelStateGQLModelUpdateError = StateGQLModel | StateGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type StateGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: StateGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"""Input structure - C operation"""
+input StateInsertGQLModel {
+  """name"""
+  name: String!
+
+  """id of machine whichs state belongs to"""
+  statemachineId: UUID = null
+
+  """eng. name"""
+  nameEn: String = null
+
+  """order of states"""
+  order: Int = 0
+
+  """primary key (UUID), could be client generated"""
+  id: UUID = null
+
+  """who can access"""
+  rbacobjectId: UUID = null
+}
+
+"""Entity representing a state machine"""
+type StateMachineGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """All states associated with this state machine"""
+  states(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateWhereFilter = null
+  ): [StateGQLModel!]!
+
+  """All states associated with this state machine"""
+  transitions(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: StateTransitionWhereFilter = null
+  ): [StateTransitionGQLModel!]!
+
+  """state machine type id"""
+  typeId: UUID
+}
+
+"""Error object returned as an result of Delete operation"""
+type StateMachineGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: StateMachineGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union StateMachineGQLModelInsertError = StateMachineGQLModel | InsertError
+
+union StateMachineGQLModelStateMachineGQLModelUpdateError = StateMachineGQLModel | StateMachineGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type StateMachineGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: StateMachineGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **type_id** filter, examples:\n\n\t {'type_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'type_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateMachineWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateMachineWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateMachineWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  type_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **type_id** filter, examples:\n\n\t {'type_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'type_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateMachineWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateMachineWhereFilter_or!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  type_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **type_id** filter, examples:\n\n\t {'type_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'type_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateMachineWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateMachineWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  type_id: UuidFilter!
+}
+
+"""Entity representing an entity type"""
+type StateTransitionGQLModel implements NamedGQLModel & BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """name"""
+  name: String
+
+  """english name"""
+  nameEn: String
+
+  """"""
+  sourceId: UUID
+
+  """Going from state"""
+  source: StateGQLModel
+
+  """"""
+  targetId: UUID
+
+  """Going to state"""
+  target: StateGQLModel
+
+  """"""
+  statemachineId: UUID
+
+  """Owing state machine"""
+  statemachine: StateMachineGQLModel
+}
+
+"""Error object returned as an result of Delete operation"""
+type StateTransitionGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: StateTransitionGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union StateTransitionGQLModelInsertError = StateTransitionGQLModel | InsertError
+
+union StateTransitionGQLModelStateTransitionGQLModelUpdateError = StateTransitionGQLModel | StateTransitionGQLModelUpdateError
+
+"""Error object returned as an result of Update operation"""
+type StateTransitionGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: StateTransitionGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **source_id** filter, examples:\n\n\t {'source_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'source_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **target_id** filter, examples:\n\n\t {'target_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'target_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateTransitionWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateTransitionWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateTransitionWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  source_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  target_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **source_id** filter, examples:\n\n\t {'source_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'source_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **target_id** filter, examples:\n\n\t {'target_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'target_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateTransitionWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateTransitionWhereFilter_or!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  source_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  target_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **source_id** filter, examples:\n\n\t {'source_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'source_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **target_id** filter, examples:\n\n\t {'target_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'target_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateTransitionWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateTransitionWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  source_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  target_id: UuidFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"""Update structure - C operation"""
+input StateUpdateGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+
+  """name"""
+  name: String = null
+
+  """eng. name"""
+  nameEn: String = null
+
+  """order of states"""
+  order: Int = null
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [StateWhereFilter_or!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **name_en** filter, examples:\n\n\t {'name_en': {'_eq': 'Peter'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_lt': 'F'}}\n\t {'name_en': {'_ge': 'A'}}\n\t {'name_en': {'_gt': 'E'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_like': 'Pet%'}}\n\t {'name_en': {'_startswith': 'Pet'}}\n\t {'name_en': {'_endswith': 'ter'}}\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **created** filter, examples:\n\n\t {'created': {'_eq': '2025-06-30T18:01:59'}}\n\t {'created': {'_le': '2025-06-30T18:01:59'}}\n\t {'created': {'_lt': '2025-06-30T18:01:59'}}\n\t {'created': {'_ge': '2025-06-30T18:01:59'}}\n\t {'created': {'_gt': '2025-06-30T18:01:59'}}\n- **statemachine_id** filter, examples:\n\n\t {'statemachine_id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'statemachine_id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input StateWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [StateWhereFilter_and!] = null
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name_en: StrFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Datetime filter operators, \nfor field \"lastchange\" the filters can be \n{\"lastchange\": {\"_eq\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_ge\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_gt\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_le\": \"2025-06-30T18:01:59\"}}\n{\"lastchange\": {\"_lt\": \"2025-06-30T18:01:59\"}}\n"
+  created: DatetimeFilter!
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  statemachine_id: UuidFilter!
+}
+
+"""Delete structure - C operation"""
+input StatemachineDeleteGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+}
+
+"""Input structure - C operation"""
+input StatemachineInsertGQLModel {
+  """name"""
+  name: String!
+
+  """name"""
+  nameEn: String = null
+
+  """primary key (UUID), could be client generated"""
+  id: UUID = null
+
+  """list states to be part of state machine"""
+  states: [StateInsertGQLModel!] = []
+
+  """list transitions to be part of state machine"""
+  transitions: [StatetransitionInsertGQLModel!] = []
+
+  """who can access"""
+  rbacobjectId: UUID = null
+}
+
+"""Update structure - C operation"""
+input StatemachineUpdateGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+
+  """name"""
+  name: String = null
+
+  """eng. name"""
+  nameEn: String = null
+}
+
+"""Delete structure - D operation"""
+input StatetransitionDeleteGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+}
+
+"""Input structure - C operation"""
+input StatetransitionInsertGQLModel {
+  """name"""
+  name: String!
+
+  """id of state machine"""
+  statemachineId: UUID = null
+
+  """id of state source"""
+  sourceId: UUID!
+
+  """id of state target"""
+  targetId: UUID!
+
+  """primary key (UUID), could be client generated"""
+  id: UUID = null
+
+  """eng. name"""
+  nameEn: String = null
+}
+
+"""Update structure - C operation"""
+input StatetransitionUpdateGQLModel {
+  """timestamp of last change = TOKEN"""
+  lastchange: DateTime!
+
+  """primary key (UUID), identifies object of operation"""
+  id: UUID!
+
+  """name"""
+  name: String = null
+
+  """eng. name"""
+  nameEn: String = null
+
+  """id of state source"""
+  sourceId: UUID = null
+
+  """id of state target"""
+  targetId: UUID = null
+}
+
+"Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+input StrFilter {
+  """filter aka {"name": {"_eq": "Peter"}}"""
+  _eq: String = null
+
+  """filter aka {"name": {"_ge": "A"}}"""
+  _le: String = null
+
+  """filter aka {"name": {"_lt": "F"}}"""
+  _lt: String = null
+
+  """filter aka {"name": {"_ge": "A"}}"""
+  _ge: String = null
+
+  """filter aka {"name": {"_gt": "E"}}"""
+  _gt: String = null
+
+  """filter aka {"name": {"_like": "Pet%"}}"""
+  _like: String = null
+
+  """filter aka {"name": {"_like": "Pet%"}}"""
+  _ilike: String = null
+
+  """filter aka {"name": {"_startswith": "Pet"}}"""
+  _startswith: String = null
+
+  """filter aka {"name": {"_endswith": "ter"}}"""
+  _endswith: String = null
+}
+
+scalar UUID
+
+"\nDescription:\nInput for deleting a UserGQLModel entity.\nVstup pro odstranění entity UserGQLModel.\nDetails:\nRequires the id and lastchange timestamp to ensure safe deletion and data consistency.\nVyžaduje id a časové razítko poslední změny pro zajištění bezpečného odstranění a zachování konzistence dat.\nPermissions:\nOnly authenticated users with appropriate RBAC permissions can perform delete operations.\nPouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto operaci provádět.\n"
+input UserDeleteGQLModel {
+  """
+  Primary key identifier
+  Primární klíč
+  """
+  id: UUID!
+
+  """
+  Timestamp of last change
+  Časové razítko poslední změny
+  """
+  lastchange: DateTime!
+}
+
+"Description:\nEntity representing a user\nEntita reprezentujícího uživatele\n\nDetails:\nGraphQL type that models user data including personal details, roles, memberships, and groups.\nGraphQL typ modelující data uživatele včetně osobních údajů, rolí, členství a skupin.\n\nPermissions:\nAccess to this type is restricted to authenticated users.\nPřístup k tomuto typu je omezen na autentizované uživatele.\n"
+type UserGQLModel implements BaseGQLModel @key(fields: "id") {
+  """Primary key of the entity."""
+  id: UUID!
+
+  """
+  Timestamp of the last change.
+  Časové razítko poslední změny.
+  """
+  lastchange: DateTime
+
+  """
+  Date and time when the entity was created.
+  Datum a čas vytvoření entity.
+  """
+  created: DateTime
+
+  """
+  Identifier of the user who created this entity.
+  Identifikátor uživatele, který vytvořil tuto entitu.
+  """
+  createdbyId: UUID
+
+  """
+  Identifier of the user who last modified this entity.
+  Identifikátor uživatele, který naposledy upravil tuto entitu.
+  """
+  changedbyId: UUID
+
+  """
+  Reference to the RBAC object governing permissions.
+  Reference na RBAC objekt, který řídí oprávnění.
+  """
+  rbacobjectId: UUID
+
+  """
+  The user who created this entity.
+  Uživatel, který vytvořil tuto entitu.
+  """
+  createdby: UserGQLModel
+
+  """
+  The user who last modified this entity.
+  Uživatel, který naposledy upravil tuto entitu.
+  """
+  changedby: UserGQLModel
+
+  """
+  The RBAC object associated with this entity.
+  RBAC objekt spojený s touto entitou.
+  """
+  rbacobject: RBACObjectGQLModel
+
+  """
+  Full name (if in database)
+  Celé jméno (pokud je v databázi)
+  """
+  name: String
+
+  """
+  User's name (like John)
+  Jméno uživatele (např. John)
+  """
+  givenname: String
+
+  """
+  Middle name
+  Střední jméno
+  """
+  middlename: String
+
+  """
+  Email address
+  Emailová adresa
+  """
+  email: String
+
+  """
+  User's first name (like John)
+  Křestní jméno uživatele (např. John)
+  """
+  firstname: String
+
+  """
+  User's family name (like Obama)
+  Rodinné jméno uživatele (např. Obama)
+  """
+  surname: String
+
+  """
+  User validity status
+  Stav platnosti uživatele
+  """
+  valid: Boolean
+
+  """
+  Account start date
+  Datum zahájení účtu
+  """
+  startdate: DateTime
+
+  """
+  Account end date
+  Datum ukončení účtu
+  """
+  enddate: DateTime
+
+  """
+  User type identifier
+  Identifikátor typu uživatele
+  """
+  typeId: UUID
+
+  """
+  List of memberships associated with the user
+  Seznam členství spojených s uživatelem
+  """
+  memberships(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: MembershipInputWhereFilter = null
+  ): [MembershipGQLModel!]!
+
+  """
+  Deprecated: list of memberships (use memberships)
+  Zastaralé: seznam členství (použijte memberships)
+  """
+  membership(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: MembershipInputWhereFilter = null
+  ): [MembershipGQLModel!]! @deprecated(reason: "use memberships")
+
+  """
+  Roles assigned to the user
+  Role přiřazené uživateli
+  """
+  roles(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: RoleInputWhereFilter = null
+  ): [RoleGQLModel!]!
+
+  """
+  Checks if the current record belongs to the logged-in user
+  Zjistí, zda záznam patří přihlášenému uživateli
+  """
+  isThisMe: Boolean!
+
+  """
+  Fetches roles related to the user
+  Načte role vztažené k uživateli
+  """
+  rolesOn: [RoleGQLModel!]!
+
+  """
+  Performs GDPR compliance check
+  Provádí kontrolu souladu s GDPR
+  """
+  gdpr(force: Boolean = false): String
+
+  """
+  Concatenates user's name parts into full name
+  Spojí části jména uživatele do celého jména
+  """
+  fullname: String
+
+  """
+  Retrieves a list of groups of a specified type where the user is a member
+  Načte seznam skupin daného typu, kde je uživatel členem
+  """
+  memberOf(grouptypeId: UUID = null): [GroupGQLModel!]!
+}
+
+"""Error object returned as an result of Delete operation"""
+type UserGQLModelDeleteError {
+  """Entity to be updated"""
+  Entity: UserGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union UserGQLModelInsertError = UserGQLModel | InsertError
+
+"""Error object returned as an result of Update operation"""
+type UserGQLModelUpdateError {
+  """Entity to be updated"""
+  Entity: UserGQLModel
+
+  """reason of fail"""
+  msg: String!
+
+  """always True, available when error"""
+  failed: Boolean!
+
+  """error code, if available"""
+  code: UUID
+
+  """location of the error - resolver name"""
+  location: String
+
+  """original data"""
+  input: JSON
+}
+
+union UserGQLModelUserGQLModelUpdateError = UserGQLModel | UserGQLModelUpdateError
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **surname** filter, examples:\n\n\t {'surname': {'_eq': 'Peter'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_lt': 'F'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_gt': 'E'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_startswith': 'Pet'}}\n\t {'surname': {'_endswith': 'ter'}}\n- **email** filter, examples:\n\n\t {'email': {'_eq': 'Peter'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_lt': 'F'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_gt': 'E'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_startswith': 'Pet'}}\n\t {'email': {'_endswith': 'ter'}}\n- **fullname** filter, examples:\n\n\t {'fullname': {'_eq': 'Peter'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_lt': 'F'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_gt': 'E'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_startswith': 'Pet'}}\n\t {'fullname': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **memberships** compound sub filter\n- **roles** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input UserInputWhereFilter {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [UserInputWhereFilter_or!] = null
+
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [UserInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  surname: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  email: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  fullname: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  """Operators definition on MembershipInputWhereFilter"""
+  memberships: MembershipInputWhereFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **surname** filter, examples:\n\n\t {'surname': {'_eq': 'Peter'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_lt': 'F'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_gt': 'E'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_startswith': 'Pet'}}\n\t {'surname': {'_endswith': 'ter'}}\n- **email** filter, examples:\n\n\t {'email': {'_eq': 'Peter'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_lt': 'F'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_gt': 'E'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_startswith': 'Pet'}}\n\t {'email': {'_endswith': 'ter'}}\n- **fullname** filter, examples:\n\n\t {'fullname': {'_eq': 'Peter'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_lt': 'F'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_gt': 'E'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_startswith': 'Pet'}}\n\t {'fullname': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **memberships** compound sub filter\n- **roles** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input UserInputWhereFilter_and {
+  """Logical OR of multiple filters. At least one child filter must match."""
+  _or: [UserInputWhereFilter_or!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  surname: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  email: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  fullname: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  """Operators definition on MembershipInputWhereFilter"""
+  memberships: MembershipInputWhereFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+}
+
+"Compound filter encapsulating subfilters on fields:\n\n- **id** filter, examples:\n\n\t {'id': {'_eq': '5fa97795-454e-4631-870e-3f0806018755'}}\n\t {'id': {'_in': ['5fa97795-454e-4631-870e-3f0806018755', '011ec2bc-a0b9-44f3-bcd8-a42691eebaa4']}}\n- **name** filter, examples:\n\n\t {'name': {'_eq': 'Peter'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_lt': 'F'}}\n\t {'name': {'_ge': 'A'}}\n\t {'name': {'_gt': 'E'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_like': 'Pet%'}}\n\t {'name': {'_startswith': 'Pet'}}\n\t {'name': {'_endswith': 'ter'}}\n- **surname** filter, examples:\n\n\t {'surname': {'_eq': 'Peter'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_lt': 'F'}}\n\t {'surname': {'_ge': 'A'}}\n\t {'surname': {'_gt': 'E'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_like': 'Pet%'}}\n\t {'surname': {'_startswith': 'Pet'}}\n\t {'surname': {'_endswith': 'ter'}}\n- **email** filter, examples:\n\n\t {'email': {'_eq': 'Peter'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_lt': 'F'}}\n\t {'email': {'_ge': 'A'}}\n\t {'email': {'_gt': 'E'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_like': 'Pet%'}}\n\t {'email': {'_startswith': 'Pet'}}\n\t {'email': {'_endswith': 'ter'}}\n- **fullname** filter, examples:\n\n\t {'fullname': {'_eq': 'Peter'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_lt': 'F'}}\n\t {'fullname': {'_ge': 'A'}}\n\t {'fullname': {'_gt': 'E'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_like': 'Pet%'}}\n\t {'fullname': {'_startswith': 'Pet'}}\n\t {'fullname': {'_endswith': 'ter'}}\n- **valid** filter, examples:\n\n\t {'valid': {'_eq': True}}\n- **memberships** compound sub filter\n- **roles** compound sub filter\n\nSubfilters can be nested via `_and` and `_or`. `_and` can nest only `_or`, while `_or` can nest only `_and`\n_and can be a list of subfilters, all of them must be satisfied\n_or can be a list of subfilters, one of them must be satisfied\n"
+input UserInputWhereFilter_or {
+  """Logical AND of multiple filters. All child filters must match."""
+  _and: [UserInputWhereFilter_and!] = null
+
+  "UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+  id: UuidFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  name: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  surname: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  email: StrFilter!
+
+  "Str filter operators, \nfor field \"name\" the filters can be \n{\"name\": {\"_eq\": \"Peter\"}}\n{\"name\": {\"_ge\": \"A\"}}\n{\"name\": {\"_gt\": \"E\"}}\n{\"name\": {\"_le\": \"Z\"}}\n{\"name\": {\"_lt\": \"F\"}}\n{\"name\": {\"_ilike\": \"%ete%\"}}\n{\"name\": {\"_like\": \"Pet%\"}}\n{\"name\": {\"_startswith\": \"Pet\"}}\n{\"name\": {\"_endswith\": \"ter\"}}\n"
+  fullname: StrFilter!
+
+  "Boolean filter operators, \nfor field \"valid\" the filters can be \n{\"valid\": {\"_eq\": true}}\n"
+  valid: BoolFilter!
+
+  """Operators definition on MembershipInputWhereFilter"""
+  memberships: MembershipInputWhereFilter!
+
+  """Filter for type 'GroupInputWhereFilter'."""
+  roles: GroupInputWhereFilterRoles!
+}
+
+"\nDescription:\nInput for creating a new UserGQLModel entity.\nVstup pro vytvoření nové entity UserGQLModel.\nDetails:\nOptional fields include id (primary key), name, surname, email, and valid status.\nVolitelná pole zahrnují id (primární klíč), jméno, příjmení, email a stav validace.\nPermissions:\nOnly authenticated users with appropriate RBAC permissions can perform create operations.\nPouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto operaci provádět.\n"
+input UserInsertGQLModel {
+  """
+  Primary key identifier
+  Primární klíč
+  """
+  id: UUID = null
+
+  """
+  User's first name
+  Jméno uživatele
+  """
+  name: String = null
+
+  """
+  User's surname
+  Příjmení uživatele
+  """
+  surname: String = null
+
+  """
+  User's email address
+  Email uživatele
+  """
+  email: String = null
+
+  """
+  Validation status of the user
+  Stav validace uživatele
+  """
+  valid: Boolean = null
+
+  """
+  List of memberships associated with the user
+  Seznam členství spojených s uživatelem
+  """
+  memberships: [MembershipInsertGQLModel!] = []
+
+  """
+  List of roles assigned to the user
+  Seznam rolí přiřazených uživateli
+  """
+  roles: [RoleInsertGQLModel!] = []
+}
+
+"""User mutations interface"""
+interface UserMutations {
+  "\nDescription:\nMutation for updating a UserGQLModel entity.\nMutace pro aktualizaci entity UserGQLModel.\n\nDetails:\nExecutes a safe update operation with concurrency control using provided update input.\nProvádí bezpečnou aktualizaci s využitím kontroly souběžnosti na základě zadaného vstupu.\n\nPermissions:\nOnly authenticated users with the necessary update permissions can execute this mutation.\nPouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provést.\n    "
+  userUpdate(user: UserUpdateGQLModel!): UserGQLModelUserGQLModelUpdateError!
+
+  "\nDescription:\nMutation for inserting a new UserGQLModel entity.\nMutace pro vytvoření nové entity UserGQLModel.\nDetails:\nExecutes a safe insertion operation with role-based access control and data validation.\nProvádí bezpečné vytvoření s kontrolou přístupových práv a validací vstupních dat.\nPermissions:\nOnly authenticated users with the necessary insert permissions can perform this mutation.\nPouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci provádět.\n    "
+  userInsert(user: UserInsertGQLModel!): UserGQLModelInsertError!
+
+  "\nDescription:\nMutation for deleting a UserGQLModel entity.\nMutace pro odstranění entity UserGQLModel.\n\nDetails:\nRequires the id and lastchange timestamp to ensure safe deletion and data consistency.\nVyžaduje id a časové razítko poslední změny pro zajištění bezpečného odstranění a zachování konzistence dat.\n\nPermissions:\nOnly authenticated users with appropriate RBAC permissions can perform delete operations.\nPouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto mutaci provádět.\n    "
+  userDelete(user: UserDeleteGQLModel!): UserGQLModelDeleteError
+}
+
+"""User queries interface"""
+interface UserQueries {
+  "## Description\nFetches a user by its unique identifier.\nNačte uživatele podle jeho unikátního identifikátoru.\n\n## Details\nUtilizes a data loader to efficiently retrieve user details from the underlying data source.\nVyužívá loader pro efektivní načítání detailů uživatele z databáze.\n\n## Permissions\nOnly authenticated users can access this field.\nPouze autentizovaní uživatelé mají přístup k tomuto poli.\n    "
+  userById(id: UUID!): UserGQLModel
+
+  "## Description\nFetches a paginated list of users.\nNačte stránkovaný seznam uživatelů.\n\n## Details\nReturns a list of users based on filtering criteria defined in UserInputWhereFilter. Supports pagination, sorting, and advanced filtering options.\nVrací seznam uživatelů na základě filtračních kritérií definovaných ve třídě UserInputWhereFilter. Podporuje stránkování, řazení a pokročilé filtrovací možnosti.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  userPage(
+    """how many entities will be ignored"""
+    skip: Int = 0
+
+    """how many entities will be taken"""
+    limit: Int = 10
+
+    """name of field which will determite the order"""
+    orderby: String = null
+
+    """filter"""
+    where: UserInputWhereFilter = null
+  ): [UserGQLModel!]!
+
+  "## Description\nReturns the logged in user.\nVrací přihlášeného uživatele.\n\n## Details\nRetrieves the currently authenticated user based on context information.\nNačítá aktuálně autentizovaného uživatele na základě informací v kontextu.\n\n## Permissions\nAccessible only to authenticated users.\nPřístup pouze pro autentizované uživatele.\n    "
+  me: UserGQLModel
+}
+
+"\nDescription:\nInput for updating a UserGQLModel entity.\nVstup pro aktualizaci entity UserGQLModel.\nDetails:\nRequires a unique identifier and a lastchange timestamp for concurrency control. Optional fields include name, surname, email, and valid status.\nVyžaduje unikátní identifikátor a časové razítko poslední změny pro řízení souběžnosti. Volitelná pole zahrnují jméno, příjmení, email a stav validace.\nPermissions:\nOnly authenticated users with appropriate RBAC permissions can perform update operations.\nPouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou tuto operaci provádět.\n"
+input UserUpdateGQLModel {
+  """
+  Unique identifier
+  Unikátní identifikátor
+  """
+  id: UUID!
+
+  """
+  Timestamp of last change
+  Časové razítko poslední změny
+  """
+  lastchange: DateTime!
+
+  """
+  User's first name
+  Jméno uživatele
+  """
+  name: String = null
+
+  """
+  User's surname
+  Příjmení uživatele
+  """
+  surname: String = null
+
+  """
+  User's email address
+  Email uživatele
+  """
+  email: String = null
+
+  """
+  Validation status of the user
+  Stav validace uživatele
+  """
+  valid: Boolean = null
+}
+
+"UUID filter operators, \nfor field \"id\" the filters can be \n{\"id\": {\"_eq\": \"5fa97795-454e-4631-870e-3f0806018755\"}}\n{\"id\": {\"_in\": [\"5fa97795-454e-4631-870e-3f0806018755\", \"011ec2bc-a0b9-44f3-bcd8-a42691eebaa4\"]}}\n"
+input UuidFilter {
+  """operation for select.filter() method"""
+  _eq: UUID = null
+
+  """operation for select.filter() method"""
+  _in: [UUID!] = null
+}
+
+scalar _Any
+
+union _Entity = GroupCategoryGQLModel | GroupGQLModel | GroupTypeGQLModel | MembershipGQLModel | RBACObjectGQLModel | RoleCategoryGQLModel | RoleGQLModel | RoleTypeGQLModel | StateGQLModel | StateMachineGQLModel | StateTransitionGQLModel | UserGQLModel
+
+type _Service {
+  sdl: String!
+}
