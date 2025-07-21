@@ -41,17 +41,19 @@ from src.DBResolvers import DBResolvers
 from .NamedGQLModel import NamedGQLModel
 RoleGQLModel = Annotated["RoleGQLModel", strawberry.lazy(".roleGQLModel")]
 RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleGQLModel")]
-RoleCategoryGQLModel = Annotated["RoleCategoryGQLModel", strawberry.lazy(".roleCategoryGQLModel")]
+# RoleCategoryGQLModel = Annotated["RoleCategoryGQLModel", strawberry.lazy(".roleCategoryGQLModel")]
 
 @createInputs2
 class RoleTypeInputWhereFilter:
     id: IDType
+    path: str
     name: str
     name_en: str
+    mastertype: "RoleTypeInputWhereFilter"
     # from .roleGQLModel import RoleInputWhereFilter
     # roles: RoleInputWhereFilter
-    from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
-    category: RoleCategoryInputWhereFilter
+    # from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
+    # category: RoleCategoryInputWhereFilter
 
 
 @strawberry.federation.type(

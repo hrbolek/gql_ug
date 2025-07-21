@@ -4,16 +4,16 @@ import uuid
 from typing import List, Optional, Union, Annotated
 from uoishelpers.resolvers import createInputs
 
-from .BaseGQLModel import BaseGQLModel, IDType
-from .NamedGQLModel import NamedGQLModel
+from ..BaseGQLModel import BaseGQLModel, IDType
+from ..NamedGQLModel import NamedGQLModel
 
-from ._GraphPermissions import (
+from .._GraphPermissions import (
     RoleBasedPermission, 
     OnlyForAuthentized,
     RBACPermission,
     OnlyForAdmins
 )
-from ._GraphResolvers import (
+from .._GraphResolvers import (
     default_by_id_resolver,
 )
 from uoishelpers.resolvers import (
