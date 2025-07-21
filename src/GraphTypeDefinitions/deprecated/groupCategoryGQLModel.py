@@ -7,9 +7,9 @@ import typing
 import strawberry.types
 from uoishelpers.resolvers import createInputs
 
-from .BaseGQLModel import BaseGQLModel, IDType
-from .NamedGQLModel import NamedGQLModel
-from ._GraphPermissions import (
+from ..BaseGQLModel import BaseGQLModel, IDType
+from ..NamedGQLModel import NamedGQLModel
+from .._GraphPermissions import (
     RoleBasedPermission, 
     OnlyForAuthentized,
     RBACPermission,
