@@ -206,6 +206,7 @@ Pokud je členství nalezeno, vrací se odpovídající záznam; v opačném př
 import datetime
 
 from .utils import InputModelMixin
+
 @strawberry.input(
     description="""## Description
 Input model for inserting a new membership.
@@ -359,34 +360,6 @@ class UpdateMembershipPermission(RBACPermission):
         #         raise self.error_class(f"{roleTypeName} cannot change grouptype_id")
         return True
 
-
-@strawberry.mutation(
-    description="""## Description
-Updates the membership record, except for the associated group and user.
-Aktualizuje záznam členství, s výjimkou změny asociované skupiny a uživatele.
-
-## Details
-This mutation updates membership details such as validity and effective dates.
-Changing the associated group or user is not permitted.
-Tato mutace aktualizuje detaily členství, jako je platnost a datum začátku/ukončení.
-Změna asociované skupiny nebo uživatele není povolena.
-
-## Permissions
-- Only authenticated users (OnlyForAuthentized) with appropriate membership update permissions (UpdateMembershipPermission) can perform this mutation.
-- Pouze autentizovaní uživatelé s odpovídajícími právy pro aktualizaci členství (UpdateMembershipPermission) mohou tuto mutaci provést.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        UpdateMembershipPermission
-    ]
-)
-async def membership_update(self, 
-    info: strawberry.types.Info, 
-    membership: "MembershipUpdateGQLModel"
-) -> Union[MembershipGQLModel, UpdateError[MembershipGQLModel]]:
-    result = await Update[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
-    return result
-
 class InsertMembershipPermission(RBACPermission):
     message = "User is not allowed create new membership"
     async def has_permission(self, source, info: strawberry.types.Info, membership: "MembershipInsertGQLModel") -> bool:
@@ -400,55 +373,48 @@ class InsertMembershipPermission(RBACPermission):
         if not role: return False
         return True
 
-@strawberry.mutation(
-    description="""## Description
-Inserts new membership.
-Vloží nové členství.
 
-## Details
-This mutation creates a new membership record using the provided details.
-All required fields must be specified and valid.
-Tato mutace vytvoří nový záznam členství se zadanými detaily.
-Všechna povinná pole musí být správně vyplněna.
-
-## Permissions
-- Only authenticated users (OnlyForAuthentized) with the permissions defined by InsertMembershipPermission can perform this mutation.
-- Pouze autentizovaní uživatelé s oprávněními definovanými pomocí InsertMembershipPermission mohou tuto mutaci provést.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        InsertMembershipPermission
-    ]
-)
-async def membership_insert(self, 
-    info: strawberry.types.Info, 
-    membership: "MembershipInsertGQLModel"
-) -> Union[MembershipGQLModel, InsertError[MembershipGQLModel]]:
-    result = await Insert[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
-    return result
+@strawberry.interface(description="Membership related mutations")
+class MembershipMutations:
 
 
-@strawberry.mutation(
-    description="""## Description
-Deletes the membership.
-Maže členství.
+    @strawberry.mutation(
+        description="""Updates the membership record, except the associated group and user""",
+        permission_classes=[
+            OnlyForAuthentized,
+            UpdateMembershipPermission
+        ]
+    )
+    async def membership_update(self, 
+        info: strawberry.types.Info, 
+        membership: "MembershipUpdateGQLModel"
+    ) -> Union[MembershipGQLModel, UpdateError[MembershipGQLModel]]:
+        result = await Update[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
+        return result
 
-## Details
-This mutation removes an existing membership record identified by its unique identifier.
-It uses the last change timestamp for concurrency control to ensure data consistency.
-Tato mutace odstraní existující záznam členství, který je identifikován jeho unikátním identifikátorem.
-Pro kontrolu konzistence se využívá časové razítko poslední změny.
+    @strawberry.mutation(
+        description="""Inserts new membership""",
+        permission_classes=[
+            OnlyForAuthentized,
+            InsertMembershipPermission
+        ]
+    )
+    async def membership_insert(self, 
+        info: strawberry.types.Info, 
+        membership: "MembershipInsertGQLModel"
+    ) -> Union[MembershipGQLModel, InsertError[MembershipGQLModel]]:
+        result = await Insert[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
+        return result
 
-## Permissions
-- Only authenticated users with administrative rights (OnlyForAdmins) are allowed to perform this mutation.
-- Pouze autentizovaní uživatelé s administrátorskými právy (OnlyForAdmins) mohou tuto mutaci provést.
-""",
-    permission_classes=[
-        OnlyForAuthentized,
-        OnlyForAdmins
-    ]
-)
-async def membership_delete(self, info: strawberry.types.Info, membership: MembershipDeleteGQLModel) -> typing.Optional[DeleteError[MembershipGQLModel]]:
-    result = await Delete[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
-    return result
+
+    @strawberry.mutation(
+        description="""Deletes the membership""",
+        permission_classes=[
+            OnlyForAuthentized,
+            OnlyForAdmins
+        ]
+    )
+    async def membership_delete(self, info: strawberry.types.Info, membership: MembershipDeleteGQLModel) -> typing.Optional[DeleteError[MembershipGQLModel]]:
+        result = await Delete[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
+        return result
 

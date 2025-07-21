@@ -7,14 +7,23 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import MappedAsDataclass, Mapped, mapped_column
 
 def UUIDFKey(ForeignKeyArg=None, **kwargs):
-    newkwargs = {
-        **kwargs,
-        "index": True, 
-        "primary_key": False, 
-        "default": None,
-        "nullable": True,
-        "comment": "foreign key"
-    }
+    if "default_factory" in kwargs:
+        newkwargs = {
+            **kwargs,
+            "index": True, 
+            "primary_key": False, 
+            "nullable": True,
+            "comment": "foreign key"
+        }
+    else:
+        newkwargs = {
+            **kwargs,
+            "index": True, 
+            "primary_key": False, 
+            "default": None,
+            "nullable": True,
+            "comment": "foreign key"
+        }
     return mapped_column(**newkwargs)
 
 def UUIDColumn(**kwargs):

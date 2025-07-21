@@ -23,8 +23,8 @@ class StateModel(BaseModel):
 
     statemachine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("statemachines.id"), index=True, nullable=True, default=None)
 
-    readerslist_id: Mapped[uuid.UUID] = UUIDFKey(comment="who can read item in this state", default=uuid.uuid4)
-    writerslist_id: Mapped[uuid.UUID] = UUIDFKey(comment="who can update item in this state", default=uuid.uuid4)
+    readerslist_id: Mapped[uuid.UUID] = UUIDFKey(comment="who can read item in this state", default_factory=uuid.uuid4)
+    writerslist_id: Mapped[uuid.UUID] = UUIDFKey(comment="who can update item in this state", default_factory=uuid.uuid4)
 
     statemachine = relationship("StateMachineModel", back_populates="states")
 

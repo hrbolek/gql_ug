@@ -6,6 +6,8 @@ from .groupTypeGQLModel import GroupTypeMutations
 from .userGQLModel import UserMutations
 from .roleGQLModel import RoleMutations
 from .roleTypeGQLModel import RoleTypeMutations
+from .membershipGQLModel import MembershipMutations
+
 from .stateGQLModel import (
     StateMutations,
     StateMachineMutations,
@@ -16,6 +18,7 @@ class Mutation(
     GroupMutations, 
     GroupTypeMutations,
     UserMutations,
+    MembershipMutations,
     RoleMutations,
     RoleTypeMutations,
     StateMutations,
