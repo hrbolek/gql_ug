@@ -21,6 +21,12 @@ from uoishelpers.resolvers import (
     Delete
 
 )    
+from uoishelpers.gqlpermissions.LoadDataExtension import LoadDataExtension
+from uoishelpers.gqlpermissions.RbacProviderExtension import RbacProviderExtension, MISSING
+from uoishelpers.gqlpermissions.UserRoleProviderExtension import UserRoleProviderExtension
+from uoishelpers.gqlpermissions.UserAccessControlExtension import UserAccessControlExtension
+from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
+
 
 from .BaseGQLModel import BaseGQLModel, IDType
 from ._GraphPermissions import (
@@ -400,31 +406,18 @@ Přístup pouze pro autentizované uživatele.
 #####################################################################
 import datetime
 from uoishelpers.resolvers import InputModelMixin
-@strawberry.input(description="""## Description
-Update input for Role entity.
-Vstup pro aktualizaci entity Role.
-
-## Details
-Provides input for updating a Role with necessary identifiers and timestamps. Optional fields allow modification of role validity and duration.
-Poskytuje vstup pro aktualizaci role s potřebnými identifikátory a časovým razítkem. Volitelná pole umožňují změnu platnosti role a její doby trvání.
-""")
+@strawberry.input(description="""Update input for Role entity.""")
 class RoleUpdateGQLModel:
     id: IDType = strawberry.field(description="Unique identifier\nUnikátní identifikátor")
     lastchange: datetime.datetime = strawberry.field(description="Timestamp of last change\nČasové razítko poslední změny")
-    valid: Optional[bool] = strawberry.field(description="Role validity status\nStav platnosti role", default=None)
+    # valid: Optional[bool] = strawberry.field(description="Role validity status\nStav platnosti role", default=None)
     startdate: Optional[datetime.datetime] = strawberry.field(description="Start date of role\nDatum začátku role", default=None)
     enddate: Optional[datetime.datetime] = strawberry.field(description="End date of role\nDatum ukončení role", default=None)
     changedby_id: strawberry.Private[IDType] = None
 
-@strawberry.input(description="""## Description
-Insert input for Role entity.
-Vstup pro vytvoření entity Role.
-
-## Details
-Provides input for creating a new Role, including user, group, and role type identifiers. Optional fields include deputy status and role duration.
-Poskytuje vstup pro vytvoření nové role, včetně identifikátorů uživatele, skupiny a typu role. Volitelná pole zahrnují status zástupce a dobu trvání role.
-""")
+@strawberry.input(description="""Insert input for Role entity.""")
 class RoleInsertGQLModel(InputModelMixin):
+    getLoader = RoleGQLModel.getLoader
     user_id: IDType = strawberry.field(description="User identifier\nIdentifikátor uživatele")
     group_id: IDType = strawberry.field(description="Group identifier\nIdentifikátor skupiny")
     roletype_id: IDType = strawberry.field(description="Role type identifier\nIdentifikátor typu role")
@@ -435,24 +428,28 @@ class RoleInsertGQLModel(InputModelMixin):
     createdby_id: strawberry.Private[IDType] = None
     rbacobject_id: strawberry.Private[IDType] = None
 
-@strawberry.input(description="""## Description
-Delete input for Role entity.
-Vstup pro odstranění entity Role.
-
-## Details
-Provides input for deleting a Role using its unique identifier and last change timestamp.
-Poskytuje vstup pro odstranění role pomocí unikátního identifikátoru a časového razítka poslední změny.
-""")
+@strawberry.input(description="""Input for Delete of Role.""")
 class RoleDeleteGQLModel:
     id: IDType = strawberry.field(description="Unique identifier\nUnikátní identifikátor")
     lastchange: datetime.datetime = strawberry.field(description="Timestamp of last change\nČasové razítko poslední změny")
 
-@strawberry.input(description="Sets the deputy for the role")
+@strawberry.input(description="Input for setting a deputy for the role")
 class RoleDeputyGQLModel:
-    id: IDType = strawberry.field(description="Primary key of the role for which the deputy will be assigned")
+    deputy_role_id: IDType = strawberry.field(description="Primary key of the role for which the deputy will be assigned")
     user_id: IDType = strawberry.field(description="ID of the user who will act as deputy")
     enddate: datetime.datetime = strawberry.field(description="Date when the deputyship ends")
+    id: typing.Optional[IDType] = strawberry.field(description="Primary key of the new role", default=None)
+    startdate: typing.Optional[datetime.datetime] = strawberry.field(description="Date when the deputyship ends", default=None)
+    deputy: strawberry.Private[bool] = True
+    group_id: strawberry.Private[IDType] = None
+    createdby_id: strawberry.Private[IDType] = None
+    rbacobject_id: strawberry.Private[IDType] = None
 
+class InsertRoleRbacProviderExtension(RbacProviderExtension):
+    async def provide_rbac_object_id(self, source, info: strawberry.types.Info, *args, **kwargs):
+        input_params = next(iter(kwargs.values()), None)
+        rbacobject_id = getattr(input_params, "group_id", MISSING)
+        return rbacobject_id
    
 class UpdateRolePermission(RBACPermission):
     message = "User is not allowed to update the role"
@@ -485,77 +482,113 @@ class InsertRolePermission(RBACPermission):
 @strawberry.interface(description="Mutations for roles")
 class RoleMutations:
     @strawberry.mutation(
-        description="""## Description
-Updates a role.
-Aktualizuje roli.
-
-## Details
-Executes a safe update operation for a role based on the provided input, verifying that the user has the necessary permissions to update the role.
-Provádí bezpečnou aktualizaci role na základě poskytnutého vstupu, přičemž ověřuje, zda má uživatel potřebná oprávnění pro aktualizaci role.
-
-## Permissions
-Accessible only to authenticated users with update permissions.
-Přístup mají pouze autentizovaní uživatelé s oprávněními pro aktualizaci.
-    """,
+        description="""Updates a role.""",
         permission_classes=[
             OnlyForAuthentized, 
-            UpdateRolePermission
+            # UpdateRolePermission
         ],
-        extensions=[]
+        extensions=[
+            UserAccessControlExtension[UpdateError, RoleGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[UpdateError, RoleGQLModel](),
+            RbacProviderExtension[UpdateError, RoleGQLModel](),
+            LoadDataExtension[UpdateError, RoleGQLModel]()
+        ]
     )
     async def role_update(
         self, 
         info: strawberry.types.Info, 
-        role: RoleUpdateGQLModel
+        role: RoleUpdateGQLModel,
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
+        db_row: typing.Any
     ) -> typing.Union[RoleGQLModel, UpdateError[RoleGQLModel]]:
         return await Update[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
 
     @strawberry.mutation(
-        description="""## Description
-Inserts a new role.
-Vloží novou roli.
+        description="""User with role sets deputy.""",
+        permission_classes=[
+            OnlyForAuthentized, 
+            # InsertRolePermission
+        ],
+        extensions=[
+            # UserAccessControlExtension[InsertError, RoleGQLModel](roles=["administrátor", "personalista"]),
+            # UserRoleProviderExtension[InsertError, RoleGQLModel](),
+            # RbacProviderExtension[InsertError, RoleGQLModel](),
+            LoadDataExtension[InsertError, RoleGQLModel](primary_key_name="deputy_role_id")
+        ]
+    )
+    async def role_create_deputy(
+        self, 
+        info: strawberry.types.Info, 
+        role: RoleDeputyGQLModel,
+        # user_roles: typing.List[dict],
+        # rbacobject_id: IDType,
+        db_row: typing.Any
+    ) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
+        if db_row.deputy:
+            return InsertError[RoleGQLModel](
+                msg="Role marked as deputy cannot be transfered",
+                code="2e86ca9f-9388-495e-a741-b0eab5bca68a",
+                _input=role,
+                location="role_create_deputy"
+            )
 
-## Details
-Sets rbacobject_id to group_id to ensure role association consistency before insertion.
-Nastaví rbacobject_id na group_id pro zajištění konzistence přiřazení role před vložením.
+        user = getUserFromInfo(info=info)
+        user_id = user["id"]
+        user_id = IDType(user_id) if isinstance(user_id, str) else user_id
+        role.user_id = user_id
+        if user_id != db_row.user_id:
+            return InsertError[RoleGQLModel](
+                msg="This is not your role",
+                code="b9fd337f-4001-4045-9432-a9adeb27a03a",
+                _input=role,
+                location="role_create_deputy"
+            )
+        
+        if role.startdate is None:
+            role.startdate = datetime.datetime.now()
+        role.rbacobject_id = db_row.group_id
+        role.group_id = db_row.group_id
+        return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
-## Permissions
-Accessible only to authenticated users with the necessary permissions to insert roles.
-Přístup mají pouze autentizovaní uživatelé s potřebnými oprávněními pro vkládání rolí.
-    """,
-        permission_classes=[OnlyForAuthentized, InsertRolePermission]
+    @strawberry.mutation(
+        description="""Inserts a new role.""",
+        permission_classes=[
+            OnlyForAuthentized, 
+            # InsertRolePermission
+        ],
+        extensions=[
+            UserAccessControlExtension[InsertError, RoleGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[InsertError, RoleGQLModel](),
+            InsertRoleRbacProviderExtension[InsertError, RoleGQLModel]()
+        ]
     )
     async def role_insert(
         self, 
         info: strawberry.types.Info, 
-        role: RoleInsertGQLModel
+        role: RoleInsertGQLModel,
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
     ) -> typing.Union[RoleGQLModel, InsertError[RoleGQLModel]]:
         role.rbacobject_id = role.group_id
         return await Insert[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 
     @strawberry.mutation(
-        description="""## Description
-Deletes a role.
-Odstraní roli.
-
-## Details
-Performs safe deletion using the unique identifier and last change timestamp.
-Provádí bezpečné odstranění pomocí unikátního identifikátoru a časového razítka poslední změny.
-
-## Permissions
-Accessible only to authenticated users with administrative privileges.
-Přístup mají pouze autentizovaní uživatelé s administrátorskými právy.
-    """,
+        description="""Deletes a role. For disabling role use update role.""",
         permission_classes=[
             OnlyForAuthentized, 
-            OnlyForAdmins
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAbsoluteAccessControlExtension[DeleteError, RoleGQLModel](roles=["superadmin"])
         ]
     )
     async def role_delete(
         self, 
         info: strawberry.types.Info, 
-        role: RoleDeleteGQLModel
+        role: RoleDeleteGQLModel,
+        user_roles: typing.List[dict]
     ) -> typing.Optional[DeleteError[RoleGQLModel]]:
         return await Delete[RoleGQLModel].DoItSafeWay(info=info, entity=role)
 

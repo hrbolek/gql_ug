@@ -46,10 +46,10 @@ RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleG
 @createInputs2
 class RoleTypeInputWhereFilter:
     id: IDType
-    path: str
+    path: str = strawberry.field(description="path")
     name: str
     name_en: str
-    mastertype: "RoleTypeInputWhereFilter"
+    mastertype: "RoleTypeInputWhereFilter" = strawberry.field(description="Type of this type.")
     # from .roleGQLModel import RoleInputWhereFilter
     # roles: RoleInputWhereFilter
     # from .roleCategoryGQLModel import RoleCategoryInputWhereFilter

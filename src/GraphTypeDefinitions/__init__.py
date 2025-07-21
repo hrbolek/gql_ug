@@ -41,7 +41,7 @@ from .groupGQLModel import GroupGQLModel
 from .groupTypeGQLModel import GroupTypeGQLModel
 from .membershipGQLModel import MembershipGQLModel
 from .roleGQLModel import RoleGQLModel
-from .deprecated.roleCategoryGQLModel import RoleCategoryGQLModel
+# from .deprecated.roleCategoryGQLModel import RoleCategoryGQLModel
 from .roleTypeGQLModel import RoleTypeGQLModel
 
 from .RBACObjectGQLModel import RBACObjectGQLModel

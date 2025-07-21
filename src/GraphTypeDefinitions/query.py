@@ -24,7 +24,7 @@ class Query(
     StateTransitionsQueries):
 
 
-    from .deprecated.roleCategoryGQLModel import role_category_by_id, role_category_page
+    # from .deprecated.roleCategoryGQLModel import role_category_by_id, role_category_page
     # role_category_by_id = role_category_by_id
 
     # from .roleCategoryGQLModel import role_category_page

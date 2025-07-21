@@ -35,11 +35,11 @@ class Mutation(
     # membership_update = membership_update
     # membership_delete = membership_delete
     
-    from .deprecated.roleCategoryGQLModel import (
-        role_category_insert,
-        role_category_update,
-        role_category_delete
-    )
+    # from .deprecated.roleCategoryGQLModel import (
+    #     role_category_insert,
+    #     role_category_update,
+    #     role_category_delete
+    # )
     # role_category_insert = role_category_insert
     # role_category_update = role_category_update
     # role_category_delete = role_category_delete
