@@ -26,11 +26,11 @@ class Mutation(
     StateTransitionMutations):
 
 
-    from .membershipGQLModel import (
-        membership_insert,
-        membership_update,
-        membership_delete
-    )
+    # from .membershipGQLModel import (
+    #     membership_insert,
+    #     membership_update,
+    #     membership_delete
+    # )
     # membership_insert = membership_insert
     # membership_update = membership_update
     # membership_delete = membership_delete
@@ -44,11 +44,11 @@ class Mutation(
     # role_category_update = role_category_update
     # role_category_delete = role_category_delete
 
-    from .groupCategoryGQLModel import (
-        group_category_insert,
-        group_category_update,
-        group_category_delete
-    )
+    # from .groupCategoryGQLModel import (
+    #     group_category_insert,
+    #     group_category_update,
+    #     group_category_delete
+    # )
     # group_category_insert = group_category_insert
     # group_category_update = group_category_update
     # group_category_delete = group_category_delete

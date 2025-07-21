@@ -47,7 +47,6 @@ from uoishelpers.resolvers import (
 from src.Dataloaders import getLoadersFromInfo
 from src.DBResolvers import DBResolvers
 
-GroupCategoryGQLModel = Annotated["GroupCategoryGQLModel", strawberry.lazy(".groupCategoryGQLModel")]
 
 # GroupTypeGQLModelResolvers = DBResolvers.GroupTypeModel(ForwardRef("GroupTypeGQLModel"))
 

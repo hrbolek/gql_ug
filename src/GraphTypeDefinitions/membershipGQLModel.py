@@ -6,6 +6,12 @@ import uuid
 from typing import List, Optional, Union, Annotated, Type
 from uoishelpers.resolvers import createInputs
 
+from uoishelpers.gqlpermissions.LoadDataExtension import LoadDataExtension
+from uoishelpers.gqlpermissions.RbacProviderExtension import RbacProviderExtension, MISSING
+from uoishelpers.gqlpermissions.UserRoleProviderExtension import UserRoleProviderExtension
+from uoishelpers.gqlpermissions.UserAccessControlExtension import UserAccessControlExtension
+from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
+
 from .BaseGQLModel import BaseGQLModel, IDType, Relation
 from ._GraphPermissions import (
     RoleBasedPermission, OnlyForAuthentized,
@@ -147,12 +153,13 @@ Vrací RBAC objekt spojený s tímto členstvím.""",
 # Special fields for query
 #
 #####################################################################
-from uoishelpers.resolvers import createInputs
+from uoishelpers.resolvers import createInputs2
 from dataclasses import dataclass
+
 GroupInputWhereFilter = Annotated["GroupInputWhereFilter", strawberry.lazy(".groupGQLModel")]
 UserInputWhereFilter = Annotated["UserInputWhereFilter", strawberry.lazy(".userGQLModel")]
-@createInputs
-@dataclass
+
+@createInputs2
 class MembershipInputWhereFilter:
     valid: bool
     # from .userGQLModel import UserInputWhereFilter
@@ -161,42 +168,21 @@ class MembershipInputWhereFilter:
     user: UserInputWhereFilter
 
 # from ._GraphResolvers import asPage
+@strawberry.interface(description="Membership related queries")
+class MembershipQueries:
+    membership_page = strawberry.field(
+        description="""Retrieves memberships in a paged format.""",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=List[MembershipGQLModel],
+        resolver=PageResolver[MembershipGQLModel](whereType=MembershipInputWhereFilter)
+    )
 
-membership_page = strawberry.field(
-    description="""## Description
-Retrieves memberships in a paged format.
-Vrací členství ve stránkovaném formátu.
-
-## Details
-This query returns a list of membership records. Pagination parameters can be applied to efficiently navigate large datasets.
-Tento dotaz vrací seznam záznamů členství. Pro efektivní práci s rozsáhlými datovými sadami je podporováno stránkování.
-
-## Permissions
-- Only authenticated users (OnlyForAuthentized) can execute this query.
-- Pouze autentizovaní uživatelé mají oprávnění tento dotaz spustit.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=List[MembershipGQLModel],
-    resolver=PageResolver[MembershipGQLModel](whereType=MembershipInputWhereFilter)
-)
-
-membership_by_id = strawberry.field(
-    description="""## Description
-Retrieves a specific membership by its unique identifier.
-Vyhledá konkrétní členství podle jeho unikátního identifikátoru.
-
-## Details
-If the membership is found, the corresponding membership record is returned; otherwise, null is returned.
-Pokud je členství nalezeno, vrací se odpovídající záznam; v opačném případě se vrací null.
-
-## Permissions
-- Only authenticated users (OnlyForAuthentized) can perform this query.
-- Pouze autentizovaní uživatelé mají přístup k tomuto dotazu.
-""",
-    permission_classes=[OnlyForAuthentized],
-    graphql_type=Optional[MembershipGQLModel],
-    resolver=MembershipGQLModel.load_with_loader
-)
+    membership_by_id = strawberry.field(
+        description="""Retrieves a specific membership by its unique identifier.""",
+        permission_classes=[OnlyForAuthentized],
+        graphql_type=Optional[MembershipGQLModel],
+        resolver=MembershipGQLModel.load_with_loader
+    )
 
 #####################################################################
 #
@@ -208,41 +194,18 @@ import datetime
 from .utils import InputModelMixin
 
 @strawberry.input(
-    description="""## Description
-Input model for inserting a new membership.
-Vstupní model pro vložení nového členství.
-
-## Fields
-- **user_id**: Unique identifier of the user.
-  Unikátní identifikátor uživatele.
-- **group_id**: Unique identifier of the group.
-  Unikátní identifikátor skupiny.
-- **id**: (Optional) Primary key of the membership entity. If not provided, a new unique identifier will be generated.
-  (Volitelné) Primární klíč entity členství. Pokud není zadán, bude vygenerován nový unikátní identifikátor.
-- **valid**: (Optional) Flag indicating if the membership is valid.
-  (Volitelné) Příznak platnosti členství.
-- **startdate**: (Optional) Date when the membership starts.
-  (Volitelné) Datum začátku členství.
-- **enddate**: (Optional) Date when the membership ends.
-  (Volitelné) Datum ukončení členství.
-- **createdby_id**: (Private) Identifier of the user who created the membership.
-  (Interní) Identifikátor uživatele, který vytvořil členství.
-"""
+    description="""Input model for inserting a new membership."""
 )
 class MembershipInsertGQLModel(InputModelMixin):
     getLoader = MembershipGQLModel.getLoader
     user_id: "IDType" = strawberry.field(
-         description="""Unique identifier of the user.
-Unikátní identifikátor uživatele."""
+         description="""Unique identifier of the user."""
     )
     group_id: "IDType" = strawberry.field(
-         description="""Unique identifier of the group.
-Unikátní identifikátor skupiny."""
+         description="""Unique identifier of the group."""
     )
     id: typing.Optional["IDType"] = strawberry.field(
-         description="""Primary key of the membership entity.
-Primární klíč entity členství. If not provided, a new unique identifier will be generated.
-Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
+         description="""Primary key of the membership entity.""",
          default=None
     )
 #     valid: typing.Optional[bool] = strawberry.field(
@@ -251,13 +214,11 @@ Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
 #          default=True
 #     )
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
-         description="""(Optional) Date when the membership starts.
-(Volitelné) Datum začátku členství.""",
+         description="""(Optional) Date when the membership starts.""",
          default=None
     )
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
-         description="""(Optional) Date when the membership ends.
-(Volitelné) Datum ukončení členství.""",
+         description="""(Optional) Date when the membership ends.""",
          default=None
     )
     # Private pole – nejsou zahrnuta do SDL
@@ -265,49 +226,25 @@ Pokud není zadán, bude vygenerován nový unikátní identifikátor.""",
 
 
 @strawberry.input(
-    description="""## Description
-Input model for updating an existing membership.
-Vstupní model pro aktualizaci existujícího členství.
-
-## Fields
-- **id**: Unique identifier of the membership.
-  Unikátní identifikátor členství.
-- **lastchange**: Timestamp of the last modification for concurrency control.
-  Časové razítko poslední změny, sloužící k řízení konzistence.
-- **valid**: (Optional) Flag indicating if the membership is valid.
-  (Volitelné) Příznak platnosti členství.
-- **startdate**: (Optional) Updated date when the membership starts.
-  (Volitelné) Aktualizované datum začátku členství.
-- **enddate**: (Optional) Updated date when the membership ends.
-  (Volitelné) Aktualizované datum ukončení členství.
-- **changedby_id**: (Private) Identifier of the user who made the change.
-  (Interní) Identifikátor uživatele, který provedl změnu.
-- **group_id**: (Private) Identifier for the group, if changed.
-  (Interní) Identifikátor skupiny, pokud došlo ke změně.
-"""
+    description="""Input model for updating an existing membership."""
 )
 class MembershipUpdateGQLModel:
     id: "IDType" = strawberry.field(
-         description="""Unique identifier of the membership.
-Unikátní identifikátor členství."""
+         description="""Unique identifier of the membership."""
     )
     lastchange: datetime.datetime = strawberry.field(
-         description="""Timestamp of the last modification for concurrency control.
-Časové razítko poslední změny, sloužící k řízení konzistence."""
+         description="""Timestamp of the last modification for concurrency control."""
     )
     valid: typing.Optional[bool] = strawberry.field(
-         description="""(Optional) Flag indicating if the membership is valid.
-(Volitelné) Příznak platnosti členství.""",
+         description="""(Optional) Flag indicating if the membership is valid.""",
          default=None
     )
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
-         description="""(Optional) Updated date when the membership starts.
-(Volitelné) Aktualizované datum začátku členství.""",
+         description="""(Optional) Updated date when the membership starts.""",
          default=None
     )
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
-         description="""(Optional) Updated date when the membership ends.
-(Volitelné) Aktualizované datum ukončení členství.""",
+         description="""(Optional) Updated date when the membership ends.""",
          default=None
     )
     # Private pole – nejsou zahrnuta do SDL
@@ -316,25 +253,14 @@ Unikátní identifikátor členství."""
 
 
 @strawberry.input(
-    description="""## Description
-Input model for deleting a membership.
-Vstupní model pro smazání členství.
-
-## Fields
-- **id**: Unique identifier of the membership.
-  Unikátní identifikátor členství.
-- **lastchange**: Timestamp of the last modification for concurrency control.
-  Časové razítko poslední změny, sloužící k řízení konzistence.
-"""
+    description="""Input model for deleting a membership."""
 )
 class MembershipDeleteGQLModel:
     id: "IDType" = strawberry.field(
-         description="""Unique identifier of the membership.
-Unikátní identifikátor členství."""
+         description="""Unique identifier of the membership."""
     )
     lastchange: datetime.datetime = strawberry.field(
-         description="""Timestamp of the last modification for concurrency control.
-Časové razítko poslední změny, sloužící k řízení konzistence."""
+         description="""Timestamp of the last modification for concurrency control."""
     )
 
 class UpdateMembershipPermission(RBACPermission):
@@ -373,6 +299,11 @@ class InsertMembershipPermission(RBACPermission):
         if not role: return False
         return True
 
+class InsertMembershipRbacProviderExtension(RbacProviderExtension):
+    async def provide_rbac_object_id(self, source, info: strawberry.types.Info, *args, **kwargs):
+        input_params = next(iter(kwargs.values()), None)
+        rbacobject_id = getattr(input_params, "group_id", MISSING)
+        return rbacobject_id
 
 @strawberry.interface(description="Membership related mutations")
 class MembershipMutations:
@@ -382,12 +313,21 @@ class MembershipMutations:
         description="""Updates the membership record, except the associated group and user""",
         permission_classes=[
             OnlyForAuthentized,
-            UpdateMembershipPermission
-        ]
+            # UpdateMembershipPermission
+        ],
+        extensions=[
+            UserAccessControlExtension[UpdateError, MembershipGQLModel](roles=["administrátor", "personalista"]),
+            UserRoleProviderExtension[UpdateError, MembershipGQLModel](),
+            RbacProviderExtension[UpdateError, MembershipGQLModel](),
+            LoadDataExtension[UpdateError, MembershipGQLModel]()
+        ],
     )
     async def membership_update(self, 
         info: strawberry.types.Info, 
-        membership: "MembershipUpdateGQLModel"
+        membership: "MembershipUpdateGQLModel",
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
+        db_row: typing.Any
     ) -> Union[MembershipGQLModel, UpdateError[MembershipGQLModel]]:
         result = await Update[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
         return result
@@ -396,25 +336,41 @@ class MembershipMutations:
         description="""Inserts new membership""",
         permission_classes=[
             OnlyForAuthentized,
-            InsertMembershipPermission
-        ]
+            # InsertMembershipPermission
+        ],
+        extensions=[
+            UserAccessControlExtension[UpdateError, MembershipGQLModel](
+                roles=["administrátor", "personalista", "garant", "garant předmětu"]
+            ),
+            UserRoleProviderExtension[UpdateError, MembershipGQLModel](),
+            InsertMembershipRbacProviderExtension[UpdateError, MembershipGQLModel](),
+        ],
     )
     async def membership_insert(self, 
         info: strawberry.types.Info, 
-        membership: "MembershipInsertGQLModel"
+        membership: "MembershipInsertGQLModel",
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
     ) -> Union[MembershipGQLModel, InsertError[MembershipGQLModel]]:
         result = await Insert[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
         return result
 
 
     @strawberry.mutation(
-        description="""Deletes the membership""",
+        description="""Deletes the membership. If you want to end membership, you should update it with appropriate enddate.""",
         permission_classes=[
             OnlyForAuthentized,
-            OnlyForAdmins
-        ]
+            # OnlyForAdmins
+        ],
+        extensions=[
+            UserAccessControlExtension[UpdateError, MembershipGQLModel](roles=["superadmin"]),
+            UserRoleProviderExtension[UpdateError, MembershipGQLModel](),
+            RbacProviderExtension[UpdateError, MembershipGQLModel](),
+            LoadDataExtension[UpdateError, MembershipGQLModel]()
+        ],
     )
     async def membership_delete(self, info: strawberry.types.Info, membership: MembershipDeleteGQLModel) -> typing.Optional[DeleteError[MembershipGQLModel]]:
+        ""
         result = await Delete[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
         return result
 

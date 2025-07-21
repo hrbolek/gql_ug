@@ -4,6 +4,7 @@ from .groupGQLModel import GroupQueries
 from .userGQLModel import UserQueries
 from .roleGQLModel import RoleQueries
 from .groupTypeGQLModel import GroupTypeQueries
+from .membershipGQLModel import MembershipQueries
 from .roleTypeGQLModel import RoleTypeQueries
 from .stateGQLModel import (
     StateMachineQueries,
@@ -15,6 +16,7 @@ class Query(
     GroupQueries, 
     GroupTypeQueries,
     UserQueries, 
+    MembershipQueries,
     RoleQueries,
     RoleTypeQueries,    
     StateMachineQueries,
@@ -28,18 +30,18 @@ class Query(
     # from .roleCategoryGQLModel import role_category_page
     # role_category_page = role_category_page
 
-    from .groupCategoryGQLModel import (
-        group_category_by_id, 
-        group_category_page
-    )
+    # from .groupCategoryGQLModel import (
+    #     group_category_by_id, 
+    #     group_category_page
+    # )
 
     from .RBACObjectGQLModel import rbac_by_id
     # rbac_by_id = rbac_by_id
 
-    from .membershipGQLModel import (
-        membership_page,
-        membership_by_id
-    )
+    # from .membershipGQLModel import (
+    #     membership_page,
+    #     membership_by_id
+    # )
     # membership_page = membership_page
     # membership_by_id = membership_by_id
 
