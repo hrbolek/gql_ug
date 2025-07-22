@@ -49,7 +49,7 @@ class RoleTypeInputWhereFilter:
     path: str = strawberry.field(description="path")
     name: str
     name_en: str
-    mastertype: "RoleTypeInputWhereFilter" = strawberry.field(description="Type of this type.")
+    # mastertype: "RoleTypeInputWhereFilter" = strawberry.field(description="Type of this type.")
     # from .roleGQLModel import RoleInputWhereFilter
     # roles: RoleInputWhereFilter
     # from .roleCategoryGQLModel import RoleCategoryInputWhereFilter
