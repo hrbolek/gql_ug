@@ -150,10 +150,10 @@ class GroupTypeQueries:
 #
 #####################################################################
 import datetime
-from uoishelpers.resolvers import InputModelMixin
+from uoishelpers.resolvers import InputModelMixin, TreeInputStructureMixin
 
 @strawberry.input(description="")
-class GroupTypeInsertGQLModel(InputModelMixin):
+class GroupTypeInsertGQLModel(TreeInputStructureMixin):
     getLoader = GroupTypeGQLModel.getLoader
     id: Optional[IDType] = None
     name: Optional[str] = None
@@ -162,7 +162,11 @@ class GroupTypeInsertGQLModel(InputModelMixin):
         description="""List of subtypes associated with this group type""", 
         default_factory=list
     )
-    createdby_id: strawberry.Private[IDType] = None
+
+    # Private pole – bez použití strawberry.field
+    path: strawberry.Private[str] = ""
+    createdby_id: strawberry.Private["IDType"] = None
+    rbacobject: strawberry.Private["IDType"] = None    
 
 
 @strawberry.input(description="")

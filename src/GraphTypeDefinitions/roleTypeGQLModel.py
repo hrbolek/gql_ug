@@ -144,7 +144,7 @@ class RoleTypeQueries:
 #
 #####################################################################
 import datetime
-from uoishelpers.resolvers import ( TreeInputStructureMixin)
+from uoishelpers.resolvers import (TreeInputStructureMixin)
 @strawberry.input(description="")
 class RoleTypeInsertGQLModel(TreeInputStructureMixin):
     # category_id: IDType = None
@@ -157,7 +157,10 @@ class RoleTypeInsertGQLModel(TreeInputStructureMixin):
         description="""List of subtypes associated with this role type""",
         default_factory=list,
     )
-    createdby_id: strawberry.Private[IDType] = None
+    # Private pole – bez použití strawberry.field
+    path: strawberry.Private[str] = ""
+    createdby_id: strawberry.Private["IDType"] = None
+    rbacobject: strawberry.Private["IDType"] = None    
    
 @strawberry.input(description="")
 class RoleTypeUpdateGQLModel:
