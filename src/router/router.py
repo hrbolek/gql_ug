@@ -5,7 +5,7 @@ import strawberry
 import aiohttp
 import graphql
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from graphql.language.ast import (
     DocumentNode, 
     ObjectTypeDefinitionNode, 
@@ -989,6 +989,12 @@ def create_router_from_schema(schema: strawberry.schema.Schema) -> APIRouter:
             path = f"/{out_type_name.lower()}/{{id}}"
             router.add_api_route(path, handle_scalar, methods=["GET"], name=out_type_name)
 
+    @router.get("/")
+    async def simple_visualiser():
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # složka, kde je tento .py soubor
+        template_path = os.path.join(script_dir, "template.html")
+        return FileResponse(template_path)
+    
     builded_query = buildMutation(ast.to_dict(), "userInsert")
     print(f"builded_query {field.name.value} => \n{json.dumps(builded_query, default=str, indent=4)}")
     builded_query_str = graphql.print_ast(builded_query)
