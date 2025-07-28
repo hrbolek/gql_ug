@@ -209,7 +209,7 @@ class RBACInputObject(TreeInputStructureMixin):
 
     id: strawberry.Private[IDType] = None
     grouptype_id: strawberry.Private[IDType] = None
-    rbacobject_id: strawberry.Private[IDType] = None
+    rbacobject_id: strawberry.Private[IDType] = IDType("3ffbc624-fe29-4486-9a56-3bc6a4e5b576")
     path: strawberry.Private[str] = None
     createdby_id: strawberry.Private[IDType] = None
 
