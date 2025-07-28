@@ -454,6 +454,10 @@ query IntrospectionQuery {
             user: {
                 __typename: "UserGQLModel",
                 id: "51d101a0-81f1-44ca-8366-6cf51432e8d6"
+            },
+            group: {
+                __typename: "GroupGQLModel",
+                id: "f2f2d33c-38ee-4f31-9426-f364bc488032"
             }
         }
 
@@ -482,12 +486,19 @@ query IntrospectionQuery {
                 return null
             }
             const row = data[0] || {}
+            const priority_attributes = ["__typename", "id", "name"];
             const attribute_names = Object.keys(row).filter( attribute_name => {
                 const attribute_value = row[attribute_name]
                 if (Array.isArray(attribute_value)) return false;
                 if (typeof attribute_value === "object" && attribute_value !== null) return false
                 return true
             })
+            const sorted_attributes = [
+                // nejdřív položky podle priority (ve správném pořadí)
+                ...priority_attributes.filter(attr => attribute_names.includes(attr)),
+                // pak ostatní, které v prioritách nejsou
+                ...attribute_names.filter(attr => !priority_attributes.includes(attr))
+            ];
             // console.log("Table.attribute_names", attribute_names)
             /* attribute_names.push("link") */ 
             
@@ -496,11 +507,11 @@ query IntrospectionQuery {
                 <table className="table table-stripped">
                     <thead>
                     <tr>
-                        {attribute_names.map(name => <th key={name}>{name}</th>)}
+                        {sorted_attributes.map(name => <th key={name}>{name}</th>)}
                     </tr>
                     </thead>
                     <tbody>
-                        {data.map(row => <TableRow key={row?.id} datarow={row} attributes={attribute_names} />)}
+                        {data.map(row => <TableRow key={row?.id} datarow={row} attributes={sorted_attributes} />)}
                     </tbody>
                 </table>
             </div>
@@ -520,6 +531,23 @@ query IntrospectionQuery {
             return (
                 <a href="#" onClick={onClick}>
                     {item?.fullname || item?.name || item?.id || "Data Error"} 
+                </a>
+            )
+        }
+        const LinkId = ({item}) => {
+             /* <a href={f`../${item?.__typename?.toLowerCase()}/${item?.id}`}>
+                  {item?.name || item?.id}
+              </a>*/
+            const { fetchEntityByTypeAndId } = React.useContext(GQLEntityContext);
+            const onClick = async (e) => {
+                e.preventDefault();
+                // setLoading(true);
+                const entity = await fetchEntityByTypeAndId(item.__typename, item.id);
+                // setLoading(false);                
+            }
+            return (
+                <a href="#" onClick={onClick}>
+                    {item?.id || "Data Error"} 
                 </a>
             )
         }
@@ -543,8 +571,8 @@ query IntrospectionQuery {
                             /*attribute_value_result = <Link item={attribute_value} />*/
                             console.log("else1", attribute_name, attribute_value)
                         }
-                        if (attribute_name === "id" && (!("name" in item)))
-                            attribute_value_result = <Link item={item} />
+                        if (attribute_name === "id")
+                            attribute_value_result = <LinkId item={item} />
                         if (attribute_name === "name")
                             attribute_value_result = <Link item={item} />
                         // else return null
@@ -633,14 +661,18 @@ query IntrospectionQuery {
 
         const TableRow = ({datarow={}, attributes=[]}) => {
             // datarow["link"] = <Link item={datarow} />
+            const priority_atributes = ["__typename", "id", "name"]
             return (
                 <tr>
                     {attributes.map(name => {
-                        if (name === "id" && !attributes.includes("name"))
-                            return <td key={name}><Link item={datarow} /></td>
+                        if (name === "id")
+                            return <td key={name}><LinkId item={datarow} /></td>
                         if (name === "name")
-                           return <td key={name}><Link item={datarow} /></td>
-                        return <td key={name}>{datarow[name]}</td>
+                            return <td key={name}><Link item={datarow} /></td>
+                        if (typeof datarow[name] === "object")
+                            return <td key={name}>{`${datarow[name]}`}</td>
+                        else
+                            return <td key={name}>{datarow[name] || ""}</td>
                     })}
                 </tr>
             )

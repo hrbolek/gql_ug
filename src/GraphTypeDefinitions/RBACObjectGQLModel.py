@@ -105,6 +105,30 @@ class RBACObjectGQLModel:
             )
         return result
     
+    @strawberry.field(
+        description="Roles associated with this RBAC for logged (asking) user",
+        permission_classes=[OnlyForAuthentized])
+    async def current_user_roles(
+        self, 
+        info: strawberry.types.Info
+        ) -> List["RoleGQLModel"]:
+        user = getUserFromInfo(info=info)
+        user_id = user["id"]
+        print(f"current_user_roles.user type {type(user_id)}")
+        from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group, RoleGQLModel
+        result = []
+        if self.asUser:
+            result = await resolve_roles_on_user(self, info, user_id=self.id, filter_user_id=user_id)
+        if self.asGroup:
+            result = await resolve_roles_on_group(self, info, group_id=self.id, filter_user_id=user_id)
+        result = (
+            RoleGQLModel.from_dataclass(r) 
+            # for result in results
+            for r in result
+            )
+        return result
+    
+
 
     @strawberry.field(
         description="""If logged user is authorized to operation on rbacobject_id""",
@@ -222,14 +246,14 @@ class RBACInputObject(TreeInputStructureMixin):
     ]
 )
 async def rbac_insert(
-    self, info: strawberry.types.Info, id: IDType, rbac: RBACInputObject
+    self, info: strawberry.types.Info, rbac: RBACInputObject
 ) -> typing.Union[RBACObjectGQLModel, InsertError[RBACObjectGQLModel]]:
     from .roleGQLModel import RoleGQLModel, RoleInsertGQLModel
+    from .groupGQLModel import GroupGQLModel
     actinguser = getUserFromInfo(info)
     # print(f"actinguser {actinguser}")
-    actinguser_id = IDType(actinguser["id"])
-    id = uuid.uuid4()
-    rbac.id = id
+    actinguser_id = actinguser["id"]
+    rbac.grouptype_id = "3ffbc624-fe29-4486-9a56-3bc6a4e5b576"
     if len(rbac.roles) == 0:
         rbac.roles = [
             RoleInsertGQLModel(
@@ -238,6 +262,52 @@ async def rbac_insert(
                 roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
             )
         ]
-    result = await Insert[RBACObjectGQLModel].DoItSafeWay(info, entity=rbac)
+    result_group = await Insert[GroupGQLModel].DoItSafeWay(info, entity=rbac)
+    if isinstance(result_group, InsertError):
+        result = InsertError[RBACObjectGQLModel](
+            msg=result_group.msg,
+            code=result_group.code,
+            location=result_group.location,
+            _input=rbac
+        )
+        return result
+    result = RBACObjectGQLModel(id=result_group.id, asGroup=True)
     return result
     
+
+"""
+mutation rbacinsert{
+  rbacInsert(rbac: {
+    mastergroupId: "04e93e6a-7180-4d01-a3e5-16790fe1498c",
+    name: "rbacX",
+    
+  }) {
+    __typename
+    ...on InsertError {
+      msg
+      failed
+      code
+      location
+      input
+    }
+    ...on RBACObjectGQLModel {
+      id
+      roles {
+        id
+        startdate
+        enddate
+        user {
+          id
+          email
+        }
+        group {
+          id
+          name
+        }
+      }
+      
+    }
+  }
+  
+}
+"""
