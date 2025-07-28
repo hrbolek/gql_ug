@@ -57,5 +57,9 @@ class Mutation(
         role_type_list_add as role_type_list_add_role,
         role_type_list_remove as role_type_list_remove_role
     )
+
+    from .RBACObjectGQLModel import (
+        rbac_insert
+    )
     # role_type_list_add_role = role_type_list_add
     # role_type_list_remove_role = role_type_list_remove

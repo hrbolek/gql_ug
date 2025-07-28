@@ -6,7 +6,21 @@ from typing import List, Annotated, Optional, Union
 
 import strawberry.types
 from .BaseGQLModel import BaseGQLModel, IDType
-from uoishelpers.resolvers import createInputs
+
+from uoishelpers.resolvers import (
+    createInputs,
+
+    ScalarResolver,
+    PageResolver,
+    VectorResolver,
+
+    Insert,
+    InsertError,
+    Update,
+    UpdateError,
+    Delete,
+    DeleteError
+)
 
 from ._GraphResolvers import resolve_id
 from ._GraphPermissions import RoleBasedPermission, OnlyForAuthentized
@@ -180,4 +194,50 @@ async def rbac_by_id(
     result = await RBACObjectGQLModel.resolve_reference(info=info, id=id)
     return result
 
+from uoishelpers.resolvers import InputModelMixin, TreeInputStructureMixin
+@strawberry.input(
+    description="Define the initial state of RBAC object"
+)
+class RBACInputObject(TreeInputStructureMixin):
+    from .groupGQLModel import GroupGQLModel
+    from .roleGQLModel import RoleInsertGQLModel
+    getLoader = GroupGQLModel.getLoader
+    mastergroup_id: IDType = strawberry.field(description="Which group will rule this RBAC object")
+    name: typing.Optional[str] = strawberry.field(description="Name", default="RBACObject")
+    abbreviation: typing.Optional[str] = strawberry.field(description="abbreviation", default="RBACObject")
+    roles: typing.Optional[typing.List[RoleInsertGQLModel]] = strawberry.field(description="roles on this rbacobject", default_factory=list)
 
+    id: strawberry.Private[IDType] = None
+    grouptype_id: strawberry.Private[IDType] = None
+    rbacobject_id: strawberry.Private[IDType] = None
+    path: strawberry.Private[str] = None
+    createdby_id: strawberry.Private[IDType] = None
+
+
+
+@strawberry.field(
+    description="creates an rbac object based on group",
+    permission_classes=[
+        OnlyForAuthentized
+    ]
+)
+async def rbac_insert(
+    self, info: strawberry.types.Info, id: IDType, rbac: RBACInputObject
+) -> typing.Union[RBACObjectGQLModel, InsertError[RBACObjectGQLModel]]:
+    from .roleGQLModel import RoleGQLModel, RoleInsertGQLModel
+    actinguser = getUserFromInfo(info)
+    # print(f"actinguser {actinguser}")
+    actinguser_id = IDType(actinguser["id"])
+    id = uuid.uuid4()
+    rbac.id = id
+    if len(rbac.roles) == 0:
+        rbac.roles = [
+            RoleInsertGQLModel(
+                user_id=actinguser_id,
+                group_id=id,
+                roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
+            )
+        ]
+    result = await Insert[RBACObjectGQLModel].DoItSafeWay(info, entity=rbac)
+    return result
+    
