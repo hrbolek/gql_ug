@@ -24,14 +24,14 @@ from uoishelpers.resolvers import (
 
 from ._GraphResolvers import resolve_id
 from ._GraphPermissions import RoleBasedPermission, OnlyForAuthentized
-from src.Dataloaders import getLoadersFromInfo as getLoader, getUserFromInfo
+from src.Dataloaders import getLoadersFromInfo as getLoader, getUserFromInfo, getLoadersFromInfo
 from .stateGQLModel import StateDataAccessType, StateGQLModel
 
 RoleGQLModel = Annotated["RoleGQLModel", strawberry.lazy(".roleGQLModel")]
 
 #@strawberry.federation.type(extend=False, keys=["id"])
-@strawberry.federation.type(keys=["id"])
-class RBACObjectGQLModel:
+@strawberry.federation.interface(keys=["id"])
+class RBACObjectGQLInterface:
 
     id: IDType = strawberry.field(description="id") # = resolve_id
     asUser: strawberry.Private[bool] = False
@@ -209,6 +209,55 @@ class RBACObjectGQLModel:
     #         return await UserGQLModel.resolve_reference(info=info, id=self.id)
     #     return None
     
+
+@strawberry.federation.type(keys=["id"])
+class RBACObjectGQLModel(RBACObjectGQLInterface):
+    pass
+
+
+@strawberry.federation.type(keys=["id", "stateId"])
+class RBACStateObjectGQLModel(RBACObjectGQLInterface):
+    from .roleTypeGQLModel import RoleTypeGQLModel
+    state_id: IDType = strawberry.field(description="state_id") # = resolve_id
+
+    @strawberry.field(
+        description="Roles associated with this RBAC for logged (asking) user",
+        permission_classes=[OnlyForAuthentized])
+    async def current_user_roles(
+        self, 
+        info: strawberry.types.Info
+    ) -> List["RoleGQLModel"]:
+        #TODO adapt it to use of state_id
+        user = getUserFromInfo(info=info)
+        user_id = user["id"]
+        print(f"current_user_roles.user type {type(user_id)}")
+        from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group, RoleGQLModel
+        result = []
+        if self.asUser:
+            result = await resolve_roles_on_user(self, info, user_id=self.id, filter_user_id=user_id)
+        if self.asGroup:
+            result = await resolve_roles_on_group(self, info, group_id=self.id, filter_user_id=user_id)
+        result = (
+            RoleGQLModel.from_dataclass(r) 
+            # for result in results
+            for r in result
+            )
+        return result    
+    
+    # @strawberry.field(
+    #     description="",
+    #     permission_classes=[
+    #         OnlyForAuthentized
+    #     ]
+    # )
+    # async def roles(self, info: strawberry.types.Info) -> List[RoleTypeGQLModel]:
+    #     loader = getLoadersFromInfo(info).RoleTypeListModel
+    #     return []
+    pass
+
+
+
+
 @strawberry.field(
     description="""Finds a rbacobject by its id""",
     permission_classes=[OnlyForAuthentized])

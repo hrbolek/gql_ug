@@ -94,6 +94,7 @@ class StateMachineGQLModel(NamedGQLModel):
         permission_classes=[
             OnlyForAuthentized
         ],
+        default=None
     )
     # type: typing.Optional[IDType] = strawberry.field(
     #     description="""state machine type""",

@@ -28,6 +28,7 @@ from uoishelpers.resolvers import (
 
 from uoishelpers.gqlpermissions.LoadDataExtension import LoadDataExtension
 from uoishelpers.gqlpermissions.RbacProviderExtension import RbacProviderExtension
+from uoishelpers.gqlpermissions.RbacInsertProviderExtension import RbacInsertProviderExtension
 from uoishelpers.gqlpermissions.UserRoleProviderExtension import UserRoleProviderExtension
 from uoishelpers.gqlpermissions.UserAccessControlExtension import UserAccessControlExtension
 from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
@@ -288,24 +289,24 @@ Pokud je skupina nalezena, vrátí se odpovídající objekt skupiny; v opačné
         resolver=GroupGQLModel.load_with_loader
     )
 
-    @strawberry.field(
-        extensions=[
-            UserRoleProviderExtension[UpdateError, GroupGQLModel](),
-            RbacProviderExtension[UpdateError, GroupGQLModel](),
-            LoadDataExtension[UpdateError, GroupGQLModel]()
-        ]
-    )
-    async def group_by_id2(
-        self, 
-        info: strawberry.types.Info, 
-        id: IDType, 
-        db_row: typing.Any,
-        rbacobject_id: IDType,
-        user_roles: typing.List[typing.Any]
-    ) -> typing.Union[UpdateError[GroupGQLModel], GroupGQLModel]:
-        print(f"group_by_id2 {user_roles}")
-        result = GroupGQLModel.from_dataclass(db_row)
-        return result
+    # @strawberry.field(
+    #     extensions=[
+    #         UserRoleProviderExtension[UpdateError, GroupGQLModel](),
+    #         RbacProviderExtension[UpdateError, GroupGQLModel](),
+    #         LoadDataExtension[UpdateError, GroupGQLModel]()
+    #     ]
+    # )
+    # async def group_by_id2(
+    #     self, 
+    #     info: strawberry.types.Info, 
+    #     id: IDType, 
+    #     db_row: typing.Any,
+    #     rbacobject_id: IDType,
+    #     user_roles: typing.List[typing.Any]
+    # ) -> typing.Union[UpdateError[GroupGQLModel], GroupGQLModel]:
+    #     print(f"group_by_id2 {user_roles}")
+    #     result = GroupGQLModel.from_dataclass(db_row)
+    #     return result
 
 #####################################################################
 #
@@ -444,6 +445,41 @@ class GroupInsertGQLModel(TreeInputStructureMixin):
     createdby_id: strawberry.Private["IDType"] = None
     rbacobject: strawberry.Private["IDType"] = None
     mastergroup_id: strawberry.Private["IDType"] = None
+
+
+@strawberry.input(
+    description="""Input model for inserting a new group."""
+)
+class RbacFreeInsertGQLModel(TreeInputStructureMixin):
+    getLoader = GroupGQLModel.getLoader
+    grouptype_id: IDType = strawberry.field(
+         description="""Identifier for the group's type."""
+    )
+    id: IDType = strawberry.field(
+         description="""Primary key of the group.""",
+    )
+    from .membershipGQLModel import MembershipInsertGQLModel
+    memberships: typing.Optional[typing.List[MembershipInsertGQLModel]] = strawberry.field(
+        description="""členství, která budou vytvořena pro tuto skupinu""",
+        default_factory=list
+    )
+    from .roleGQLModel import RoleInsertGQLModel
+    roles: Optional[List[RoleInsertGQLModel]] = strawberry.field(
+        description="List of roles assigned to the user\nSeznam rolí přiřazených uživateli",
+        default_factory=list
+    )
+
+    # Private pole – bez použití strawberry.field
+    path: strawberry.Private[str] = ""
+    name: strawberry.Private[str] = "rbacobject"
+    name_en: strawberry.Private[str] = "rbacobject"
+    abbreviation: strawberry.Private[str] = "rbac"
+    email: strawberry.Private[str] = None
+    startdate: strawberry.Private[datetime.datetime] = None
+    enddate: strawberry.Private[datetime.datetime] = None
+    createdby_id: strawberry.Private["IDType"] = None
+    rbacobject_id: strawberry.Private["IDType"] = None
+    mastergroup_id: strawberry.Private["IDType"] = None    
 
 @strawberry.input(
     description="""Input model for inserting a new group."""
@@ -764,6 +800,33 @@ class GroupMutations:
         return result
 
     @strawberry.mutation(
+        description="""Inserts a new rbacobject out of structure represented by a group.""",
+        extensions=[
+            # UserAccessControlExtension[InsertError, GroupGQLModel](
+            #     roles=["administrátor"]
+            # ),
+            UserRoleProviderExtension[InsertError, GroupGQLModel](),
+            RbacInsertProviderExtension[InsertError, GroupGQLModel](
+                rbac_key_name="id"
+            ),
+            # RbacProviderExtension[InsertError, GroupGQLModel](),
+            # LoadDataExtension[InsertError, GroupGQLModel](primary_key_name="mastergroup_id")
+        ]
+    )
+    async def rbac_object_insert(
+        self, 
+        info: strawberry.types.Info, 
+        rbacobject: RbacFreeInsertGQLModel,
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
+        # db_row: typing.Any
+    ) -> typing.Union["GroupGQLModel", InsertError["GroupGQLModel"]]:
+        rbacobject.rbacobject_id = rbacobject.id
+        print(f"rbac_object_insert\n{rbacobject}\n{strawberry.asdict(rbacobject)}")
+        result = await Insert[GroupGQLModel].DoItSafeWay(info=info, entity=rbacobject)
+        return result
+
+    @strawberry.mutation(
         description="""Deletes a group""",
         extensions=[
             UserAccessControlExtension[DeleteError, GroupGQLModel](roles=["administrátor", "personalista"]),
@@ -782,3 +845,5 @@ class GroupMutations:
     ) -> typing.Optional[DeleteError[GroupGQLModel]]:
         result = await Delete[GroupGQLModel].DoItSafeWay(info=info, entity=group)
         return result
+    
+# 0185a46d-42f9-4175-b7c9-99e8dad78af5

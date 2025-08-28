@@ -44,7 +44,7 @@ from .roleGQLModel import RoleGQLModel
 # from .deprecated.roleCategoryGQLModel import RoleCategoryGQLModel
 from .roleTypeGQLModel import RoleTypeGQLModel
 
-from .RBACObjectGQLModel import RBACObjectGQLModel
+from .RBACObjectGQLModel import RBACObjectGQLModel, RBACStateObjectGQLModel
 from .BaseGQLModel import IDType, Relation
 
 
@@ -59,7 +59,7 @@ from uoishelpers.gqlpermissions.ApplyPermissionCheckRoleDirectiveMixin import Pe
 
 schema = strawberry.federation.Schema(
     query=Query, 
-    types=(RBACObjectGQLModel, IDType), 
+    types=(RBACObjectGQLModel, RBACStateObjectGQLModel, IDType), 
     mutation=Mutation, 
     extensions=[],
     schema_directives=[Relation, PermissionCheckRoleDirective]
@@ -134,12 +134,18 @@ class UGWhoAmIExtension(WhoAmIExtension):
         # print(f"UGWhoAmIExtension")
         from graphql import print_ast
         query_sdl = "{\n  _service {\n    sdl\n  }\n}"        
+        queries = [
+            query_sdl,
+            "{\n  __schema {\n    types {\n      name\n    }\n  }\n}",
+            "query __ApolloGetServiceDefinition__ {\n  _service {\n    sdl\n  }\n}"
+        ]
+        
         # print(f"printed attrs: {dir(self.execution_context)}", flush=True)
         graphql_document = self.execution_context.graphql_document
         query_str = print_ast(graphql_document)
-
-        print(f"printed query ast: {query_str} {query_str==query_sdl}", flush=True)
-        if not query_str == query_sdl:
+        to_pass = query_str in queries
+        print(f"printed query ast: {query_str} {to_pass}", flush=True)
+        if not to_pass:
             whoami = await self.ug_query(query=WhoAmIExtension.mequery)
             # data = whoami.get("data", {"me": {"roles": []}})
             data = whoami.get("data", None)

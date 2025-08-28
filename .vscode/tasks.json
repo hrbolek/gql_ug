@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "docker-build",
+      "type": "shell",
+      "command": "docker build -t hrbolek/gql_ug:latest .",
+      "group": "build"
+    },
+    {
+      "label": "docker-build-no-cache",
+      "type": "shell",
+      "command": "docker build --no-cache -t hrbolek/gql_ug:latest .",
+      "group": "build"
+    }
+  ]
+}

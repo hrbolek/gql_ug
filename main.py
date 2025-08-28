@@ -109,8 +109,11 @@ schema.extensions.append(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from src.DBFeeder import backupDB
     initizalizedEngine = await RunOnceAndReturnSessionMaker()
     yield
+    await backupDB(initizalizedEngine)
+
 
 app = FastAPI(lifespan=lifespan)
 # app.mount("/gql", graphql_app)
@@ -137,9 +140,9 @@ async def graphiql():
 
 logging.info("All initialization is done")
 
-from src.router.router import create_router_from_schema
-router = create_router_from_schema(schema)
-app.include_router(router, prefix="/ui")
+# from src.router.router import create_router_from_schema
+# router = create_router_from_schema(schema)
+# app.include_router(router, prefix="/ui")
 # endregion
 
 # region ENV setup tests
