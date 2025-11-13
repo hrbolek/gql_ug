@@ -235,17 +235,17 @@ class MembershipUpdateGQLModel:
     lastchange: datetime.datetime = strawberry.field(
          description="""Timestamp of the last modification for concurrency control."""
     )
-    valid: typing.Optional[bool] = strawberry.field(
-         description="""(Optional) Flag indicating if the membership is valid.""",
-         default=None
-    )
+    # valid: typing.Optional[bool] = strawberry.field(
+    #      description="""(Optional) Flag indicating if the membership is valid.""",
+    #      default=strawberry.UNSET
+    # )
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
          description="""(Optional) Updated date when the membership starts.""",
-         default=None
+         default=strawberry.UNSET
     )
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
          description="""(Optional) Updated date when the membership ends.""",
-         default=None
+         default=strawberry.UNSET
     )
     # Private pole – nejsou zahrnuta do SDL
     changedby_id: strawberry.Private["IDType"] = None

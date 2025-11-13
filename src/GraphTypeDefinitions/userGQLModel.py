@@ -261,7 +261,13 @@ class UserInputWhereFilter:
     from .membershipGQLModel import MembershipInputWhereFilter
     memberships: MembershipInputWhereFilter
     from .roleGQLModel import RoleInputWhereFilter
-    roles: RoleInputWhereFilter
+    roles: RoleInputWhereFilter = strawberry.field(description="""Filter for roles
+for field roles the filters could be
+{"roles": {"start_date": {"_ge": "2025-06-30T18:01:59"}}}
+{"roles": {"roletype_id": {"_eq": "8da9cec4-bfc2-487f-8080-dc596dfec53c"}}}
+{"roles": {"_and": [{"start_date": {"_ge": "2025-06-30T18:01:59"}}, {"roletype_id": {"_eq": "8da9cec4-bfc2-487f-8080-dc596dfec53c"}}]}}
+
+""", default=None)
 
 @strawberry.interface(description="User queries interface")
 class UserQueries:
@@ -353,10 +359,10 @@ Pouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou t
 class UserUpdateGQLModel:
     id: IDType = strawberry.field(description="Unique identifier\nUnikátní identifikátor")
     lastchange: datetime.datetime = strawberry.field(description="Timestamp of last change\nČasové razítko poslední změny")
-    name: Optional[str] = strawberry.field(description="User's first name\nJméno uživatele", default=None)
-    surname: Optional[str] = strawberry.field(description="User's surname\nPříjmení uživatele", default=None)
-    email: Optional[str] = strawberry.field(description="User's email address\nEmail uživatele", default=None)
-    valid: Optional[bool] = strawberry.field(description="Validation status of the user\nStav validace uživatele", default=None)
+    name: Optional[str] = strawberry.field(description="User's first name\nJméno uživatele", default=strawberry.UNSET)
+    surname: Optional[str] = strawberry.field(description="User's surname\nPříjmení uživatele", default=strawberry.UNSET)
+    email: Optional[str] = strawberry.field(description="User's email address\nEmail uživatele", default=strawberry.UNSET)
+    valid: Optional[bool] = strawberry.field(description="Validation status of the user\nStav validace uživatele", default=strawberry.UNSET)
     changedby_id: strawberry.Private[IDType] = None
 
 @strawberry.input(description="""
@@ -452,7 +458,16 @@ Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci
             LoadDataExtension[UpdateError, UserGQLModel]()
         ]
     )
-    async def user_update(self, info: strawberry.types.Info, user: UserUpdateGQLModel) -> typing.Union[UserGQLModel, UpdateError[UserGQLModel]]:
+    async def user_update(
+        self, 
+        info: strawberry.types.Info, 
+        user: UserUpdateGQLModel,
+        db_row: typing.Any,
+        rbacobject_id: IDType,
+        user_roles: typing.List[dict],
+    ) -> typing.Union[UserGQLModel, UpdateError[UserGQLModel]]:
+        print(f"user_update.db_row={db_row}")
+        # return UserGQLModel.from_dataclass(db_row)
         return await Update[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
     class InsertUserPermission(RBACPermission):
@@ -494,7 +509,14 @@ Pouze autentizovaní uživatelé s potřebnými oprávněními mohou tuto mutaci
             LoadDataExtension[InsertError, UserGQLModel]()
         ]
     )
-    async def user_insert(self, info: strawberry.types.Info, user: UserInsertGQLModel) -> typing.Union[UserGQLModel, InsertError[UserGQLModel]]:
+    async def user_insert(
+        self, 
+        info: strawberry.types.Info, 
+        user: UserInsertGQLModel,
+        db_row: typing.Any,
+        rbacobject_id: IDType,
+        user_roles: typing.List[dict],
+    ) -> typing.Union[UserGQLModel, InsertError[UserGQLModel]]:
         return await Insert[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
     @strawberry.mutation(
@@ -523,7 +545,14 @@ Pouze autentizovaní uživatelé s odpovídajícími RBAC oprávněními mohou t
             LoadDataExtension[DeleteError, UserGQLModel]()
         ]
     )
-    async def user_delete(self, info: strawberry.types.Info, user: UserDeleteGQLModel) -> typing.Optional[DeleteError[UserGQLModel]]:
+    async def user_delete(
+        self, 
+        info: strawberry.types.Info, 
+        user: UserDeleteGQLModel,
+        user_roles: typing.List[dict],
+        rbacobject_id: IDType,
+        db_row: typing.Any
+    ) -> typing.Optional[DeleteError[UserGQLModel]]:
         return await Delete[UserGQLModel].DoItSafeWay(info=info, entity=user)
 
 

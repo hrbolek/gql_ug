@@ -166,7 +166,7 @@ class UGWhoAmIExtension(WhoAmIExtension):
                         "details": "You are not logged in"
                     }
                 )
-
+            print(f"UGWhoAmIExtension:user={user}")
             context = self.execution_context
             context.context["user"] = user
             context.context["ug_client"] = self.ug_query

@@ -150,6 +150,7 @@ class RoleInputWhereFilter:
     valid: bool
     startdate: datetime.datetime
     enddate: datetime.datetime
+    roletype_id: IDType
     # from .groupGQLModel import GroupInputWhereFilter
     # from .userGQLModel import UserInputWhereFilter
     # from .roleTypeGQLModel import RoleTypeInputWhereFilter
