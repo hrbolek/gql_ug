@@ -1,3 +1,4 @@
+import uuid
 import sqlalchemy
 from sqlalchemy import (
     Column,
@@ -19,8 +20,8 @@ class MembershipModel(BaseModel):
 
     __tablename__ = "memberships"
 
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, default=None)
-    group_id: Mapped[str] = mapped_column(ForeignKey("groups.id"), index=True, default=None)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, default=None)
+    group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id"), index=True, default=None)
 
     startdate: Mapped[datetime.datetime] = mapped_column(
         nullable=True,

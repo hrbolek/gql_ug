@@ -1,3 +1,4 @@
+import uuid
 import datetime
 import sqlalchemy
 from sqlalchemy import (
@@ -20,9 +21,9 @@ class RoleModel(BaseModel):
 
     __tablename__ = "roles"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=True, default=None)
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True, nullable=True, default=None)
-    roletype_id: Mapped[int] = mapped_column(ForeignKey("roletypes.id"), index=True, nullable=True, default=None)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=True, default=None)
+    group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id"), index=True, nullable=True, default=None)
+    roletype_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("roletypes.id"), index=True, nullable=True, default=None)
 
     deputy: Mapped[bool] = mapped_column(comment="if this role is deputy role", nullable=True, default=None)
     startdate: Mapped = mapped_column(DateTime, comment="When the role begins", nullable=True, default=None)

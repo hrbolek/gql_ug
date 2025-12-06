@@ -77,8 +77,9 @@ class RBACObjectGQLInterface:
         # urows = await loaderU.load(id)
         # print(f"RBACObjectGQLModel.resolve_reference: asUser={asUser}, asGroup={asGroup}, id={id}", flush=True)
         # print(f"RBACObjectGQLModel.resolve_reference: {urows} ({id} {type(id)})", flush=True)
-        if asUser is None and asGroup is None: return None
-        
+        # if asUser is None and asGroup is None: return None
+        if not asUser and not asGroup:
+            return None
         result = RBACObjectGQLModel(id=id, asGroup=asGroup, asUser=asUser)
         # result.id = id
         # result._data = None
@@ -307,7 +308,7 @@ async def rbac_insert(
         rbac.roles = [
             RoleInsertGQLModel(
                 user_id=actinguser_id,
-                group_id=id,
+                group_id=rbac.id,
                 roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
             )
         ]
