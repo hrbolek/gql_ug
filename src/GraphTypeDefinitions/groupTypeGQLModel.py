@@ -158,6 +158,7 @@ class GroupTypeInsertGQLModel(TreeInputStructureMixin):
     id: Optional[IDType] = None
     name: Optional[str] = None
     name_en: Optional[str] = None
+    mastertype_id: Optional[IDType] = strawberry.field(description="", default=None)
     subtypes: Optional[List["GroupTypeInsertGQLModel"]] = strawberry.field(
         description="""List of subtypes associated with this group type""", 
         default_factory=list
@@ -173,9 +174,10 @@ class GroupTypeInsertGQLModel(TreeInputStructureMixin):
 class GroupTypeUpdateGQLModel:
     id: IDType
     lastchange: datetime.datetime
-    name: Optional[str] = None
-    name_en: Optional[str] = None
-    changedby_id: strawberry.Private[IDType] = None
+    mastertype_id: Optional[IDType] = strawberry.field(description="", default=strawberry.UNSET)
+    name: Optional[str] = strawberry.field(description="", default=strawberry.UNSET)
+    name_en: Optional[str] = strawberry.field(description="", default=strawberry.UNSET)
+    changedby_id: strawberry.Private[IDType] = strawberry.UNSET
 
 @strawberry.input(description="")
 class GroupTypeDeleteGQLModel:
@@ -206,7 +208,12 @@ class GroupTypeMutations:
             UserAbsoluteAccessControlExtension[UpdateError, GroupTypeUpdateGQLModel](roles=["superadmin"])
         ]
     )
-    async def group_type_update(self, info: strawberry.types.Info, group_type: GroupTypeUpdateGQLModel) -> Union[GroupTypeGQLModel, UpdateError[GroupTypeGQLModel]]:
+    async def group_type_update(
+        self, 
+        info: strawberry.types.Info, 
+        group_type: GroupTypeUpdateGQLModel,
+        user_roles: typing.Any
+    ) -> Union[GroupTypeGQLModel, UpdateError[GroupTypeGQLModel]]:
         result = await Update[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
         return result
 
@@ -220,7 +227,12 @@ class GroupTypeMutations:
             UserAbsoluteAccessControlExtension[InsertError, GroupTypeUpdateGQLModel](roles=["superadmin"])
         ]
     )
-    async def group_type_insert(self, info: strawberry.types.Info, group_type: GroupTypeInsertGQLModel) -> Union[GroupTypeGQLModel, InsertError[GroupTypeGQLModel]]:
+    async def group_type_insert(
+        self, 
+        info: strawberry.types.Info, 
+        group_type: GroupTypeInsertGQLModel,
+        user_roles: typing.Any
+    ) -> Union[GroupTypeGQLModel, InsertError[GroupTypeGQLModel]]:
         result = await Insert[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
         return result
 
@@ -234,7 +246,12 @@ class GroupTypeMutations:
             UserAbsoluteAccessControlExtension[DeleteError, GroupTypeUpdateGQLModel](roles=["superadmin"])
         ]
     )
-    async def group_type_delete(self, info: strawberry.types.Info, group_type: GroupTypeDeleteGQLModel) -> Optional[DeleteError[GroupTypeGQLModel]]:
+    async def group_type_delete(
+        self, 
+        info: strawberry.types.Info, 
+        group_type: GroupTypeDeleteGQLModel,
+        user_roles: typing.Any
+    ) -> Optional[DeleteError[GroupTypeGQLModel]]:
         result = await Delete[GroupTypeGQLModel].DoItSafeWay(info=info, entity=group_type)
         return result
 

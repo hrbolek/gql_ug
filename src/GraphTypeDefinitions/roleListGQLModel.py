@@ -1,4 +1,6 @@
 import sqlalchemy
+import uuid
+import typing
 import datetime
 import strawberry
 import asyncio
@@ -6,6 +8,7 @@ from typing import List, Annotated, Optional, Union
 from uoishelpers.resolvers import createInputs
 
 from .BaseGQLModel import BaseGQLModel, IDType
+from uoishelpers.dataloaders.IDLoader import IDLoader
 from ._GraphResolvers import (
     remove_constructor
     )
@@ -42,12 +45,18 @@ RoleTypeGQLModel = Annotated["RoleTypeGQLModel", strawberry.lazy(".roleTypeGQLMo
 @strawberry.type(description="")
 class RoleTypeListGQLModel(BaseGQLModel):
     @classmethod
-    def getLoader(cls, info: strawberry.types.Info):
-        return getLoadersFromInfo(info).RoleTypeListModel
+    def getLoader(cls, info: strawberry.types.Info) -> IDLoader:
+        return getLoadersFromInfo(info).RoleTypeListNameModel
     
     @classmethod
-    async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
-        return None if id is None else cls(id=id)
+    def getLoaderRTLM(cls, info: strawberry.types.Info) -> IDLoader:
+        return getLoadersFromInfo(info).RoleTypeListModel
+    
+    
+    
+    # @classmethod
+    # async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
+    #     return None if id is None else cls(id=id)
 
     # id: IDType = strawberry.field(description="primary key")
 
@@ -57,12 +66,18 @@ class RoleTypeListGQLModel(BaseGQLModel):
     # createdby = resolve_createdby
     # rbacobject = resolve_rbacobject
 
+    name: typing.Optional[str] = strawberry.field(
+        description="""name of the list of role types""",
+        default=None,
+        permission_classes=[OnlyForAuthentized],
+    )
+
     @strawberry.field(
         description="""All roletypes associated with role type list""",
         permission_classes=[OnlyForAuthentized])
     async def roletypes(self, info: strawberry.types.Info) -> List["RoleTypeGQLModel"]:
         from .roleTypeGQLModel import RoleTypeGQLModel
-        loader = RoleTypeListGQLModel.getLoader(info)
+        loader = RoleTypeListGQLModel.getLoaderRTLM(info)
         # print("self.id", self.id, type(self.id), flush=True)
         results = await loader.filter_by(list_id=self.id)
         results = (RoleTypeGQLModel.resolve_reference(info, id=r.type_id) for r in results)
@@ -73,7 +88,7 @@ class RoleTypeListGQLModel(BaseGQLModel):
 #     self, info: strawberry.types.Info, list_id: IDType
 # ) -> List["RoleTypeGQLModel"]:
 #     # print("resolve_role_type_list_by_id", list_id)
-#     loader = RoleTypeListGQLModel.getLoader(info)
+#     loader = RoleTypeListGQLModel.getLoaderRTLM(info)
 #     roles = await loader.filter_by(list_id=list_id)
 #     # print("resolve_role_type_list_by_id", list_id)
 #     return roles  
@@ -107,6 +122,14 @@ import asyncio
 #         return await RoleTypeListGQLModel.resolve_reference(info=info, id=self.id)
 
 import dataclasses
+
+@strawberry.input(description="")
+class RoleTypeListInsert:
+    id: typing.Optional[IDType] = strawberry.field(default=None)
+    name: typing.Optional[str] = strawberry.field(default=None)
+    createdby_id: strawberry.Private[IDType] = None
+
+
 @strawberry.input(description="")
 class RoleTypeInsertIntoList:
     type_id: IDType = None
@@ -128,6 +151,16 @@ class RoleTypeInsertIntoList:
 #         return True
 
 @strawberry.field(
+    description="""inserts a new list of role types""",
+    permission_classes=[OnlyForAuthentized])
+async def role_type_list_insert(
+    self, info: strawberry.types.Info, roletypelist: RoleTypeListInsert
+) -> Union[RoleTypeListGQLModel, InsertError[RoleTypeListGQLModel]]:
+    result = await Insert[RoleTypeListGQLModel].DoItSafeWay(info=info, entity=roletypelist)
+    return result
+
+
+@strawberry.field(
     description="""adds to a list of role types new item""",
     permission_classes=[OnlyForAuthentized])
 async def role_type_list_add(
@@ -137,7 +170,7 @@ async def role_type_list_add(
     # type_id = IDType(role_type_id) if isinstance(role_type_id, str) else role_type_id
     try:
         entity.list_id = entity.id
-        loader = RoleTypeListGQLModel.getLoader(info)
+        loader = RoleTypeListGQLModel.getLoaderRTLM(info)
         roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
         # roles = [*roles]
         
@@ -182,7 +215,7 @@ async def role_type_list_remove(
         entity.list_id = entity.id
         # print(list_id, type(list_id), flush=True)
         # print(type_id, type(type_id), flush=True)
-        loader = RoleTypeListGQLModel.getLoader(info)
+        loader = RoleTypeListGQLModel.getLoaderRTLM(info)
         # roles = await loader.filter_by(list_id=entity.list_id, type_id=entity.type_id)
         # isIn = False
         # isIn = next(roles, None)

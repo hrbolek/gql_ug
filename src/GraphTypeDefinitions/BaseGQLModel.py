@@ -49,7 +49,10 @@ class BaseGQLModel:
     @classmethod
     def from_dataclass(cls, db_row):
         """Transforms a dataclass instance into a GraphQL model instance."""
-        db_row_dict = dataclasses.asdict(db_row)
+        if isinstance(db_row, dict):
+            db_row_dict = db_row
+        else:
+            db_row_dict = dataclasses.asdict(db_row)
         instance = cls(**db_row_dict)
         return instance
 
@@ -148,4 +151,5 @@ RBAC objekt spojený s touto entitou.""",
     )
     async def rbacobject(self, info: strawberry.types.Info) -> typing.Optional["RBACObjectGQLModel"]:
         from .RBACObjectGQLModel import RBACObjectGQLModel
+        # print(f"resolving rbacobject {self.rbacobject_id}")
         return None if self.rbacobject_id is None else await RBACObjectGQLModel.resolve_reference(info=info, id=self.rbacobject_id)

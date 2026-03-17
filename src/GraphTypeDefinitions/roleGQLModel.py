@@ -67,6 +67,7 @@ class RoleGQLModel(BaseGQLModel):
     @classmethod
     def from_dataclass(cls, db_row):
         db_row_dict = dataclasses.asdict(db_row)
+        # print(f"role as dict {db_row_dict}")
         db_row_dict["valid"] = db_row.valid
         instance = cls(**db_row_dict)
         return instance
@@ -74,66 +75,133 @@ class RoleGQLModel(BaseGQLModel):
     valid: typing.Optional[bool] = strawberry.field(
         description="""If the user still holds this role
 Jestli uživatel tuto roli stále zastává""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     deputy: typing.Optional[bool] = strawberry.field(
         description="""Indicates if this role is assigned as deputy
 Ukazuje, zda je tato role přiřazena jako zástupce""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     startdate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""The date when the user assumed this role
 Datum, kdy uživatel tuto roli převzal""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     enddate: typing.Optional[datetime.datetime] = strawberry.field(
         description="""The date when the user was removed from this role
 Datum, kdy byl uživatel odebrán z této role""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     roletype_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier of the role type
 Identifikátor typu role""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     user_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier of the user who holds this role
 Identifikátor uživatele, který tuto roli zastává""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
 
     group_id: typing.Optional[IDType] = strawberry.field(
         description="""Identifier of the group to which this role belongs
 Identifikátor skupiny, ke které tato role patří""",
+        default=None,
         permission_classes=[OnlyForAuthentized],
     )
+    
+    # roletype: typing.Optional[typing.List] = strawberry.Private[typing.List]
+    roletype: strawberry.Private[typing.Any] = dataclasses.field(default=None)
 
-    roletype: typing.Optional[RoleTypeGQLModel] = strawberry.field(
+#     roletype_: typing.Optional[RoleTypeGQLModel] = strawberry.field(
+#         name="roletype",
+#         description="""Role type detail (e.g. Dean)
+# Detail typu role (např. Dekan)""",
+#         permission_classes=[OnlyForAuthentized],
+#         resolver=ScalarResolver[RoleTypeGQLModel](fkey_field_name="roletype_id")
+#     )
+
+    @strawberry.field(
+        name="roletype",
         description="""Role type detail (e.g. Dean)
 Detail typu role (např. Dekan)""",
         permission_classes=[OnlyForAuthentized],
-        resolver=ScalarResolver[RoleTypeGQLModel](fkey_field_name="roletype_id")
     )
+    async def get_roletype(self, info: strawberry.Info) -> typing.Optional["RoleTypeGQLModel"]:
+        
+        from .roleTypeGQLModel import RoleTypeGQLModel
+        if self.roletype:
+            # print(f"call from GQL having value {self.roletype}")
+            return RoleTypeGQLModel.from_dataclass(self.roletype)
+        
+        if self.roletype_id:
+            # print(f"call from GQL resolving value")
+            return await RoleTypeGQLModel.resolve_reference(info, id=self.roletype)
+        
+        resolver=ScalarResolver[RoleTypeGQLModel](fkey_field_name="roletype_id")
+        # print(f"call from GQL resolving value")
+        return None
+        
+        return await resolver(self, info)
 
-    user: typing.Optional[UserGQLModel] = strawberry.field(
+#     user: typing.Optional[UserGQLModel] = strawberry.field(
+#         description="""User associated with this role
+# Uživatel spojený s touto rolí""",
+#         permission_classes=[OnlyForAuthentized],
+#         resolver=ScalarResolver[UserGQLModel](fkey_field_name="user_id")
+#     ) 
+    user: strawberry.Private[typing.Any] = dataclasses.field(default=None)
+
+    @strawberry.field(
+        name="user",
         description="""User associated with this role
 Uživatel spojený s touto rolí""",
         permission_classes=[OnlyForAuthentized],
         resolver=ScalarResolver[UserGQLModel](fkey_field_name="user_id")
     )
+    async def get_user(self, info: strawberry.Info) -> typing.Optional[UserGQLModel]:
+        from .userGQLModel import UserGQLModel
+        if self.user:
+            return UserGQLModel.from_dataclass(self.user)
+        if self.user_id:
+            return await UserGQLModel.resolve_reference(info, id=self.user_id)
+        return None
 
-    group: typing.Optional[GroupGQLModel] = strawberry.field(
+
+#     group: typing.Optional[GroupGQLModel] = strawberry.field(
+#         description="""Group in which the role is assigned
+# Skupina, ve které je role přiřazena""",
+#         permission_classes=[OnlyForAuthentized],
+#         resolver=ScalarResolver[GroupGQLModel](fkey_field_name="group_id")
+#     )
+
+    group: strawberry.Private[typing.Any] = dataclasses.field(default=None)        
+
+    @strawberry.field(
+        name="group",
         description="""Group in which the role is assigned
 Skupina, ve které je role přiřazena""",
-        permission_classes=[OnlyForAuthentized],
-        resolver=ScalarResolver[GroupGQLModel](fkey_field_name="group_id")
+        permission_classes=[OnlyForAuthentized]
     )
-        
+    async def get_group(self, info: strawberry.Info) -> typing.Optional[GroupGQLModel]:
+        from .groupGQLModel import GroupGQLModel
+        if self.group:
+            return GroupGQLModel.from_dataclass(self.group)
+        if self.group_id:
+            return await GroupGQLModel.resolve_reference(info, id=self.group_id)
+        return None
+
 #####################################################################
 #
 # Special fields for query
@@ -181,7 +249,7 @@ async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDTy
     groupfutures = (group_loader.load(gid) for gid in groupids)
     grouprows = await asyncio.gather(*groupfutures)
 
-    grouppaths = [row.path for row in grouprows if row.path]
+    grouppaths = [row.path for row in grouprows if row and row.path]
     groupids2 = set(groupids)
     for path in grouppaths:
         for id_str in path.split('/'):
@@ -562,7 +630,14 @@ class RoleMutations:
         extensions=[
             UserAccessControlExtension[InsertError, RoleGQLModel](roles=["administrátor", "personalista"]),
             UserRoleProviderExtension[InsertError, RoleGQLModel](),
-            InsertRoleRbacProviderExtension[InsertError, RoleGQLModel]()
+            InsertRoleRbacProviderExtension[InsertError, RoleGQLModel](),
+            
+            # those two are replaced by one above
+            # RbacProviderExtension[InsertError, RoleGQLModel](),
+            # LoadDataExtension[InsertError, RoleGQLModel](
+            #     getLoader=GroupGQLModel.getLoader,
+            #     primary_key_name="group_id"
+            # ),
         ]
     )
     async def role_insert(
@@ -595,8 +670,8 @@ class RoleMutations:
 
 
 
-    @strawberry.mutation(
-        description="Nastavit si zastupce"
-    )
-    async def role_set_deputy(self, info: strawberry.types.Info, role: RoleDeputyGQLModel) -> typing.Union[InsertError[RoleGQLModel], RoleGQLModel]:
-        pass
+    # @strawberry.mutation(
+    #     description="Nastavit si zastupce"
+    # )
+    # async def role_set_deputy(self, info: strawberry.types.Info, role: RoleDeputyGQLModel) -> typing.Union[InsertError[RoleGQLModel], RoleGQLModel]:
+    #     pass

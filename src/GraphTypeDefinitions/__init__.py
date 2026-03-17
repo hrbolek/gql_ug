@@ -97,9 +97,22 @@ class Item(BaseModel):
     variables: dict = {}
     operationName: str = None
 
+
+me_query = """{
+  me {
+    id
+    fullname
+    email
+    roles(where: {valid: {_eq: true}}, limit: 1000) {
+      valid
+      group { id name }
+      roletype { id name }
+    }
+  }
+}"""
 class UGWhoAmIExtension(WhoAmIExtension):
     def __init__(self, execution_context):
-        print(f"UGWhoAmIExtension called")
+        # print(f"UGWhoAmIExtension called")
         JWTPUBLICKEYURL = os.environ.get("JWTPUBLICKEYURL", "http://localhost:8000/oauth/publickey")
         JWTRESOLVEUSERPATHURL = os.environ.get("JWTRESOLVEUSERPATHURL", "http://localhost:8000/oauth/userinfo")
         self.sentinel = createAuthentizationSentinel(
@@ -110,11 +123,16 @@ class UGWhoAmIExtension(WhoAmIExtension):
                 status_code=401)
         )
 
-    async def ug_query(self, query, variables={}):
+    async def ug_query(self, query, variables={}, is_UGWhoAmIExtension=False):
         await self.authorize()
         context = self.execution_context.context
         # print(f"ug_query context A = {context}")
         # result = await self.execution_context.schema.execute(query=query, variable_values=variables, context_value=context)
+        if is_UGWhoAmIExtension:
+            print(f"is_UGWhoAmIExtension")
+        else:
+            print(f"not is_UGWhoAmIExtension")
+        print(f"query for gql_ug with \n{query}\nvariables\n{variables}")
         result = await readonlyschema.execute(query=query, variable_values=variables, context_value=context)
         # print(f"ug_query context B = {context}")
         result = strawberry.asdict(result)
@@ -122,6 +140,9 @@ class UGWhoAmIExtension(WhoAmIExtension):
         return result
 
     async def authorize(self):
+        user = self.execution_context.context.get("user")
+        if user is not None:
+            return
         request = self.execution_context.context.get("request")
         # print(f"UGWhoAmIExtension.{self.execution_context.context}")
         item = Item(variables={}, query="")
@@ -137,16 +158,25 @@ class UGWhoAmIExtension(WhoAmIExtension):
         queries = [
             query_sdl,
             "{\n  __schema {\n    types {\n      name\n    }\n  }\n}",
-            "query __ApolloGetServiceDefinition__ {\n  _service {\n    sdl\n  }\n}"
+            "query __ApolloGetServiceDefinition__ {\n  _service {\n    sdl\n  }\n}",
+            """query __ApolloGetServiceDefinition__ {
+  _service {
+    sdl
+  }
+}"""
         ]
         
         # print(f"printed attrs: {dir(self.execution_context)}", flush=True)
         graphql_document = self.execution_context.graphql_document
         query_str = print_ast(graphql_document)
         to_pass = query_str in queries
-        print(f"printed query ast: {query_str} {to_pass}", flush=True)
+        # print(f"printed query ast: {query_str} {to_pass}", flush=True)
+        context = self.execution_context
+        context.context["ug_client"] = self.ug_query
+        # print(f"ug_client is set in context {self.ug_query}")
+        context.context["query_str"] = query_str
         if not to_pass:
-            whoami = await self.ug_query(query=WhoAmIExtension.mequery)
+            whoami = await self.ug_query(query=me_query, is_UGWhoAmIExtension=True)
             # data = whoami.get("data", {"me": {"roles": []}})
             data = whoami.get("data", None)
             if data is None:        
@@ -166,10 +196,9 @@ class UGWhoAmIExtension(WhoAmIExtension):
                         "details": "You are not logged in"
                     }
                 )
-            print(f"UGWhoAmIExtension:user={user}")
-            context = self.execution_context
+            # print(f"UGWhoAmIExtension:user={user}")
             context.context["user"] = user
-            context.context["ug_client"] = self.ug_query
+            
         # print(f"UGWhoAmIExtension.on_execute {data}:{user}")
         # print(f"UGWhoAmIExtension.on_execute {user}")
         # print(f"""UGWhoAmIExtension.on_execute {self.execution_context.context["user"]}""")
@@ -189,5 +218,8 @@ schema.extensions.extend([PrometheusExtension(prefix="prom"), UGWhoAmIExtension]
 from uoishelpers.gqlpermissions.RolePermissionSchemaExtension import RolePermissionSchemaExtension, GraphQLBatchLoader
 schema.extensions.append(RolePermissionSchemaExtension)
 
+from strawberry.extensions import ParserCache, ValidationCache
 
+schema.extensions.append(ParserCache(1000))
+schema.extensions.append(ValidationCache(1000))
 print(f"schema.extensions.length: {len(schema.extensions)}")

@@ -122,7 +122,17 @@ class GroupModel(BaseModel):
     # https://docs.sqlalchemy.org/en/20/_modules/examples/materialized_paths/materialized_paths.html
 
 
-    grouptype = relationship("GroupTypeModel", viewonly=True)
+    grouptype = relationship(
+        "GroupTypeModel", 
+        viewonly=True,
+    )
+
+    # grouptype: Mapped[typing.Optional["GroupTypeModel"]] = relationship(
+    #     "GroupTypeModel", 
+    #     viewonly=True,
+    #     lazy="joined", default=None
+    # )
+
     memberships = relationship(
         "MembershipModel", 
         foreign_keys="MembershipModel.group_id",

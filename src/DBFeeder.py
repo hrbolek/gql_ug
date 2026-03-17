@@ -1002,7 +1002,7 @@ async def backupDB(asyncSessionMaker, filename="./systemdata.backup.json"):
         StateTransitionModel,
         MembershipModel
     ]
-    data = []
+    data = {}
     async with asyncSessionMaker() as session:
         for model in dbModels:
             sqlquery = sqlalchemy.select(model)
@@ -1017,35 +1017,43 @@ async def backupDB(asyncSessionMaker, filename="./systemdata.backup.json"):
                 rowsdict[id] = asdict
             # vsechny primarní klice do ids
             ids = set(rowsdict.keys())
-            todo = set()
-            done = set()
+            current_chunk = set()
+            already_chunked = set()
             chunk_id = 0
-            while len(done) < len(ids):
+            while len(already_chunked) < len(ids):
                 for row in rowsdict.values():
                     id = row.get("id", None)
-                    if id in done: continue
+                    if id in already_chunked: continue
                     skip_this_id = False
+                    keys_to_remove = []
                     for key, value in row.items():
-                        if key == "id": continue
+                        if key in {"id", "rbacobject_id", "path"}: continue
+                        # if key == "id": continue
                         # if not isinstance(value, IDType): continue
+                        if isinstance(value, (dict, list)): 
+                            keys_to_remove.append(key) # odstraneni nezadoucich typu z radku, typicky item v relaci
+                            continue
                         if value is None: continue
                         if value not in ids: continue
-                        if value not in done: 
-                            # print(row, key, value)
-                            skip_this_id = True
-                            break
-                            # primarni klic je zpracovatelny, nemame zavislost na nezpracovanych klicich
+                        if isinstance(value, uuid.UUID):
+                            print(f"{key}@{id} id UUID {value}")
+                            if value not in already_chunked: 
+                                # print(row, key, value)
+                                skip_this_id = True
+                                break
+                                # primarni klic je zpracovatelny, nemame zavislost na nezpracovanych klicich
                     if skip_this_id: continue
+                    for key in keys_to_remove:
+                        del row[key]
                     row["_chunk"] = chunk_id
-                    todo.add(id)
-                print(f"{model.__tablename__} chunk {chunk_id} todo/done/all {len(todo)}/{len(done)}/{len(ids)}")
-                if len(todo) == 0: break
-                done = done.union(todo)
-                todo = set()
+                    current_chunk.add(id)
+                print(f"{model.__tablename__} chunk {chunk_id} todo/done/all {len(current_chunk)}/{len(already_chunked)}/{len(ids)}")
+                if len(current_chunk) == 0: break
+                already_chunked = already_chunked.union(current_chunk)
+                current_chunk = set()
                 chunk_id += 1
-            data.append({
-                model.__tablename__: list(rowsdict.values())
-            })
+            data[model.__tablename__] = list(rowsdict.values())
+            
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False, default=str)
     

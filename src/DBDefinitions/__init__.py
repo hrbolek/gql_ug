@@ -22,7 +22,7 @@ from .GroupCategoryModel import GroupCategoryModel
 from .RoleModel import RoleModel
 from .RoleTypeModel import RoleTypeModel
 # from .RoleCategoryModel import RoleCategoryModel
-from .RoleTypeListModel import RoleTypeListModel
+from .RoleTypeListModel import RoleTypeListModel, RoleTypeListNameModel
 
 from .StateTransitionModel import StateTransitionModel
 from .StateMachineModel import StateMachineModel
@@ -53,7 +53,13 @@ async def startEngine(connectionstring=None, makeDrop=False, makeUp=True) -> Asy
         connectionstring = ComposeConnectionString()
     global dbInitIsDone
     """Provede nezbytne ukony a vrati asynchronni SessionMaker"""
-    asyncEngine = create_async_engine(connectionstring, pool_pre_ping=True)
+    asyncEngine = create_async_engine(
+        connectionstring, 
+        pool_pre_ping=True, 
+        pool_size=10,
+        max_overflow=10,
+        # echo=True
+    )
     # pool_size=20, max_overflow=10, pool_recycle=60) #pool_pre_ping=True, pool_recycle=3600
 
     async with asyncEngine.begin() as conn:

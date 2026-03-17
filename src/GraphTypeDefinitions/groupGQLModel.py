@@ -66,9 +66,9 @@ class GroupInputWhereFilter:
     valid: bool
     startdate: datetime.datetime
     enddate: datetime.datetime
-    from .groupTypeGQLModel import GroupTypeInputWhereFilter
+    # from .groupTypeGQLModel import GroupTypeInputWhereFilter
     grouptype: GroupTypeInputWhereFilter
-    from .roleGQLModel import RoleInputWhereFilter
+    # from .roleGQLModel import RoleInputWhereFilter
     roles: RoleInputWhereFilter
     mastergroup_id: IDType
     grouptype_id: IDType
@@ -365,12 +365,12 @@ Unikátní identifikátor skupiny."""
     grouptype_id: typing.Optional["IDType"] = strawberry.field(
          description="""(Optional) Identifier for the new group type.
 (Volitelné) Identifikátor nového typu skupiny.""",
-         default=None
+         default=strawberry.UNSET
     )
     mastergroup_id: typing.Optional["IDType"] = strawberry.field(
          description="""(Optional) Identifier for the new master group.
 (Volitelné) Identifikátor nové nadřazené skupiny.""",
-         default=None
+         default=strawberry.UNSET
     )
     valid: typing.Optional[bool] = strawberry.field(
          description="""(Optional) Flag indicating if the group is active.

@@ -339,11 +339,11 @@ class MembershipMutations:
             # InsertMembershipPermission
         ],
         extensions=[
-            UserAccessControlExtension[UpdateError, MembershipGQLModel](
+            UserAccessControlExtension[InsertError, MembershipGQLModel](
                 roles=["administrátor", "personalista", "garant", "garant předmětu"]
             ),
-            UserRoleProviderExtension[UpdateError, MembershipGQLModel](),
-            InsertMembershipRbacProviderExtension[UpdateError, MembershipGQLModel](),
+            UserRoleProviderExtension[InsertError, MembershipGQLModel](),
+            InsertMembershipRbacProviderExtension[InsertError, MembershipGQLModel](),
         ],
     )
     async def membership_insert(self, 
@@ -353,6 +353,7 @@ class MembershipMutations:
         rbacobject_id: IDType,
     ) -> Union[MembershipGQLModel, InsertError[MembershipGQLModel]]:
         result = await Insert[MembershipGQLModel].DoItSafeWay(info=info, entity=membership)
+        print("membership_insert", type(result), result)
         return result
 
 

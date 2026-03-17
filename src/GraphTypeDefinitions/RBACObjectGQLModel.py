@@ -60,6 +60,7 @@ class RBACObjectGQLInterface:
 
     @classmethod
     async def resolve_reference(cls, info: strawberry.types.Info, id: IDType):
+        from ..DBDefinitions import GroupModel
         from .groupGQLModel import GroupGQLModel
         from .userGQLModel import UserGQLModel
         if id is None: return None
@@ -69,12 +70,26 @@ class RBACObjectGQLInterface:
         loaderU = UserGQLModel.getLoader(info)
         loaderG = GroupGQLModel.getLoader(info)
         futures = [loaderU.load(id), loaderG.load(id)]
-        rows = await asyncio.gather(*futures)
+        # rows = await asyncio.gather(*futures)
 
-        asUser = rows[0] is not None
-        asGroup = rows[1] is not None
+        urows = await futures[0]
+        grows = await futures[1]
+        if urows is None and grows is None:
+            return None
+        
+        if urows == grows:
+            raise Exception(f"RBACObjectGQLModel.resolve_reference: id {id} is both User and Group")
+        
+        if isinstance(grows, GroupModel):
+            asGroup = True
+            asUser = False
+            # print(f"RBACObjectGQLModel.resolve_reference: asGroup={grows}, id={id}", flush=True)
+        else: 
+            asGroup = False
+            asUser = True
+            # print(f"RBACObjectGQLModel.resolve_reference: asUser={urows}, id={id}", flush=True)
 
-        # urows = await loaderU.load(id)
+        
         # print(f"RBACObjectGQLModel.resolve_reference: asUser={asUser}, asGroup={asGroup}, id={id}", flush=True)
         # print(f"RBACObjectGQLModel.resolve_reference: {urows} ({id} {type(id)})", flush=True)
         # if asUser is None and asGroup is None: return None
@@ -115,7 +130,7 @@ class RBACObjectGQLInterface:
         ) -> List["RoleGQLModel"]:
         user = getUserFromInfo(info=info)
         user_id = user["id"]
-        print(f"current_user_roles.user type {type(user_id)}")
+        # print(f"current_user_roles.user type {type(user_id)}")
         from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group, RoleGQLModel
         result = []
         if self.asUser:
@@ -231,7 +246,7 @@ class RBACStateObjectGQLModel(RBACObjectGQLInterface):
         #TODO adapt it to use of state_id
         user = getUserFromInfo(info=info)
         user_id = user["id"]
-        print(f"current_user_roles.user type {type(user_id)}")
+        # print(f"current_user_roles.user type {type(user_id)}")
         from .roleGQLModel import resolve_roles_on_user, resolve_roles_on_group, RoleGQLModel
         result = []
         if self.asUser:
@@ -242,6 +257,8 @@ class RBACStateObjectGQLModel(RBACObjectGQLInterface):
             RoleGQLModel.from_dataclass(r) 
             # for result in results
             for r in result
+            # TODO check if really works
+            if r.valid
             )
         return result    
     
@@ -281,7 +298,7 @@ class RBACInputObject(TreeInputStructureMixin):
     abbreviation: typing.Optional[str] = strawberry.field(description="abbreviation", default="RBACObject")
     roles: typing.Optional[typing.List[RoleInsertGQLModel]] = strawberry.field(description="roles on this rbacobject", default_factory=list)
 
-    id: strawberry.Private[IDType] = None
+    id: IDType = strawberry.field(description="Client generated id of this RBAC object")
     grouptype_id: strawberry.Private[IDType] = None
     rbacobject_id: strawberry.Private[IDType] = IDType("3ffbc624-fe29-4486-9a56-3bc6a4e5b576")
     path: strawberry.Private[str] = None
@@ -302,6 +319,7 @@ async def rbac_insert(
     from .groupGQLModel import GroupGQLModel
     actinguser = getUserFromInfo(info)
     # print(f"actinguser {actinguser}")
+    # "08912fe1-0d0b-48e4-b9e1-56b0350c653b"
     actinguser_id = actinguser["id"]
     rbac.grouptype_id = "3ffbc624-fe29-4486-9a56-3bc6a4e5b576"
     if len(rbac.roles) == 0:
@@ -312,6 +330,7 @@ async def rbac_insert(
                 roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
             )
         ]
+    rbac.rbacobject_id = rbac.id
     result_group = await Insert[GroupGQLModel].DoItSafeWay(info, entity=rbac)
     if isinstance(result_group, InsertError):
         result = InsertError[RBACObjectGQLModel](

@@ -46,7 +46,7 @@ RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleG
 @createInputs2
 class RoleTypeInputWhereFilter:
     id: IDType
-    path: str = strawberry.field(description="path")
+    path: typing.Optional[str] = strawberry.field(description="path", default=None)
     name: str
     name_en: str
     # mastertype: "RoleTypeInputWhereFilter" = strawberry.field(description="Type of this type.")
@@ -212,9 +212,11 @@ class RoleTypeMutations:
             UserAbsoluteAccessControlExtension[UpdateError, RoleTypeGQLModel](roles=["superadmin"])
         ]
     )
-    async def role_type_update(self, 
+    async def role_type_update(
+        self, 
         info: strawberry.types.Info, 
-        role_type: RoleTypeUpdateGQLModel
+        role_type: RoleTypeUpdateGQLModel,
+        user_roles: typing.Any
 
     ) -> Union[RoleTypeGQLModel, UpdateError[RoleTypeGQLModel]]:
         result = await Update[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
@@ -246,8 +248,8 @@ class RoleTypeMutations:
     )
     async def role_type_insert(self, 
         info: strawberry.types.Info, 
-        role_type: RoleTypeInsertGQLModel
-
+        role_type: RoleTypeInsertGQLModel,
+        user_roles: typing.Any
     ) -> Union[RoleTypeGQLModel, InsertError[RoleTypeGQLModel]]:
         result = await Insert[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
         return result
@@ -262,7 +264,12 @@ class RoleTypeMutations:
             UserAbsoluteAccessControlExtension[DeleteError, RoleTypeGQLModel](roles=["superadmin"])
         ]
     )
-    async def role_type_delete(self, info: strawberry.types.Info, role_type: RoleTypeDeleteGQLModel) -> Optional[DeleteError[RoleTypeGQLModel]]:
+    async def role_type_delete(
+        self, 
+        info: strawberry.types.Info, 
+        role_type: RoleTypeDeleteGQLModel,
+        user_roles: typing.Any
+    ) -> Optional[DeleteError[RoleTypeGQLModel]]:
         result = await Delete[RoleTypeGQLModel].DoItSafeWay(info=info, entity=role_type)
         return result
 

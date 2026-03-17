@@ -13,6 +13,17 @@ def setAttributeOnCollection(collection, sourceAttributeName, destinationAttribu
     for item in collection:
         setAttributeOnItem(item, sourceAttributeName, destinationAttributeName)
 
+def setAttributeConstOnItem(item, const, destinationAttributeName):
+    item[destinationAttributeName] = const
+
+def setAttributeConstOnCollection(collection, const, destinationAttributeName):
+    for item in collection:
+        setAttributeConstOnItem(item, const, destinationAttributeName)
+
+for name, collection in data.items():
+    setAttributeConstOnCollection(collection=collection, const="d75d64a4-bf5f-43c5-9c14-8fda7aff6c09", destinationAttributeName="rbacobject_id")
+
+
 users = data["users"]
 setAttributeOnCollection(users, "id", "rbacobject_id")
 # for user in users:
@@ -27,26 +38,26 @@ roles = data["roles"]
 for role in roles:
     role["rbacobject_id"] = role["group_id"]
 
-forms = data["forms"]
-setAttributeOnCollection(forms, "rbacobject", "rbacobject_id")
-setAttributeOnCollection(forms, "rbacobject", "createdby_id")
-setAttributeOnCollection(forms, "rbacobject", "changedby_id")
-formsections = data["formsections"]
-setAttributeOnCollection(formsections, "rbacobject", "rbacobject_id")
-formparts = data["formparts"]
-setAttributeOnCollection(formparts, "rbacobject", "rbacobject_id")
-formitems = data["formitems"]
-setAttributeOnCollection(formitems, "rbacobject", "rbacobject_id")
-formrequests = data["formrequests"]
-setAttributeOnCollection(formrequests, "rbacobject", "rbacobject_id")
-formhistories = data["formhistories"]
+# forms = data["forms"]
+# setAttributeOnCollection(forms, "rbacobject", "rbacobject_id")
+# setAttributeOnCollection(forms, "rbacobject", "createdby_id")
+# setAttributeOnCollection(forms, "rbacobject", "changedby_id")
+# formsections = data["formsections"]
+# setAttributeOnCollection(formsections, "rbacobject", "rbacobject_id")
+# formparts = data["formparts"]
+# setAttributeOnCollection(formparts, "rbacobject", "rbacobject_id")
+# formitems = data["formitems"]
+# setAttributeOnCollection(formitems, "rbacobject", "rbacobject_id")
+# formrequests = data["formrequests"]
+# setAttributeOnCollection(formrequests, "rbacobject", "rbacobject_id")
+# formhistories = data["formhistories"]
 
-formindex = {form["id"]: form for form in forms}
-for history in formhistories:
-    form = formindex[history["form_id"]]
-    history["rbacobject_id"] = form["rbacobject_id"]
-    history["createdby_id"] = form["rbacobject_id"]
-    history["changedby_id"] = form["rbacobject_id"]
+# formindex = {form["id"]: form for form in forms}
+# for history in formhistories:
+#     form = formindex[history["form_id"]]
+#     history["rbacobject_id"] = form["rbacobject_id"]
+#     history["createdby_id"] = form["rbacobject_id"]
+#     history["changedby_id"] = form["rbacobject_id"]
 
 
 
