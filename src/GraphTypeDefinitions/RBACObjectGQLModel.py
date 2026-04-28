@@ -21,6 +21,12 @@ from uoishelpers.resolvers import (
     Delete,
     DeleteError
 )
+from uoishelpers.gqlpermissions.LoadDataExtension import LoadDataExtension
+from uoishelpers.gqlpermissions.RbacProviderExtension import RbacProviderExtension
+from uoishelpers.gqlpermissions.RbacInsertProviderExtension import RbacInsertProviderExtension
+from uoishelpers.gqlpermissions.UserRoleProviderExtension import UserRoleProviderExtension
+from uoishelpers.gqlpermissions.UserAccessControlExtension import UserAccessControlExtension
+from uoishelpers.gqlpermissions.UserAbsoluteAccessControlExtension import UserAbsoluteAccessControlExtension
 
 from ._GraphResolvers import resolve_id
 from ._GraphPermissions import RoleBasedPermission, OnlyForAuthentized
@@ -305,44 +311,60 @@ class RBACInputObject(TreeInputStructureMixin):
     createdby_id: strawberry.Private[IDType] = None
 
 
-
-@strawberry.field(
-    description="creates an rbac object based on group",
-    permission_classes=[
-        OnlyForAuthentized
-    ]
-)
-async def rbac_insert(
-    self, info: strawberry.types.Info, rbac: RBACInputObject
-) -> typing.Union[RBACObjectGQLModel, InsertError[RBACObjectGQLModel]]:
-    from .roleGQLModel import RoleGQLModel, RoleInsertGQLModel
+@strawberry.interface(description="RBAC mutations")
+class RBACMutations:
     from .groupGQLModel import GroupGQLModel
-    actinguser = getUserFromInfo(info)
-    # print(f"actinguser {actinguser}")
-    # "08912fe1-0d0b-48e4-b9e1-56b0350c653b"
-    actinguser_id = actinguser["id"]
-    rbac.grouptype_id = "3ffbc624-fe29-4486-9a56-3bc6a4e5b576"
-    if len(rbac.roles) == 0:
-        rbac.roles = [
-            RoleInsertGQLModel(
-                user_id=actinguser_id,
-                group_id=rbac.id,
-                roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
+    @strawberry.field(
+        description="creates an rbac object based on group",
+        permission_classes=[
+            OnlyForAuthentized
+        ],
+        extensions=[
+            UserRoleProviderExtension[InsertError, RBACObjectGQLModel](),
+            RbacProviderExtension[InsertError, RBACObjectGQLModel](),
+            LoadDataExtension[InsertError, RBACObjectGQLModel](
+                getLoader=GroupGQLModel.getLoader,
+                primary_key_name="mastergroup_id"
             )
         ]
-    rbac.rbacobject_id = rbac.id
-    result_group = await Insert[GroupGQLModel].DoItSafeWay(info, entity=rbac)
-    if isinstance(result_group, InsertError):
-        result = InsertError[RBACObjectGQLModel](
-            msg=result_group.msg,
-            code=result_group.code,
-            location=result_group.location,
-            _input=rbac
-        )
+    )
+    async def rbac_insert(
+        self, 
+        info: strawberry.types.Info, 
+        rbac: RBACInputObject,
+        db_row: typing.Any,
+        rbacobject_id: IDType,
+        user_roles: typing.List[dict],
+    ) -> typing.Union[RBACObjectGQLModel, InsertError[RBACObjectGQLModel]]:
+        
+        from .roleGQLModel import RoleGQLModel, RoleInsertGQLModel
+        from .groupGQLModel import GroupGQLModel
+        actinguser = getUserFromInfo(info)
+        # print(f"actinguser {actinguser}")
+        # "08912fe1-0d0b-48e4-b9e1-56b0350c653b"
+        actinguser_id = actinguser["id"]
+        rbac.grouptype_id = "3ffbc624-fe29-4486-9a56-3bc6a4e5b576"
+        if len(rbac.roles) == 0:
+            rbac.roles = [
+                RoleInsertGQLModel(
+                    user_id=actinguser_id,
+                    group_id=rbac.id,
+                    roletype_id=IDType("ced46aa4-3217-4fc1-b79d-f6be7d21c6b6"),
+                )
+            ]
+        rbac.rbacobject_id = rbac.id
+        result_group = await Insert[GroupGQLModel].DoItSafeWay(info, entity=rbac)
+        if isinstance(result_group, InsertError):
+            result = InsertError[RBACObjectGQLModel](
+                msg=result_group.msg,
+                code=result_group.code,
+                location=result_group.location,
+                _input=rbac
+            )
+            return result
+        result = RBACObjectGQLModel(id=result_group.id, asGroup=True)
         return result
-    result = RBACObjectGQLModel(id=result_group.id, asGroup=True)
-    return result
-    
+        
 
 """
 mutation rbacinsert{

@@ -13,6 +13,10 @@ from .stateGQLModel import (
     StateMachineMutations,
     StateTransitionMutations
 )
+
+from .RBACObjectGQLModel import (
+    RBACMutations
+)
 @strawberry.type
 class Mutation(
     GroupMutations, 
@@ -23,7 +27,10 @@ class Mutation(
     RoleTypeMutations,
     StateMutations,
     StateMachineMutations,
-    StateTransitionMutations):
+    StateTransitionMutations,
+
+    RBACMutations
+):
 
 
     # from .membershipGQLModel import (
@@ -59,8 +66,6 @@ class Mutation(
         role_type_list_insert
     )
 
-    from .RBACObjectGQLModel import (
-        rbac_insert
-    )
+
     # role_type_list_add_role = role_type_list_add
     # role_type_list_remove_role = role_type_list_remove

@@ -46,7 +46,7 @@ RoleInputWhereFilter = Annotated["RoleInputWhereFilter", strawberry.lazy(".roleG
 @createInputs2
 class RoleTypeInputWhereFilter:
     id: IDType
-    path: typing.Optional[str] = strawberry.field(description="path", default=None)
+    path: str
     name: str
     name_en: str
     # mastertype: "RoleTypeInputWhereFilter" = strawberry.field(description="Type of this type.")

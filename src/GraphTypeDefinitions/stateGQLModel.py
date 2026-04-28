@@ -222,12 +222,12 @@ class StateGQLModel(NamedGQLModel):
             if state.readerslist_id is None:
                 results = []
             else:
-                results = await loader.filter_by(list_id=state.readerslist_id)
+                results = await loader.filter_by(id=state.readerslist_id)
         else:
             if state.writerslist_id is None:
                 results = []
             else:
-                results = await loader.filter_by(list_id=state.writerslist_id)
+                results = await loader.filter_by(id=state.writerslist_id)
         return results
 
     @strawberry.field(

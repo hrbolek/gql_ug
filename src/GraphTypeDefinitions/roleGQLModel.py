@@ -233,6 +233,47 @@ from src.DBDefinitions import (
 from sqlalchemy import select
 
 
+from uoishelpers.dataloaders.IDLoader import GlobalTTLCache
+# import time
+# class GlobalTTLCache:
+#     def __init__(self, ttl: float, maxsize: int = 200_000):
+#         self.ttl = ttl
+#         self.maxsize = maxsize
+#         self._data = {}  # key -> (expires_at, value)
+#         self._lock = asyncio.Lock()
+
+#     def _now(self): return time.time()
+
+#     async def get_many(self, keys):
+#         now = self._now()
+#         hit = {}
+#         async with self._lock:
+#             for k in keys:
+#                 item = self._data.get(k)
+#                 if not item:
+#                     continue
+#                 exp, val = item
+#                 if exp <= now:
+#                     self._data.pop(k, None)
+#                     continue
+#                 hit[k] = val
+#         return hit
+
+#     async def set_many(self, mapping):
+#         now = self._now()
+#         async with self._lock:
+#             if len(self._data) > self.maxsize:
+#                 self._data.clear()
+#             exp = now + self.ttl
+#             for k, v in mapping.items():
+#                 self._data[k] = (exp, v)
+
+#     async def invalidate(self, key):
+#         async with self._lock:
+#             self._data.pop(key, None)
+
+
+GLOBAL_RBAC_CACHE = GlobalTTLCache(ttl=5.0)
 
 async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: Optional[IDType] = None) -> List["RoleGQLModel"]:
     # ve vsech skupinach, kde je user clenem najdi vsechny role a ty vrat
@@ -274,6 +315,13 @@ async def resolve_roles_on_user(self, info: strawberry.types.Info, user_id: IDTy
 async def resolve_roles_on_user_with_user(self, info: strawberry.types.Info, user_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
     "find roles for user with id 'filter_user_id' and their relations to user with id 'user_id', so roles of user(id=filter_user_id)  on user(id=user_id)," 
     "user(id=filter_user_id) RULEZZ :)"
+    
+    key = ("roles_on_user", user_id, filter_user_id)
+    cached = await GLOBAL_RBAC_CACHE.get_many([key])
+    if key in cached:
+        role_ids = cached[key]
+        loader = RoleGQLModel.getLoader(info)
+        return await asyncio.gather(*(loader.load(id) for id in role_ids))
 
     loaderr = RoleGQLModel.getLoader(info=info)
     stmtr = loaderr.getSelectStatement()
@@ -281,9 +329,19 @@ async def resolve_roles_on_user_with_user(self, info: strawberry.types.Info, use
     Membership = modelr.memberships.property.mapper.class_
     stmtr = stmtr.filter_by(user_id=filter_user_id).join(modelr.memberships).where(Membership.user_id==user_id)
     rows = await loaderr.execute_select(stmtr)
-    return rows
+    rows_list = list(rows)
+    role_ids = tuple(r.id for r in rows_list)
+    await GLOBAL_RBAC_CACHE.set_many({key: role_ids})    
+    return rows_list
 
 async def resolve_roles_on_group_with_user(self, info: strawberry.types.Info, group_id: IDType, filter_user_id: IDType) -> List["RoleGQLModel"]:
+    key = ("roles_on_group", group_id, filter_user_id)
+    cached = await GLOBAL_RBAC_CACHE.get_many([key])
+    if key in cached:
+        role_ids = cached[key]
+        loader = RoleGQLModel.getLoader(info)
+        return await asyncio.gather(*(loader.load(id) for id in role_ids))
+    
     from .groupGQLModel import GroupGQLModel
     loaderg = GroupGQLModel.getLoader(info=info)
     # modelg = loaderg.getModel()
@@ -300,7 +358,12 @@ async def resolve_roles_on_group_with_user(self, info: strawberry.types.Info, gr
     modelr = loaderr.getModel()
     stmtr = stmtr.filter_by(user_id=filter_user_id).where(modelr.group_id.in_(ids))
     rows = await loaderr.execute_select(stmtr)
-    return rows
+    
+    rows_list = list(rows)
+    role_ids = tuple(r.id for r in rows_list)
+    await GLOBAL_RBAC_CACHE.set_many({key: role_ids})    
+    return rows_list
+    
 
 async def resolve_roles_on_group(self, info: strawberry.types.Info, group_id: IDType, filter_user_id: Optional[IDType] = None) -> List["RoleGQLModel"]:
     # najdi vsechny role pro skupinu a nadrizene skupiny
@@ -492,7 +555,7 @@ class RoleInsertGQLModel(InputModelMixin):
     roletype_id: IDType = strawberry.field(description="Role type identifier\nIdentifikátor typu role")
     id: Optional[IDType] = strawberry.field(description="Primary key\nPrimární klíč", default=None)
     deputy: Optional[bool] = strawberry.field(description="Deputy role status\nStatus zástupce", default=False)
-    startdate: Optional[datetime.datetime] = strawberry.field(description="Start datetime of role\nDatum začátku role", default_factory=datetime.datetime.now)
+    startdate: Optional[datetime.datetime] = strawberry.field(description="Start datetime of role\nDatum začátku role", default=None)
     enddate: Optional[datetime.datetime] = strawberry.field(description="End datetime of role\nDatum ukončení role", default=None)
     createdby_id: strawberry.Private[IDType] = None
     rbacobject_id: strawberry.Private[IDType] = None
