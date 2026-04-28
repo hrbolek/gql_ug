@@ -130,12 +130,22 @@ app.include_router(graphql_app, prefix="/gql")
 
 @app.get("/voyager", response_class=FileResponse)
 async def graphiql():
-    realpath = os.path.realpath("./voyager.html")
+    realpath = os.path.realpath("./src/Htmls/voyager.html")
     return realpath
 
 @app.get("/doc", response_class=FileResponse)
 async def graphiql():
-    realpath = os.path.realpath("./liveschema.html")
+    realpath = os.path.realpath("./src/Htmls/liveschema.html")
+    return realpath
+
+@app.get("/ui", response_class=FileResponse)
+async def graphiql():
+    realpath = os.path.realpath("./src/Htmls/livedata.html")
+    return realpath
+
+@app.get("/test", response_class=FileResponse)
+async def graphiql():
+    realpath = os.path.realpath("./src/Htmls/tests.html")
     return realpath
 
 logging.info("All initialization is done")
